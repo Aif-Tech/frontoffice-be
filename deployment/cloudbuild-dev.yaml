@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'asia.gcr.io/$PROJECT_ID/frontoffice-be:$TAG_NAME', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'asia.gcr.io/$PROJECT_ID/frontoffice-be:$TAG_NAME']
+- name: "gcr.io/cloud-builders/gke-deploy"
+  args:
+  - run
+  - --filename=deployment/deployment-dev.yaml
+  - --image=asia.gcr.io/$PROJECT_ID/frontoffice-be:$TAG_NAME
+  - --location=asia-southeast2-a
+  - --cluster=development

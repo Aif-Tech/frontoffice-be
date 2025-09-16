@@ -1,0 +1,65 @@
+package operation
+
+import (
+	"front-office/pkg/common/model"
+	"time"
+)
+
+type LogOperation struct {
+	LogOpsID  uint      `json:"log_ops_id" gorm:"primaryKey;autoIncrement"`
+	MemberId  uint      `json:"member_id"`
+	Member    MstMember `json:"member" gorm:"foreignKey:MemberId"`
+	CompanyId uint      `json:"company_id"`
+	Module    string    `json:"module"`
+	Action    string    `json:"action"`
+	ClientIP  string    `json:"ip_address"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type MstMember struct {
+	MemberID uint    `json:"member_id" gorm:"primaryKey;autoIncrement"`
+	Name     string  `json:"name"`
+	RoleId   uint    `json:"role_id"`
+	Role     MstRole `json:"role"`
+}
+
+type MstRole struct {
+	RoleID uint   `json:"role_id" gorm:"primaryKey;autoIncrement"`
+	Name   string `json:"name"`
+}
+
+type LogOperationFilter struct {
+	CompanyId string
+	Page      string
+	Size      string
+	Role      string
+	Event     string
+	Name      string
+	StartDate string
+	EndDate   string
+}
+
+type LogRangeFilter struct {
+	CompanyId string
+	Page      string
+	Size      string
+	StartDate string
+	EndDate   string
+}
+
+type AddLogRequest struct {
+	MemberId  uint   `json:"member_id" validate:"required~Field Member ID is required"`
+	CompanyId uint   `json:"company_id" validate:"required~Field Company ID is required"`
+	Action    string `json:"action" validate:"required~Field Action is required"`
+}
+
+type logOperationAPIResponse struct {
+	Message string                `json:"message"`
+	Success bool                  `json:"success"`
+	Data    *logOperationRespData `json:"data"`
+	Meta    model.Meta            `json:"meta"`
+}
+
+type logOperationRespData struct {
+	Logs interface{} `json:"logs"`
+}
