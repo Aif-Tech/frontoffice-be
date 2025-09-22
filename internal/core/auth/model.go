@@ -25,6 +25,7 @@ type loginResponse struct {
 	Email              string      `json:"email"`
 	CompanyId          uint        `json:"company_id"`
 	CompanyName        string      `json:"company_name"`
+	QuotaType          uint        `json:"quota_type"`
 	TierLevel          uint        `json:"tier_level"`
 	Image              string      `json:"image"`
 	SubscriberProducts interface{} `json:"subscriber_products"`
@@ -36,6 +37,7 @@ type loginResponseData struct {
 	Email              string      `json:"email"`
 	CompanyId          uint        `json:"company_id"`
 	CompanyName        string      `json:"company_name"`
+	QuotaType          uint        `json:"quota_type"`
 	RoleId             uint        `json:"role_id"`
 	Image              string      `json:"image"`
 	ApiKey             string      `json:"api_key"`
@@ -46,6 +48,7 @@ type tokenPayload struct {
 	MemberId  uint   `json:"member_id"`
 	CompanyId uint   `json:"company_id"`
 	RoleId    uint   `json:"role_id"`
+	QuotaType uint   `json:"quota_type"`
 	ApiKey    string `json:"api_key"`
 }
 

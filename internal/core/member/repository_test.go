@@ -124,7 +124,7 @@ func TestGetMemberAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetMemberAPI(&FindUserQuery{})
+		result, err := repo.GetMemberAPI(&MemberParams{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -137,7 +137,7 @@ func TestGetMemberAPI(t *testing.T) {
 			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.GetMemberAPI(&FindUserQuery{})
+		_, err := repo.GetMemberAPI(&MemberParams{})
 
 		assert.Error(t, err)
 	})
@@ -147,7 +147,7 @@ func TestGetMemberAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		_, err := repo.GetMemberAPI(&FindUserQuery{})
+		_, err := repo.GetMemberAPI(&MemberParams{})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
@@ -162,7 +162,7 @@ func TestGetMemberAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetMemberAPI(&FindUserQuery{})
+		result, err := repo.GetMemberAPI(&MemberParams{})
 
 		assert.Nil(t, result)
 		assert.Error(t, err)
@@ -171,8 +171,8 @@ func TestGetMemberAPI(t *testing.T) {
 }
 
 func TestGetMemberListAPI(t *testing.T) {
-	filter := &MemberFilter{
-		CompanyID: constant.CompanyId,
+	filter := &MemberParams{
+		CompanyId: constant.CompanyId,
 	}
 
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {

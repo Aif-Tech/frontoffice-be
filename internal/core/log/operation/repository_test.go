@@ -40,7 +40,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 }
 
 func TestGetLogsOperationAPI(t *testing.T) {
-	filter := LogOperationFilter{
+	filter := logOperationFilter{
 		CompanyId: constant.DummyCompanyId,
 	}
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
@@ -106,7 +106,7 @@ func TestGetLogsOperationAPI(t *testing.T) {
 }
 
 func TestGetLogsByRangeAPI(t *testing.T) {
-	filter := LogRangeFilter{
+	filter := logRangeFilter{
 		CompanyId: constant.DummyCompanyId,
 	}
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {

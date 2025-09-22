@@ -37,7 +37,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 		return apperror.BadRequest("invalid event type")
 	}
 
-	filter := &LogOperationFilter{
+	filter := &logOperationFilter{
 		CompanyId: companyId,
 		Page:      page,
 		Size:      size,
@@ -67,7 +67,7 @@ func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
 		return apperror.BadRequest("start_date and end_date are required")
 	}
 
-	filter := &LogRangeFilter{
+	filter := &logRangeFilter{
 		Page:      page,
 		Size:      size,
 		CompanyId: companyId,

@@ -32,12 +32,12 @@ type repository struct {
 }
 
 type Repository interface {
-	GetLogsOperationAPI(filter *LogOperationFilter) (*model.AifcoreAPIResponse[any], error)
-	GetLogsByRangeAPI(filter *LogRangeFilter) (*model.AifcoreAPIResponse[any], error)
+	GetLogsOperationAPI(filter *logOperationFilter) (*model.AifcoreAPIResponse[any], error)
+	GetLogsByRangeAPI(filter *logRangeFilter) (*model.AifcoreAPIResponse[any], error)
 	AddLogOperation(req *AddLogRequest) error
 }
 
-func (repo *repository) GetLogsOperationAPI(filter *LogOperationFilter) (*model.AifcoreAPIResponse[any], error) {
+func (repo *repository) GetLogsOperationAPI(filter *logOperationFilter) (*model.AifcoreAPIResponse[any], error) {
 	url := fmt.Sprintf("%s/api/core/logging/operation/list/%s", repo.cfg.Env.AifcoreHost, filter.CompanyId)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -71,7 +71,7 @@ func (repo *repository) GetLogsOperationAPI(filter *LogOperationFilter) (*model.
 	return apiResp, nil
 }
 
-func (repo *repository) GetLogsByRangeAPI(filter *LogRangeFilter) (*model.AifcoreAPIResponse[any], error) {
+func (repo *repository) GetLogsByRangeAPI(filter *logRangeFilter) (*model.AifcoreAPIResponse[any], error) {
 	url := fmt.Sprintf("%s/api/core/logging/operation/range", repo.cfg.Env.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
