@@ -12,7 +12,7 @@ import (
 func GenerateToken(
 	secret string,
 	minutesToExpired int,
-	userId, companyId, roleId uint,
+	userId, companyId, roleId, quotaType uint,
 	apiKey string,
 ) (string, error) {
 	willExpiredAt := time.Now().Add(time.Duration(minutesToExpired) * time.Minute)
@@ -22,6 +22,7 @@ func GenerateToken(
 	claims["company_id"] = companyId
 	claims["role_id"] = roleId
 	claims["api_key"] = apiKey
+	claims["quota_type"] = quotaType
 	claims["exp"] = willExpiredAt.Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -85,6 +86,10 @@ func ExtractCompanyIdFromClaims(claims *jwt.MapClaims) (uint, error) {
 
 func ExtractRoleIdFromClaims(claims *jwt.MapClaims) (uint, error) {
 	return extractUintClaim(claims, "role_id")
+}
+
+func ExtractQuotaTypeFromClaims(claims *jwt.MapClaims) (uint, error) {
+	return extractUintClaim(claims, "quota_type")
 }
 
 func ExtractApiKeyFromClaims(claims *jwt.MapClaims) (string, error) {

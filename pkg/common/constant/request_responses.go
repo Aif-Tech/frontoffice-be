@@ -18,6 +18,7 @@ const (
 	UserId    = "userId"
 	CompanyId = "companyId"
 	RoleId    = "roleId"
+	QuotaType = "quota_type"
 	Page      = "page"
 	Size      = "size"
 	JobId     = "job_id"

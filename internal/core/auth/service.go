@@ -135,7 +135,7 @@ func (svc *service) VerifyMember(token string, req *PasswordResetRequest) error 
 
 	userId := fmt.Sprintf("%d", activationData.MemberId)
 
-	user, err := svc.memberRepo.GetMemberAPI(&member.FindUserQuery{
+	user, err := svc.memberRepo.GetMemberAPI(&member.MemberParams{
 		Id: userId,
 	})
 	if err != nil {
@@ -282,7 +282,7 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 }
 
 func (svc *service) RequestActivation(email string) error {
-	user, err := svc.memberRepo.GetMemberAPI(&member.FindUserQuery{
+	user, err := svc.memberRepo.GetMemberAPI(&member.MemberParams{
 		Email: email,
 	})
 	if err != nil {
@@ -332,7 +332,7 @@ func (svc *service) RequestActivation(email string) error {
 }
 
 func (svc *service) RequestPasswordReset(email string) error {
-	user, err := svc.memberRepo.GetMemberAPI(&member.FindUserQuery{
+	user, err := svc.memberRepo.GetMemberAPI(&member.MemberParams{
 		Email: email,
 	})
 	if err != nil {
@@ -394,6 +394,7 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		MemberId:  user.MemberId,
 		CompanyId: user.CompanyId,
 		RoleId:    user.RoleId,
+		QuotaType: user.QuotaType,
 		ApiKey:    user.ApiKey,
 	}
 	accessToken, err = svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtExpiresMinutes)
@@ -420,6 +421,7 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		Email:              user.Email,
 		CompanyId:          user.CompanyId,
 		CompanyName:        user.CompanyName,
+		QuotaType:          user.QuotaType,
 		TierLevel:          user.RoleId,
 		Image:              user.Image,
 		SubscriberProducts: user.SubscriberProducts,
@@ -457,7 +459,7 @@ func (svc *service) Logout(userId, companyId uint) error {
 }
 
 func (svc *service) ChangePassword(userId string, reqBody *ChangePasswordRequest) error {
-	user, err := svc.memberRepo.GetMemberAPI(&member.FindUserQuery{
+	user, err := svc.memberRepo.GetMemberAPI(&member.MemberParams{
 		Id: userId,
 	})
 	if err != nil {
@@ -502,5 +504,5 @@ func (svc *service) generateToken(payload *tokenPayload, secret, minutesStr stri
 		return "", fmt.Errorf("invalid duration: %w", err)
 	}
 
-	return helper.GenerateToken(secret, minutes, payload.MemberId, payload.CompanyId, payload.RoleId, payload.ApiKey)
+	return helper.GenerateToken(secret, minutes, payload.MemberId, payload.CompanyId, payload.RoleId, payload.QuotaType, payload.ApiKey)
 }
