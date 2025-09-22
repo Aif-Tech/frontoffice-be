@@ -2,7 +2,6 @@ package activation
 
 import (
 	"errors"
-	"strconv"
 
 	"front-office/configs/application"
 	"front-office/pkg/apperror"
@@ -21,34 +20,8 @@ type service struct {
 }
 
 type Service interface {
-	CreateActivationToken(memberId, companyId uint, roleId uint) (string, error)
 	ValidateActivationToken(authHeader string) (string, uint, error)
 	GetActivationToken(token string) (*MstActivationToken, error)
-}
-
-func (svc *service) CreateActivationToken(memberId, companyId, roleId uint) (string, error) {
-	secret := svc.cfg.Env.JwtSecretKey
-	minutesToExpired, err := strconv.Atoi(svc.cfg.Env.JwtActivationExpiresMinutes)
-	if err != nil {
-		return "", apperror.Internal("invalid activation expiry config", err)
-	}
-
-	token, err := helper.GenerateToken(secret, minutesToExpired, memberId, companyId, roleId, "")
-	if err != nil {
-		return "", apperror.Internal("generate activation token failed", err)
-	}
-
-	req := &CreateActivationTokenRequest{
-		Token: token,
-	}
-
-	memberIdStr := helper.ConvertUintToString(memberId)
-	err = svc.repo.CreateActivationTokenAPI(memberIdStr, req)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
 }
 
 func (svc *service) ValidateActivationToken(authHeader string) (string, uint, error) {

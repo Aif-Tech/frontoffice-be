@@ -14,12 +14,12 @@ type service struct {
 }
 
 type Service interface {
-	GetLogsOperation(filter *LogOperationFilter) (*logOperationAPIResponse, error)
-	GetLogsByRange(filter *LogRangeFilter) (*logOperationAPIResponse, error)
+	GetLogsOperation(filter *logOperationFilter) (*logOperationAPIResponse, error)
+	GetLogsByRange(filter *logRangeFilter) (*logOperationAPIResponse, error)
 	AddLogOperation(req *AddLogRequest) error
 }
 
-func (svc *service) GetLogsOperation(filter *LogOperationFilter) (*logOperationAPIResponse, error) {
+func (svc *service) GetLogsOperation(filter *logOperationFilter) (*logOperationAPIResponse, error) {
 	result, err := svc.repo.GetLogsOperationAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch log operations")
@@ -37,7 +37,7 @@ func (svc *service) GetLogsOperation(filter *LogOperationFilter) (*logOperationA
 	return response, nil
 }
 
-func (svc *service) GetLogsByRange(filter *LogRangeFilter) (*logOperationAPIResponse, error) {
+func (svc *service) GetLogsByRange(filter *logRangeFilter) (*logOperationAPIResponse, error) {
 	result, err := svc.repo.GetLogsByRangeAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch log operations")

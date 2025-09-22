@@ -8,7 +8,7 @@ import (
 type LogOperation struct {
 	LogOpsID  uint      `json:"log_ops_id" gorm:"primaryKey;autoIncrement"`
 	MemberId  uint      `json:"member_id"`
-	Member    MstMember `json:"member" gorm:"foreignKey:MemberId"`
+	Member    mstMember `json:"member" gorm:"foreignKey:MemberId"`
 	CompanyId uint      `json:"company_id"`
 	Module    string    `json:"module"`
 	Action    string    `json:"action"`
@@ -16,19 +16,19 @@ type LogOperation struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type MstMember struct {
+type mstMember struct {
 	MemberID uint    `json:"member_id" gorm:"primaryKey;autoIncrement"`
 	Name     string  `json:"name"`
 	RoleId   uint    `json:"role_id"`
-	Role     MstRole `json:"role"`
+	Role     mstRole `json:"role"`
 }
 
-type MstRole struct {
+type mstRole struct {
 	RoleID uint   `json:"role_id" gorm:"primaryKey;autoIncrement"`
 	Name   string `json:"name"`
 }
 
-type LogOperationFilter struct {
+type logOperationFilter struct {
 	CompanyId string
 	Page      string
 	Size      string
@@ -39,7 +39,7 @@ type LogOperationFilter struct {
 	EndDate   string
 }
 
-type LogRangeFilter struct {
+type logRangeFilter struct {
 	CompanyId string
 	Page      string
 	Size      string

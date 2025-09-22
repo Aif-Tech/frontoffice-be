@@ -39,7 +39,7 @@ type Controller interface {
 }
 
 func (ctrl *controller) GetBy(c *fiber.Ctx) error {
-	member, err := ctrl.svc.GetMemberBy(&FindUserQuery{
+	member, err := ctrl.svc.GetMemberBy(&MemberParams{
 		Email:    c.Query("email"),
 		Username: c.Query("username"),
 		Key:      c.Query("key"),
@@ -60,7 +60,7 @@ func (ctrl *controller) GetById(c *fiber.Ctx) error {
 		return apperror.BadRequest(constant.MissingUserId)
 	}
 
-	member, err := ctrl.svc.GetMemberBy(&FindUserQuery{
+	member, err := ctrl.svc.GetMemberBy(&MemberParams{
 		Id: id,
 	})
 	if err != nil {
@@ -76,8 +76,8 @@ func (ctrl *controller) GetById(c *fiber.Ctx) error {
 func (ctrl *controller) GetList(c *fiber.Ctx) error {
 	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
 
-	filter := &MemberFilter{
-		CompanyID: companyId,
+	filter := &MemberParams{
+		CompanyId: companyId,
 		Page:      c.Query(constant.Page, "1"),
 		Limit:     c.Query("limit", "10"),
 		Keyword:   c.Query("keyword", ""),
@@ -100,7 +100,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) UpdateProfile(c *fiber.Ctx) error {
-	req := c.Locals(constant.Request).(*UpdateProfileRequest)
+	req := c.Locals(constant.Request).(*updateProfileRequest)
 
 	userId := fmt.Sprintf("%v", c.Locals(constant.UserId))
 	roleId, err := helper.InterfaceToUint(c.Locals(constant.RoleId))
@@ -135,7 +135,7 @@ func (ctrl *controller) UploadProfileImage(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
-	req := c.Locals(constant.Request).(*UpdateUserRequest)
+	req := c.Locals(constant.Request).(*updateUserRequest)
 
 	memberId := c.Params("id")
 	if memberId == "" {

@@ -3,6 +3,7 @@ package multipleloan
 import (
 	"errors"
 	"front-office/internal/core/log/transaction"
+	"front-office/internal/core/member"
 	"front-office/internal/core/product"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
@@ -21,6 +22,7 @@ import (
 
 func NewService(
 	repo Repository,
+	memberRepo member.Repository,
 	productRepo product.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
@@ -28,6 +30,7 @@ func NewService(
 ) Service {
 	return &service{
 		repo,
+		memberRepo,
 		productRepo,
 		jobRepo,
 		transactionRepo,
@@ -37,6 +40,7 @@ func NewService(
 
 type service struct {
 	repo            Repository
+	memberRepo      member.Repository
 	productRepo     product.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
@@ -45,7 +49,7 @@ type service struct {
 
 type Service interface {
 	MultipleLoan(apiKey, slug, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
-	BulkMultipleLoan(apiKey, slug string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkMultipleLoan(apiKey, quotaType, slug string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
 type multipleLoanFunc func(string, string, string, string, *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
@@ -113,20 +117,7 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 	return result, nil
 }
 
-func (svc *service) BulkMultipleLoan(apiKey, slug string, memberId, companyId uint, file *multipart.FileHeader) error {
-	productSlug, err := mapProductSlug(slug)
-	if err != nil {
-		return apperror.BadRequest("unsupported product slug")
-	}
-
-	product, err := svc.productRepo.GetProductAPI(productSlug)
-	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
-	}
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
-
+func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, companyId uint, file *multipart.FileHeader) error {
 	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -136,13 +127,42 @@ func (svc *service) BulkMultipleLoan(apiKey, slug string, memberId, companyId ui
 		return apperror.Internal(constant.FailedParseCSV, err)
 	}
 
+	productSlug, err := mapProductSlug(slug)
+	if err != nil {
+		return apperror.BadRequest("unsupported product slug")
+	}
+
 	memberIdStr := strconv.Itoa(int(memberId))
 	companyIdStr := strconv.Itoa(int(companyId))
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, productSlug)
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return apperror.NotFound(constant.ProductNotFound)
+	}
+
+	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
+	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
+		MemberId:     memberIdStr,
+		CompanyId:    companyIdStr,
+		SubscribedId: subscribedIdStr,
+		QuotaType:    quotaType,
+	})
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchQuota)
+	}
+
+	totalRequests := len(records) - 1
+	if quotaResp.Data.Quota < totalRequests {
+		return apperror.Forbidden(constant.ErrQuotaExceeded)
+	}
+
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberIdStr,
 		CompanyId: companyIdStr,
-		Total:     len(records) - 1,
+		Total:     totalRequests,
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedCreateJob)
@@ -179,8 +199,8 @@ func (svc *service) BulkMultipleLoan(apiKey, slug string, memberId, companyId ui
 				ProductSlug:    productSlug,
 				MemberId:       memberId,
 				CompanyId:      companyId,
-				ProductId:      product.ProductId,
-				ProductGroupId: product.ProductGroupId,
+				ProductId:      subscribedResp.Data.ProductId,
+				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
 				Request:        multipleLoanReq,
 			}); err != nil {

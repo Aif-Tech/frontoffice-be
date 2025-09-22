@@ -91,6 +91,13 @@ func GetJWTPayloadFromCookie() fiber.Handler {
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
+		quotaType, err := helper.ExtractQuotaTypeFromClaims(claims)
+		if err != nil {
+			resp := helper.ResponseFailed(err.Error())
+
+			return c.Status(fiber.StatusUnauthorized).JSON(resp)
+		}
+
 		apiKey, err := helper.ExtractApiKeyFromClaims(claims)
 		if err != nil {
 			resp := helper.ResponseFailed(err.Error())
@@ -101,6 +108,7 @@ func GetJWTPayloadFromCookie() fiber.Handler {
 		c.Locals(constant.UserId, userId)
 		c.Locals(constant.CompanyId, companyId)
 		c.Locals(constant.RoleId, roleId)
+		c.Locals(constant.QuotaType, quotaType)
 		c.Locals(constant.APIKey, apiKey)
 
 		return c.Next()

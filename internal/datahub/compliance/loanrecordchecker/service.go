@@ -3,6 +3,7 @@ package loanrecordchecker
 import (
 	"errors"
 	"front-office/internal/core/log/transaction"
+	"front-office/internal/core/member"
 	"front-office/internal/core/product"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
@@ -22,6 +23,7 @@ import (
 func NewService(
 	repo Repository,
 	productRepo product.Repository,
+	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
@@ -29,6 +31,7 @@ func NewService(
 	return &service{
 		repo,
 		productRepo,
+		memberRepo,
 		jobRepo,
 		transactionRepo,
 		jobService,
@@ -38,6 +41,7 @@ func NewService(
 type service struct {
 	repo            Repository
 	productRepo     product.Repository
+	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
@@ -45,7 +49,7 @@ type service struct {
 
 type Service interface {
 	LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error)
-	BulkLoanRecordChecker(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
 func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
@@ -95,15 +99,7 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 	return result, nil
 }
 
-func (svc *service) BulkLoanRecordChecker(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugLoanRecordChecker)
-	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
-	}
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
-
+func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
 	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -115,11 +111,35 @@ func (svc *service) BulkLoanRecordChecker(apiKey string, memberId, companyId uin
 
 	memberIdStr := strconv.Itoa(int(memberId))
 	companyIdStr := strconv.Itoa(int(companyId))
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugLoanRecordChecker)
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return apperror.NotFound(constant.ProductNotFound)
+	}
+
+	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
+	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
+		MemberId:     memberIdStr,
+		CompanyId:    companyIdStr,
+		SubscribedId: subscribedIdStr,
+		QuotaType:    quotaType,
+	})
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchQuota)
+	}
+
+	totalRequests := len(records) - 1
+	if quotaResp.Data.Quota < totalRequests {
+		return apperror.Forbidden(constant.ErrQuotaExceeded)
+	}
+
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberIdStr,
 		CompanyId: companyIdStr,
-		Total:     len(records) - 1,
+		Total:     totalRequests,
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedCreateJob)
@@ -155,8 +175,8 @@ func (svc *service) BulkLoanRecordChecker(apiKey string, memberId, companyId uin
 				CompanyIdStr:   companyIdStr,
 				MemberId:       memberId,
 				CompanyId:      companyId,
-				ProductId:      product.ProductId,
-				ProductGroupId: product.ProductGroupId,
+				ProductId:      subscribedResp.Data.ProductId,
+				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
 				Request:        loanCheckerReq,
 			}); err != nil {

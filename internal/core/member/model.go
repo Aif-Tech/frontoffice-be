@@ -50,13 +50,7 @@ type registerResponseData struct {
 	MemberId uint `json:"member_id"`
 }
 
-type RegisterMemberResponse struct {
-	Data       *registerResponseData `json:"data"`
-	Message    string                `json:"message"`
-	StatusCode int                   `json:"-"`
-}
-
-type UpdateUserRequest struct {
+type updateUserRequest struct {
 	Name       *string `json:"name"`
 	Email      *string `json:"email" validate:"email~Only email pattern are allowed"`
 	MailStatus *string `json:"mail_status"`
@@ -73,13 +67,9 @@ type userUpdateResponse struct {
 	RoleId    uint   `json:"role_id"`
 }
 
-type UpdateProfileRequest struct {
+type updateProfileRequest struct {
 	Name  *string `json:"name"`
 	Email *string `json:"email"`
-}
-
-type UploadProfileImageRequest struct {
-	Image *string `json:"image"`
 }
 
 func SetPassword(password string) string {
@@ -89,58 +79,46 @@ func SetPassword(password string) string {
 	return password
 }
 
-type MemberFilter struct {
-	CompanyID string
-	Page      string
-	Limit     string
-	Keyword   string
-	RoleName  string
-	RoleID    string
-	Status    string
-	StartDate string
-	EndDate   string
-}
-
-type FindUserQuery struct {
+type MemberParams struct {
 	Id        string
 	CompanyId string
 	Email     string
 	Username  string
 	Key       string
+	Page      string
+	Limit     string
+	Keyword   string
+	RoleName  string
+	RoleId    string
+	Status    string
+	StartDate string
+	EndDate   string
 }
 
-type FindUserAifCoreResponse struct {
-	Message    string     `json:"message"`
-	Success    bool       `json:"success"`
-	Data       *MstMember `json:"data"`
-	StatusCode int        `json:"-"`
+type QuotaParams struct {
+	MemberId     string `json:"member_id"`
+	CompanyId    string `json:"company_id"`
+	SubscribedId string `json:"subscribed_id"`
+	QuotaType    string `json:"quota_type"`
 }
 
-type AifResponse struct {
-	Success bool      `json:"success"`
-	Data    MstMember `json:"data"`
-	Message string    `json:"message"`
-	Meta    any       `json:"meta,omitempty"`
-	Status  bool      `json:"status,omitempty"`
+type quotaRespData struct {
+	Quota int `json:"quota"`
 }
 
-type AifResponseWithMultipleData struct {
-	Success bool        `json:"success"`
-	Data    []MstMember `json:"data"`
-	Message string      `json:"message"`
-	Meta    Meta        `json:"meta,omitempty"`
-	Status  bool        `json:"status,omitempty"`
+type subscribedProductRespData struct {
+	SubsribedProductID uint        `json:"subscribed_product_id"`
+	CompanyId          uint        `json:"company_id"`
+	ProductId          uint        `json:"product_id"`
+	Product            productData `json:"product"`
+	QuotaProduct       int         `json:"quota_product"`
 }
 
-type Meta struct {
-	Total      any `json:"total,omitempty"`
-	Page       any `json:"page,omitempty"`
-	TotalPages any `json:"total_pages,omitempty"`
-	Visible    any `json:"visible,omitempty"`
-	StartData  any `json:"start_data,omitempty"`
-	EndData    any `json:"end_data,omitempty"`
-	Size       any `json:"size,omitempty"`
-	Message    any `json:"message,omitempty"`
+type productData struct {
+	ProductId      uint   `json:"product_id"`
+	ProductGroupId uint   `json:"product_group_id"`
+	ProductName    string `json:"product_name"`
+	ProductSlug    string `json:"product_slug_name"`
 }
 
 const (
