@@ -28,15 +28,15 @@ type service struct {
 }
 
 type Service interface {
-	GetMemberBy(query *FindUserQuery) (*MstMember, error)
-	GetMemberList(filter *MemberFilter) ([]*MstMember, *model.Meta, error)
-	UpdateProfile(userId string, currentUserRoleId uint, req *UpdateProfileRequest) (*userUpdateResponse, error)
+	GetMemberBy(query *MemberParams) (*MstMember, error)
+	GetMemberList(filter *MemberParams) ([]*MstMember, *model.Meta, error)
+	UpdateProfile(userId string, currentUserRoleId uint, req *updateProfileRequest) (*userUpdateResponse, error)
 	UploadProfileImage(id string, filename *string) (*userUpdateResponse, error)
-	UpdateMemberById(currentUserId, currentUserRoleId uint, companyId, memberId string, req *UpdateUserRequest) error
+	UpdateMemberById(currentUserId, currentUserRoleId uint, companyId, memberId string, req *updateUserRequest) error
 	DeleteMemberById(memberId, companyId string) error
 }
 
-func (svc *service) GetMemberBy(query *FindUserQuery) (*MstMember, error) {
+func (svc *service) GetMemberBy(query *MemberParams) (*MstMember, error) {
 	member, err := svc.repo.GetMemberAPI(query)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to get member")
@@ -48,7 +48,7 @@ func (svc *service) GetMemberBy(query *FindUserQuery) (*MstMember, error) {
 	return member, nil
 }
 
-func (svc *service) GetMemberList(filter *MemberFilter) ([]*MstMember, *model.Meta, error) {
+func (svc *service) GetMemberList(filter *MemberParams) ([]*MstMember, *model.Meta, error) {
 	users, meta, err := svc.repo.GetMemberListAPI(filter)
 	if err != nil {
 		return nil, nil, err
@@ -57,8 +57,8 @@ func (svc *service) GetMemberList(filter *MemberFilter) ([]*MstMember, *model.Me
 	return users, meta, nil
 }
 
-func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *UpdateProfileRequest) (*userUpdateResponse, error) {
-	user, err := svc.repo.GetMemberAPI(&FindUserQuery{Id: userId})
+func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *updateProfileRequest) (*userUpdateResponse, error) {
+	user, err := svc.repo.GetMemberAPI(&MemberParams{Id: userId})
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedFetchMember)
 	}
@@ -80,7 +80,7 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *Up
 			return nil, apperror.Unauthorized("you are not allowed to update email")
 		}
 
-		existing, err := svc.repo.GetMemberAPI(&FindUserQuery{Email: *req.Email})
+		existing, err := svc.repo.GetMemberAPI(&MemberParams{Email: *req.Email})
 		if err != nil {
 			return nil, apperror.MapRepoError(err, "failed to check existing email")
 		}
@@ -125,7 +125,7 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *Up
 }
 
 func (svc *service) UploadProfileImage(userId string, filename *string) (*userUpdateResponse, error) {
-	user, err := svc.repo.GetMemberAPI(&FindUserQuery{Id: userId})
+	user, err := svc.repo.GetMemberAPI(&MemberParams{Id: userId})
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedFetchMember)
 	}
@@ -163,8 +163,8 @@ func (svc *service) UploadProfileImage(userId string, filename *string) (*userUp
 	}, nil
 }
 
-func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, companyId, memberId string, req *UpdateUserRequest) error {
-	member, err := svc.repo.GetMemberAPI(&FindUserQuery{Id: memberId, CompanyId: companyId})
+func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, companyId, memberId string, req *updateUserRequest) error {
+	member, err := svc.repo.GetMemberAPI(&MemberParams{Id: memberId, CompanyId: companyId})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedFetchMember)
 	}
@@ -189,7 +189,7 @@ func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, comp
 			return apperror.Unauthorized("you are not allowed to update email")
 		}
 
-		existing, err := svc.repo.GetMemberAPI(&FindUserQuery{Email: *req.Email})
+		existing, err := svc.repo.GetMemberAPI(&MemberParams{Email: *req.Email})
 		if err != nil {
 			return apperror.MapRepoError(err, "failed to check existing email")
 		}
@@ -252,7 +252,7 @@ func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, comp
 }
 
 func (svc *service) DeleteMemberById(memberId, companyId string) error {
-	member, err := svc.repo.GetMemberAPI(&FindUserQuery{Id: memberId, CompanyId: companyId})
+	member, err := svc.repo.GetMemberAPI(&MemberParams{Id: memberId, CompanyId: companyId})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedFetchMember)
 	}

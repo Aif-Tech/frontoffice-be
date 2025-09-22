@@ -34,8 +34,10 @@ type repository struct {
 
 type Repository interface {
 	AddMemberAPI(req *RegisterMemberRequest) (*registerResponseData, error)
-	GetMemberAPI(query *FindUserQuery) (*MstMember, error)
-	GetMemberListAPI(filter *MemberFilter) ([]*MstMember, *model.Meta, error)
+	GetMemberAPI(query *MemberParams) (*MstMember, error)
+	GetMemberListAPI(filter *MemberParams) ([]*MstMember, *model.Meta, error)
+	GetSubscribedProducts(companyId, productSlug string) (*model.AifcoreAPIResponse[*subscribedProductRespData], error)
+	GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIResponse[*quotaRespData], error)
 	UpdateMemberAPI(id string, req map[string]interface{}) error
 	DeleteMemberAPI(id string) error
 }
@@ -73,7 +75,7 @@ func (repo *repository) AddMemberAPI(payload *RegisterMemberRequest) (*registerR
 	return apiResp.Data, nil
 }
 
-func (repo *repository) GetMemberAPI(query *FindUserQuery) (*MstMember, error) {
+func (repo *repository) GetMemberAPI(query *MemberParams) (*MstMember, error) {
 	url := fmt.Sprintf(`%v/api/core/member/by`, repo.cfg.Env.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -105,8 +107,8 @@ func (repo *repository) GetMemberAPI(query *FindUserQuery) (*MstMember, error) {
 	return apiResp.Data, nil
 }
 
-func (repo *repository) GetMemberListAPI(filter *MemberFilter) ([]*MstMember, *model.Meta, error) {
-	url := fmt.Sprintf(`%v/api/core/member/listbycompany/%v`, repo.cfg.Env.AifcoreHost, filter.CompanyID)
+func (repo *repository) GetMemberListAPI(filter *MemberParams) ([]*MstMember, *model.Meta, error) {
+	url := fmt.Sprintf(`%v/api/core/member/listbycompany/%v`, repo.cfg.Env.AifcoreHost, filter.CompanyId)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -135,6 +137,62 @@ func (repo *repository) GetMemberListAPI(filter *MemberFilter) ([]*MstMember, *m
 	}
 
 	return apiResp.Data, apiResp.Meta, nil
+}
+
+func (repo *repository) GetSubscribedProducts(companyId, productSlug string) (*model.AifcoreAPIResponse[*subscribedProductRespData], error) {
+	url := fmt.Sprintf(`%v/api/core/member/subscribed-product/%v`, repo.cfg.Env.AifcoreHost, productSlug)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+	}
+
+	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
+	req.Header.Set(constant.XCompanyId, companyId)
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+	}
+	defer resp.Body.Close()
+
+	apiResp, err := helper.ParseAifcoreAPIResponse[*subscribedProductRespData](resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiResp, nil
+}
+
+func (repo *repository) GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIResponse[*quotaRespData], error) {
+	url := fmt.Sprintf(`%v/api/core/member/quota`, repo.cfg.Env.AifcoreHost)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+	}
+
+	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
+
+	q := req.URL.Query()
+	q.Add("quota_type", query.QuotaType)
+	q.Add("company_id", query.CompanyId)
+	q.Add("member_id", query.MemberId)
+	q.Add("subscribed_id", query.SubscribedId)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+	}
+	defer resp.Body.Close()
+
+	apiResp, err := helper.ParseAifcoreAPIResponse[*quotaRespData](resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiResp, nil
 }
 
 func (repo *repository) UpdateMemberAPI(id string, payload map[string]interface{}) error {
