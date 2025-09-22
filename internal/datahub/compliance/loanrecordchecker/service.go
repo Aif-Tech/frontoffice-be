@@ -100,7 +100,6 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 }
 
 func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-
 	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
 		return apperror.BadRequest(err.Error())
 	}

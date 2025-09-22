@@ -42,6 +42,7 @@ func (ctrl *controller) MultipleLoan(c *fiber.Ctx) error {
 
 func (ctrl *controller) BulkMultipleLoan(c *fiber.Ctx) error {
 	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
+	quotaType := fmt.Sprintf("%v", c.Locals(constant.QuotaType))
 	slug := c.Params("product_slug")
 
 	memberId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
@@ -59,7 +60,7 @@ func (ctrl *controller) BulkMultipleLoan(c *fiber.Ctx) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	err = ctrl.svc.BulkMultipleLoan(apiKey, slug, memberId, companyId, file)
+	err = ctrl.svc.BulkMultipleLoan(apiKey, quotaType, slug, memberId, companyId, file)
 	if err != nil {
 		return err
 	}
