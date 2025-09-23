@@ -154,7 +154,7 @@ func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, c
 	}
 
 	totalRequests := len(records) - 1
-	if quotaResp.Data.Quota < totalRequests {
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
