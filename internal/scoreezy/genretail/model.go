@@ -11,7 +11,7 @@ import (
 type genRetailRequest struct {
 	Name     string `json:"name" validate:"required~Name cannot be empty."`
 	IdCardNo string `json:"id_card_no" validate:"required~ID Card No cannot be empty., numeric~ID Card No is only number, length(16)~ID Card No must be 16 digit number."`
-	PhoneNo  string `json:"phone_no" validate:"required~Phone number cannot be empty, phone~Phone No only allow number and (+)plus sign with minimum 10 maximum 15 digit.,bytelength(10|15)~Phone No only allow number and (+)plus sign with minimum 10 maximum 15 digit."`
+	PhoneNo  string `json:"phone_no" validate:"required~Phone number cannot be empty, phone~Phone No only allow number and (+)plus sign with minimum 10 maximum 15 digit.,bytelength(10|15)~Phone No only allow number and (+)plus sign with minimum 10 maximum 15 digit., indophone~invalid mobile phone number"`
 	LoanNo   string `json:"loan_no" validate:"required~Loan No cannot be empty."`
 }
 

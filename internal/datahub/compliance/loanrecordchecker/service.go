@@ -131,7 +131,7 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 	}
 
 	totalRequests := len(records) - 1
-	if quotaResp.Data.Quota < totalRequests {
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 

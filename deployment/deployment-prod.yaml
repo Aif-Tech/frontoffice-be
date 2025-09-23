@@ -128,11 +128,6 @@ spec:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_JWT_ACTIVATION_EXPIRES_MINUTES
-            - name: FO_JWT_ACTIVATION_EXPIRES_MINUTES
-              valueFrom:
-                configMapKeyRef:
-                  name: frontoffice-be-config
-                  key: FO_JWT_ACTIVATION_EXPIRES_MINUTES
             - name: FO_CORE_HOST
               valueFrom:
                 configMapKeyRef:
