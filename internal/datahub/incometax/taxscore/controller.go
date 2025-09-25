@@ -40,6 +40,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 
 func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
+	quotaType := fmt.Sprintf("%v", c.Locals(constant.QuotaType))
 
 	memberId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
 	if err != nil {
@@ -56,13 +57,13 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	err = ctrl.svc.BulkTaxScore(apiKey, memberId, companyId, file)
+	err = ctrl.svc.BulkTaxScore(apiKey, quotaType, memberId, companyId, file)
 	if err != nil {
 		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
-		"success",
+		constant.Success,
 		nil,
 	))
 }

@@ -2,7 +2,7 @@ package taxscore
 
 import (
 	"front-office/internal/core/log/transaction"
-	"front-office/internal/core/product"
+	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
@@ -21,14 +21,14 @@ import (
 
 func NewService(
 	repo Repository,
-	productRepo product.Repository,
+	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
 		repo,
-		productRepo,
+		memberRepo,
 		jobRepo,
 		transactionRepo,
 		jobService,
@@ -37,7 +37,7 @@ func NewService(
 
 type service struct {
 	repo            Repository
-	productRepo     product.Repository
+	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
@@ -45,20 +45,20 @@ type service struct {
 
 type Service interface {
 	TaxScore(apiKey, memberId, companyId string, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error)
-	BulkTaxScore(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
 func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error) {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugTaxScore)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxScore)
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if product.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ProductNotFound)
+	if subscribedResp.Data.ProductId == 0 {
+		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberId,
 		CompanyId: companyId,
 		Total:     1,
@@ -90,15 +90,7 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 	return result, nil
 }
 
-func (svc *service) BulkTaxScore(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugTaxScore)
-	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
-	}
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
-
+func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
 	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -110,8 +102,32 @@ func (svc *service) BulkTaxScore(apiKey string, memberId, companyId uint, file *
 
 	memberIdStr := strconv.Itoa(int(memberId))
 	companyIdStr := strconv.Itoa(int(companyId))
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugTaxScore)
+	if err != nil {
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return apperror.NotFound(constant.ErrSubscribtionNotFound)
+	}
+
+	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
+	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
+		MemberId:     memberIdStr,
+		CompanyId:    companyIdStr,
+		SubscribedId: subscribedIdStr,
+		QuotaType:    quotaType,
+	})
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchQuota)
+	}
+
+	totalRequests := len(records) - 1
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
+		return apperror.Forbidden(constant.ErrQuotaExceeded)
+	}
+
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberIdStr,
 		CompanyId: companyIdStr,
 		Total:     len(records) - 1,
@@ -151,8 +167,8 @@ func (svc *service) BulkTaxScore(apiKey string, memberId, companyId uint, file *
 				CompanyIdStr:   companyIdStr,
 				MemberId:       memberId,
 				CompanyId:      companyId,
-				ProductId:      product.ProductId,
-				ProductGroupId: product.ProductGroupId,
+				ProductId:      subscribedResp.Data.ProductId,
+				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
 				Request:        taxScoreReq,
 			}); err != nil {

@@ -63,7 +63,6 @@ const (
 	FailedFetchMember     = "failed to fetch member"
 	FailedUpdateMember    = "failed to update member"
 	FailedFetchLogs       = "failed to fetch logs"
-	FailedFetchProduct    = "failed to fetch product"
 	FailedFetchQuota      = "failed to fetch quota"
 	FailedCreateJob       = "failed to create job"
 	InvalidUserSession    = "invalid user session"
@@ -76,6 +75,8 @@ const (
 	ErrMsgMarshalReqBody = "failed to marshal request body: %w"
 	ErrMsgHTTPReqFailed  = "HTTP request failed: %w"
 
+	ErrSubscribtionNotFound     = "company has no subscription for this product"
+	ErrFetchSubscribedProduct   = "failed to fetch subscribed product"
 	ErrQuotaExceeded            = "insufficient quota to complete request"
 	ErrCreatePhoneLiveJob       = "failed to create phone live status job"
 	ErrFetchPhoneLiveDetail     = "failed to fetch phone live status job detail"
