@@ -49,7 +49,7 @@ type service struct {
 
 type Service interface {
 	CallTaxVerification(apiKey, memberId, companyId string, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
-	BulkTaxVerification(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkTaxVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
 func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
@@ -94,15 +94,7 @@ func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, requ
 	return result, nil
 }
 
-func (svc *service) BulkTaxVerification(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugTaxVerificationDetail)
-	if err != nil {
-		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
-	}
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
-
+func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
 	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -114,35 +106,59 @@ func (svc *service) BulkTaxVerification(apiKey string, memberId, companyId uint,
 
 	memberIdStr := strconv.Itoa(int(memberId))
 	companyIdStr := strconv.Itoa(int(companyId))
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugTaxVerificationDetail)
+	if err != nil {
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return apperror.NotFound(constant.ErrSubscribtionNotFound)
+	}
+
+	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
+	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
+		MemberId:     memberIdStr,
+		CompanyId:    companyIdStr,
+		SubscribedId: subscribedIdStr,
+		QuotaType:    quotaType,
+	})
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchQuota)
+	}
+
+	totalRequests := len(records) - 1
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
+		return apperror.Forbidden(constant.ErrQuotaExceeded)
+	}
+
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberIdStr,
 		CompanyId: companyIdStr,
-		Total:     len(records) - 1,
+		Total:     totalRequests,
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	var taxScoreReqs []*taxVerificationRequest
+	var taxVerificationRequests []*taxVerificationRequest
 	for i, record := range records {
 		if i == 0 {
 			continue
 		}
 
-		taxScoreReqs = append(taxScoreReqs, &taxVerificationRequest{
+		taxVerificationRequests = append(taxVerificationRequests, &taxVerificationRequest{
 			NpwpOrNik: record[0],
 		})
 	}
 
 	var (
 		wg         sync.WaitGroup
-		errChan    = make(chan error, len(taxScoreReqs))
+		errChan    = make(chan error, len(taxVerificationRequests))
 		batchCount = 0
 	)
 
-	for _, req := range taxScoreReqs {
+	for _, req := range taxVerificationRequests {
 		wg.Add(1)
 
 		go func(taxScoreReq *taxVerificationRequest) {
@@ -155,8 +171,8 @@ func (svc *service) BulkTaxVerification(apiKey string, memberId, companyId uint,
 				CompanyIdStr:   companyIdStr,
 				MemberId:       memberId,
 				CompanyId:      companyId,
-				ProductId:      product.ProductId,
-				ProductGroupId: product.ProductGroupId,
+				ProductId:      subscribedResp.Data.ProductId,
+				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
 				Request:        taxScoreReq,
 			}); err != nil {
