@@ -49,7 +49,7 @@ type Service interface {
 }
 
 func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxScore)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugLoanRecordChecker)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}

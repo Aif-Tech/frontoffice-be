@@ -2,6 +2,7 @@ package taxverificationdetail
 
 import (
 	"front-office/internal/core/log/transaction"
+	"front-office/internal/core/member"
 	"front-office/internal/core/product"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
@@ -22,6 +23,7 @@ import (
 func NewService(
 	repo Repository,
 	productRepo product.Repository,
+	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
@@ -29,6 +31,7 @@ func NewService(
 	return &service{
 		repo,
 		productRepo,
+		memberRepo,
 		jobRepo,
 		transactionRepo,
 		jobService,
@@ -38,6 +41,7 @@ func NewService(
 type service struct {
 	repo            Repository
 	productRepo     product.Repository
+	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
@@ -49,16 +53,16 @@ type Service interface {
 }
 
 func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugTaxVerificationDetail)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxVerificationDetail)
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if product.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ProductNotFound)
+	if subscribedResp.Data.ProductId == 0 {
+		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberId,
 		CompanyId: companyId,
 		Total:     1,
@@ -93,7 +97,7 @@ func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, requ
 func (svc *service) BulkTaxVerification(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error {
 	product, err := svc.productRepo.GetProductAPI(constant.SlugTaxVerificationDetail)
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 	if product.ProductId == 0 {
 		return apperror.NotFound(constant.ProductNotFound)
