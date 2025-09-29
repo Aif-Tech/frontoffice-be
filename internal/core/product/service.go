@@ -22,7 +22,7 @@ type Service interface {
 func (svc *service) GetProductBySlug(slug string) (*productResponseData, error) {
 	product, err := svc.repo.GetProductAPI(slug)
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return nil, apperror.MapRepoError(err, constant.ErrFetchProduct)
 	}
 	if product.ProductId == 0 {
 		return nil, apperror.NotFound(constant.ProductNotFound)

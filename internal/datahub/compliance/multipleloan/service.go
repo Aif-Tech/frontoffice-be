@@ -4,7 +4,6 @@ import (
 	"errors"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
-	"front-office/internal/core/product"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
@@ -23,7 +22,6 @@ import (
 func NewService(
 	repo Repository,
 	memberRepo member.Repository,
-	productRepo product.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
@@ -31,7 +29,6 @@ func NewService(
 	return &service{
 		repo,
 		memberRepo,
-		productRepo,
 		jobRepo,
 		transactionRepo,
 		jobService,
@@ -41,7 +38,6 @@ func NewService(
 type service struct {
 	repo            Repository
 	memberRepo      member.Repository
-	productRepo     product.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
@@ -60,16 +56,16 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 		return nil, apperror.BadRequest("unsupported product slug")
 	}
 
-	product, err := svc.productRepo.GetProductAPI(productSlug)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, productSlug)
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if product.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ProductNotFound)
+	if subscribedResp.Data.ProductId == 0 {
+		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberId,
 		CompanyId: companyId,
 		Total:     1,
@@ -136,7 +132,7 @@ func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, c
 	companyIdStr := strconv.Itoa(int(companyId))
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, productSlug)
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 	if subscribedResp.Data.ProductId == 0 {
 		return apperror.NotFound(constant.ProductNotFound)

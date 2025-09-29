@@ -66,7 +66,7 @@ func (ctrl *controller) BulkMultipleLoan(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
-		"success",
+		constant.Success,
 		nil,
 	))
 }

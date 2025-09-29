@@ -4,7 +4,6 @@ import (
 	"errors"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
-	"front-office/internal/core/product"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
@@ -22,7 +21,6 @@ import (
 
 func NewService(
 	repo Repository,
-	productRepo product.Repository,
 	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
@@ -30,7 +28,6 @@ func NewService(
 ) Service {
 	return &service{
 		repo,
-		productRepo,
 		memberRepo,
 		jobRepo,
 		transactionRepo,
@@ -40,7 +37,6 @@ func NewService(
 
 type service struct {
 	repo            Repository
-	productRepo     product.Repository
 	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
@@ -53,16 +49,16 @@ type Service interface {
 }
 
 func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugLoanRecordChecker)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxScore)
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if product.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ProductNotFound)
+	if subscribedResp.Data.ProductId == 0 {
+		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberId,
 		CompanyId: companyId,
 		Total:     1,
@@ -113,7 +109,7 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 	companyIdStr := strconv.Itoa(int(companyId))
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugLoanRecordChecker)
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 	if subscribedResp.Data.ProductId == 0 {
 		return apperror.NotFound(constant.ProductNotFound)
