@@ -100,6 +100,7 @@ func (repo *repository) GetLogsScoreezyAPI(filter *filterLogs) (*model.AifcoreAP
 		map[string]string{
 			"company_id": filter.CompanyId,
 			"size":       filter.Size,
+			"page":       filter.Page,
 		})
 }
 
@@ -110,6 +111,8 @@ func (repo *repository) GetLogsByRangeDateAPI(filter *filterLogs) (*model.Aifcor
 			"date_start": filter.StartDate,
 			"date_end":   filter.EndDate,
 			"grade":      filter.Grade,
+			"size":       filter.Size,
+			"page":       filter.Page,
 		})
 }
 

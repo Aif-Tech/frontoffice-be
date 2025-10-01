@@ -46,6 +46,7 @@ type filterLogs struct {
 	EndDate   string
 	CompanyId string
 	Grade     string
+	Page      string
 	Size      string
 }
 
@@ -56,20 +57,23 @@ type GenRetailV3ClientReturnSuccess struct {
 }
 
 type logTransScoreezy struct {
-	LogTrxId             uint                  `json:"log_trx_id" gorm:"primaryKey;autoIncrement"`
-	TrxId                string                `json:"trx_id"`
-	CompanyId            uint                  `json:"company_id"`
-	Status               string                `json:"status"`  // Free or Pay
-	Success              bool                  `json:"success"` // true or false
-	Message              string                `json:"message"`
-	ProbabilityToDefault string                `json:"probability_to_default"`
-	Grade                string                `json:"grade"`
-	LoanNo               string                `json:"loan_no"`
-	Data                 *dataLogTransScoreezy `json:"data" swaggertype:"object"`
-	CreatedAt            time.Time             `json:"created_at" format:"date-time"`
+	LogTrxId  uint                  `json:"log_trx_id"`
+	CompanyId uint                  `json:"company_id"`
+	Data      *dataLogTransScoreezy `json:"data" swaggertype:"object"`
+	CreatedAt time.Time             `json:"created_at" format:"date-time"`
 }
 
 type dataLogTransScoreezy struct {
+	TrxId                string `json:"trx_id"`
+	Data                 *data  `json:"data"`
+	ProbabilityToDefault string `json:"probability_to_default"`
+	Grade                string `json:"grade"`
+	Message              string `json:"message"`
+	Status               string `json:"status"`  // Free or Pay
+	Success              bool   `json:"success"` // true or false
+}
+
+type data struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_no"`
 	IdCardNo    string `json:"id_card_no"`

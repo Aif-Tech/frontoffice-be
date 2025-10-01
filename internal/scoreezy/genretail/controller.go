@@ -109,6 +109,8 @@ func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 		StartDate: c.Query(constant.StartDate),
 		EndDate:   c.Query(constant.EndDate),
 		Grade:     c.Query("grade"),
+		Page:      c.Query(constant.Page),
+		Size:      c.Query(constant.Size),
 	}
 
 	result, err := ctrl.service.GetLogsScoreezy(filter)

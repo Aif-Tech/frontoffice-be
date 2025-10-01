@@ -97,7 +97,7 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, file *multipart.Fi
 
 	product, err := svc.productRepo.GetProductAPI(productSlug)
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return apperror.MapRepoError(err, constant.ErrFetchProduct)
 	}
 
 	if product.ProductId == 0 {
@@ -245,7 +245,44 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 	}
 
 	for _, log := range logs {
-		row := []string{log.CreatedAt.Format(constant.FormatDateAndTime), log.Data.Name, log.Data.LoanNo, log.Data.IdCardNo, log.Data.PhoneNumber, log.ProbabilityToDefault, log.Grade, log.Message}
+		var (
+			createdAt            string
+			name                 string
+			loanID               string
+			idCardNo             string
+			phoneNumber          string
+			probabilityToDefault string
+			grade                string
+			message              string
+		)
+
+		if log.CreatedAt.IsZero() {
+			createdAt = ""
+		} else {
+			createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
+		}
+
+		if log.Data != nil && log.Data.Data != nil {
+			name = log.Data.Data.Name
+			loanID = log.Data.Data.LoanNo
+			idCardNo = log.Data.Data.IdCardNo
+			phoneNumber = log.Data.Data.PhoneNumber
+			probabilityToDefault = log.Data.ProbabilityToDefault
+			grade = log.Data.Grade
+			message = log.Data.Message
+		}
+
+		row := []string{
+			createdAt,
+			name,
+			loanID,
+			idCardNo,
+			phoneNumber,
+			probabilityToDefault,
+			grade,
+			message,
+		}
+
 		if err := w.Write(row); err != nil {
 			return err
 		}
