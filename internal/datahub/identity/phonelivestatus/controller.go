@@ -53,13 +53,14 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
 	memberId := fmt.Sprintf("%v", c.Locals(constant.UserId))
 	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
+	quotaType := fmt.Sprintf("%v", c.Locals(constant.QuotaType))
 
 	file, err := c.FormFile("file")
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 
-	err = ctrl.svc.BulkPhoneLiveStatus(apiKey, memberId, companyId, file)
+	err = ctrl.svc.BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType, file)
 	if err != nil {
 		return err
 	}

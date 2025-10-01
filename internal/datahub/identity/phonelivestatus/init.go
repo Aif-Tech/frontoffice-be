@@ -3,7 +3,7 @@ package phonelivestatus
 import (
 	"front-office/configs/application"
 	"front-office/internal/core/log/transaction"
-	"front-office/internal/core/product"
+	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
 	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
@@ -13,11 +13,11 @@ import (
 
 func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {
 	repository := NewRepository(cfg, client, nil)
-	productRepo := product.NewRepository(cfg, client)
+	memberRepo := member.NewRepository(cfg, client, nil)
 	jobRepo := job.NewRepository(cfg, client, nil)
 	transactionRepo := transaction.NewRepository(cfg, client, nil)
 	jobService := job.NewService(jobRepo, transactionRepo)
-	service := NewService(repository, productRepo, jobRepo, transactionRepo, jobService)
+	service := NewService(repository, memberRepo, jobRepo, transactionRepo, jobService)
 	controller := NewController(service)
 
 	phoneLiveStatusGroup := apiGroup.Group("phone-live-status")

@@ -6,13 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"front-office/internal/core/log/transaction"
-	"front-office/internal/core/product"
+	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,14 +24,14 @@ import (
 
 func NewService(
 	repo Repository,
-	productRepo product.Repository,
+	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
 		repo,
-		productRepo,
+		memberRepo,
 		jobRepo,
 		transactionRepo,
 		jobService,
@@ -39,7 +40,7 @@ func NewService(
 
 type service struct {
 	repo            Repository
-	productRepo     product.Repository
+	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
@@ -47,7 +48,7 @@ type service struct {
 
 type Service interface {
 	PhoneLiveStatus(apiKey, memberId, companyId string, reqBody *phoneLiveStatusRequest) error
-	BulkPhoneLiveStatus(apiKey, memberId, companyId string, fileHeader *multipart.FileHeader) error
+	BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, fileHeader *multipart.FileHeader) error
 	GetJobs(filter *phoneLiveStatusFilter) (*jobListRespData, error)
 	GetJobDetails(filter *phoneLiveStatusFilter) (*jobDetailsDTO, error)
 	ExportJobDetails(filter *phoneLiveStatusFilter, buf *bytes.Buffer) (string, error)
@@ -56,16 +57,16 @@ type Service interface {
 }
 
 func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody *phoneLiveStatusRequest) error {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugPhoneLiveStatus)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugPhoneLiveStatus)
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
+	if subscribedResp.Data.ProductId == 0 {
+		return apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberId,
 		CompanyId: companyId,
 		Total:     1,
@@ -98,15 +99,7 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 	return svc.jobService.FinalizeJob(jobIdStr)
 }
 
-func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId string, file *multipart.FileHeader) error {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugPhoneLiveStatus)
-	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
-	}
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
-
+func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, file *multipart.FileHeader) error {
 	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -116,11 +109,35 @@ func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId string, file
 		return apperror.Internal(constant.FailedParseCSV, err)
 	}
 
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugPhoneLiveStatus)
+	if err != nil {
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return apperror.NotFound(constant.ProductNotFound)
+	}
+
+	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
+	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
+		MemberId:     memberId,
+		CompanyId:    companyId,
+		SubscribedId: subscribedIdStr,
+		QuotaType:    quotaType,
+	})
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchQuota)
+	}
+
+	totalRequests := len(records) - 1
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
+		return apperror.Forbidden(constant.ErrQuotaExceeded)
+	}
+
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberId,
 		CompanyId: companyId,
-		Total:     len(records) - 1,
+		Total:     totalRequests,
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedCreateJob)
@@ -150,8 +167,8 @@ func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId string, file
 				JobIdStr:       jobIdStr,
 				MemberId:       jobRes.MemberId,
 				CompanyId:      jobRes.CompanyId,
-				ProductId:      product.ProductId,
-				ProductGroupId: product.ProductGroupId,
+				ProductId:      subscribedResp.Data.ProductId,
+				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
 				Request:        phoneLiveReq,
 			}); err != nil {
