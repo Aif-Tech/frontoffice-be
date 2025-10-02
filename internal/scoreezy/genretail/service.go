@@ -15,10 +15,10 @@ import (
 	"log"
 	"mime/multipart"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	logger "github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
@@ -40,6 +40,11 @@ type service struct {
 	productRepo product.Repository
 	logRepo     operation.Repository
 }
+
+const (
+	typePersonal = "personal"
+	// typeCompany  = "company"
+)
 
 type Service interface {
 	GenRetailV3(memberId, companyId uint, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error)
@@ -175,24 +180,28 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 		if err != nil {
 			return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
 		}
+	} else {
+		if filter.StartDate != "" && filter.EndDate == "" {
+			filter.EndDate = filter.StartDate
+		}
 
-		return result, nil
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
+			return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+		}
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
+			return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+		}
+
+		result, err = svc.repo.GetLogsByRangeDateAPI(filter)
+		if err != nil {
+			return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
+		}
 	}
 
-	if filter.StartDate != "" && filter.EndDate == "" {
-		filter.EndDate = filter.StartDate
-	}
-
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
-		return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
-	}
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
-		return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
-	}
-
-	result, err = svc.repo.GetLogsByRangeDateAPI(filter)
-	if err != nil {
-		return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
+	for _, log := range result.Data {
+		if log.Data != nil {
+			log.Data.Type = deriveTypeFromTrxId(log.Data.TrxId)
+		}
 	}
 
 	return result, nil
@@ -303,7 +312,7 @@ func formatCSVFileName(base, startDate, endDate string) string {
 func (svc *service) processSingleGenRetail(params *genRetailContext) error {
 	if err := validator.ValidateStruct(params.Request); err != nil {
 		_ = svc.transRepo.CreateLogScoreezyAPI(&transaction.LogTransScoreezy{
-			TrxId:     uuid.NewString(),
+			TrxId:     helper.GenerateTrx(constant.TrxIdGenRetailV3),
 			MemberId:  params.MemberId,
 			CompanyId: params.CompanyId,
 			ProductId: params.ProductId,
@@ -321,6 +330,15 @@ func (svc *service) processSingleGenRetail(params *genRetailContext) error {
 	}
 
 	return nil
+}
+
+func deriveTypeFromTrxId(trxId string) string {
+	switch {
+	case strings.Contains(trxId, constant.TrxIdGenRetailV3):
+		return typePersonal
+	default:
+		return ""
+	}
 }
 
 // func (svc *service) BulkSearchUploadSvc(req []BulkSearchRequest, tempType, apiKey, userId, companyId string) error {

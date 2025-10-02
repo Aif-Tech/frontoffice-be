@@ -287,7 +287,9 @@ func TestGetLogByTrxIdAPI(t *testing.T) {
 		mockData := model.AifcoreAPIResponse[any]{
 			Success: true,
 			Data: &logTransScoreezy{
-				TrxId: constant.DummyId,
+				Data: &dataLogTransScoreezy{
+					TrxId: constant.DummyId,
+				},
 			},
 		}
 		body, err := json.Marshal(mockData)
@@ -304,7 +306,7 @@ func TestGetLogByTrxIdAPI(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.Equal(t, constant.DummyId, result.TrxId)
+		assert.Equal(t, constant.DummyId, result.Data.TrxId)
 		mockClient.AssertExpectations(t)
 	})
 

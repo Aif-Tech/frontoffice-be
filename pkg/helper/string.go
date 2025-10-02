@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"math/big"
+	"strings"
 	"time"
 	"unicode"
 )
@@ -33,6 +34,14 @@ func GeneratePassword() (string, error) {
 	}
 
 	return string(b), nil
+}
+
+func GenerateTrx(productInitial string) string {
+	date := time.Now().Format("20060102-150405.000")
+	dateString := strings.Replace(date, ".", "", -1)
+	trx := productInitial + "-" + dateString
+
+	return trx
 }
 
 func ValidatePasswordStrength(password string) bool {

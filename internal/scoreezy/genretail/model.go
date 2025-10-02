@@ -65,6 +65,7 @@ type logTransScoreezy struct {
 
 type dataLogTransScoreezy struct {
 	TrxId                string `json:"trx_id"`
+	Type                 string `json:"type"`
 	Data                 *data  `json:"data"`
 	ProbabilityToDefault string `json:"probability_to_default"`
 	Grade                string `json:"grade"`
