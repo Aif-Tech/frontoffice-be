@@ -72,8 +72,9 @@ const (
 	MissingStartDate      = "start_date is required"
 	MissingEndDate        = "end_date is required"
 
-	ErrMsgMarshalReqBody = "failed to marshal request body: %w"
-	ErrMsgHTTPReqFailed  = "HTTP request failed: %w"
+	ErrInvalidRequestPayload = "invalid request payload"
+	ErrMsgHTTPReqFailed      = "failed to create request to upstream service"
+	ErrUpstreamUnavailable   = "upstream service unavailable"
 
 	ErrSubscribtionNotFound     = "company has no subscription for this product"
 	ErrFetchProduct             = "failed to fetch  product"

@@ -200,6 +200,7 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
 	if err := validator.ValidateStruct(params.Request); err != nil {
 		_ = svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+			TransactionID:  helper.GenerateTrx(constant.TrxIdLoanRecord),
 			MemberID:       params.MemberId,
 			CompanyID:      params.CompanyId,
 			ProductID:      params.ProductId,
@@ -212,8 +213,10 @@ func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
 				Input:    params.Request,
 				DateTime: time.Now().Format(constant.FormatDateAndTime),
 			},
-			Data:        nil,
-			RequestBody: params.Request,
+			Data:         nil,
+			RequestBody:  params.Request,
+			RequestTime:  time.Now(),
+			ResponseTime: time.Now(),
 		})
 
 		return apperror.BadRequest(err.Error())
@@ -222,13 +225,14 @@ func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
 	result, err := svc.repo.LoanRecordCheckerAPI(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
 	if err != nil {
 		if err := svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+			TransactionID:  helper.GenerateTrx(constant.TrxIdLoanRecord),
 			MemberID:       params.MemberId,
 			CompanyID:      params.CompanyId,
 			ProductID:      params.ProductId,
 			ProductGroupID: params.ProductGroupId,
 			JobID:          params.JobId,
-			Message:        result.Message,
-			Status:         result.StatusCode,
+			Message:        err.Error(),
+			Status:         http.StatusBadGateway,
 			Success:        false,
 			ResponseBody: &transaction.ResponseBody{
 				Input:    params.Request,
