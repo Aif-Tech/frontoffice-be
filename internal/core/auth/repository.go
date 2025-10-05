@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
@@ -92,19 +93,19 @@ func (repo *repository) VerifyMemberAPI(userId string, payload *PasswordResetReq
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -121,19 +122,19 @@ func (repo *repository) PasswordResetAPI(userId, token string, payload *Password
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -150,19 +151,19 @@ func (repo *repository) ChangePasswordAPI(userId string, payload *ChangePassword
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -179,12 +180,12 @@ func (repo *repository) AuthMemberAPI(payload *userLoginRequest) (*loginResponse
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -192,7 +193,7 @@ func (repo *repository) AuthMemberAPI(payload *userLoginRequest) (*loginResponse
 	// send http request
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 

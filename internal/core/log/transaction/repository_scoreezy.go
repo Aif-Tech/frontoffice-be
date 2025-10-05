@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
@@ -13,19 +14,19 @@ func (repo *repository) CreateLogScoreezyAPI(payload *LogTransScoreezy) error {
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -42,14 +43,14 @@ func (repo *repository) GetLogsScoreezyAPI() ([]*LogTransScoreezy, error) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -66,7 +67,7 @@ func (repo *repository) GetLogsScoreezyByDateAPI(companyId, date string) ([]*Log
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -78,7 +79,7 @@ func (repo *repository) GetLogsScoreezyByDateAPI(companyId, date string) ([]*Log
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -95,7 +96,7 @@ func (repo *repository) GetLogsScoreezyByDateRangeAPI(companyId, startDate, endD
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -108,7 +109,7 @@ func (repo *repository) GetLogsScoreezyByDateRangeAPI(companyId, startDate, endD
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -125,7 +126,7 @@ func (repo *repository) GetLogsScoreezyByMonthAPI(companyId, month string) ([]*L
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -137,7 +138,7 @@ func (repo *repository) GetLogsScoreezyByMonthAPI(companyId, month string) ([]*L
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 

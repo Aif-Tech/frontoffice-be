@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
@@ -46,7 +47,7 @@ func (repo *repository) CreateJobAPI(payload *CreateJobRequest) (*createJobRespD
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -54,7 +55,7 @@ func (repo *repository) CreateJobAPI(payload *CreateJobRequest) (*createJobRespD
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -63,7 +64,7 @@ func (repo *repository) CreateJobAPI(payload *CreateJobRequest) (*createJobRespD
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -80,7 +81,7 @@ func (repo *repository) UpdateJobAPI(jobId string, payload map[string]interface{
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -88,14 +89,14 @@ func (repo *repository) UpdateJobAPI(jobId string, payload map[string]interface{
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -115,7 +116,7 @@ func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -132,16 +133,11 @@ func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseAifcoreAPIResponse[any](resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiResp, nil
+	return helper.ParseAifcoreAPIResponse[any](resp)
 }
 
 func (repo *repository) GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
@@ -152,7 +148,7 @@ func (repo *repository) GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIRes
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -167,16 +163,11 @@ func (repo *repository) GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIRes
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseAifcoreAPIResponse[*jobDetailResponse](resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiResp, nil
+	return helper.ParseAifcoreAPIResponse[*jobDetailResponse](resp)
 }
 
 func (repo *repository) GetJobsSummaryAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
@@ -187,7 +178,7 @@ func (repo *repository) GetJobsSummaryAPI(filter *logFilter) (*model.AifcoreAPIR
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -204,14 +195,9 @@ func (repo *repository) GetJobsSummaryAPI(filter *logFilter) (*model.AifcoreAPIR
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseAifcoreAPIResponse[*jobDetailResponse](resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiResp, nil
+	return helper.ParseAifcoreAPIResponse[*jobDetailResponse](resp)
 }

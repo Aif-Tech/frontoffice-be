@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
@@ -45,12 +46,12 @@ func (repo *repository) SaveGradingAPI(payload *createGradePayload) error {
 
 	bodyBytes, err := repo.marshalFn(payload.Request)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -58,7 +59,7 @@ func (repo *repository) SaveGradingAPI(payload *createGradePayload) error {
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -78,7 +79,7 @@ func (repo *repository) GetGradesAPI(productSlug, companyId string) (*gradesResp
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -86,7 +87,7 @@ func (repo *repository) GetGradesAPI(productSlug, companyId string) (*gradesResp
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 

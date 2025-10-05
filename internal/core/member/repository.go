@@ -3,6 +3,7 @@ package member
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
@@ -56,14 +57,14 @@ func (repo *repository) AddMemberAPI(payload *RegisterMemberRequest) (*registerR
 
 	req, err := http.NewRequest(http.MethodPost, url, &bodyBytes)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 	req.Header.Set(constant.HeaderContentType, writer.FormDataContentType())
 	req.Header.Set(constant.XAPIKey, repo.cfg.Env.CoreModuleKey)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -80,7 +81,7 @@ func (repo *repository) GetMemberAPI(query *MemberParams) (*MstMember, error) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -95,7 +96,7 @@ func (repo *repository) GetMemberAPI(query *MemberParams) (*MstMember, error) {
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -112,7 +113,7 @@ func (repo *repository) GetMemberListAPI(filter *MemberParams) ([]*MstMember, *m
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -127,7 +128,7 @@ func (repo *repository) GetMemberListAPI(filter *MemberParams) ([]*MstMember, *m
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -144,7 +145,7 @@ func (repo *repository) GetSubscribedProducts(companyId, productSlug string) (*m
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -152,7 +153,7 @@ func (repo *repository) GetSubscribedProducts(companyId, productSlug string) (*m
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -169,7 +170,7 @@ func (repo *repository) GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIRespon
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -183,7 +184,7 @@ func (repo *repository) GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIRespon
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -200,19 +201,19 @@ func (repo *repository) UpdateMemberAPI(id string, payload map[string]interface{
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
@@ -229,14 +230,14 @@ func (repo *repository) DeleteMemberAPI(id string) error {
 
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
