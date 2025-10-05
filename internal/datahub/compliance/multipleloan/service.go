@@ -247,13 +247,8 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 
 	result, err := h.Func(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
 	if err != nil {
-		if err := svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway); err != nil {
-			return err
-		}
-
-		if err := svc.jobService.FinalizeFailedJob(params.JobIdStr); err != nil {
-			return err
-		}
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
 		// var apiErr *apperror.ExternalAPIError
 		// if errors.As(err, &apiErr) {

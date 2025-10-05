@@ -198,62 +198,22 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 }
 
 func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
+	trxId := helper.GenerateTrx(constant.TrxIdLoanRecord)
 	if err := validator.ValidateStruct(params.Request); err != nil {
-		_ = svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			TransactionID:  helper.GenerateTrx(constant.TrxIdLoanRecord),
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Message:        err.Error(),
-			Status:         http.StatusBadRequest,
-			Success:        false,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:         nil,
-			RequestBody:  params.Request,
-			RequestTime:  time.Now(),
-			ResponseTime: time.Now(),
-		})
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
 	}
 
 	result, err := svc.repo.LoanRecordCheckerAPI(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
 	if err != nil {
-		if err := svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			TransactionID:  helper.GenerateTrx(constant.TrxIdLoanRecord),
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Message:        err.Error(),
-			Status:         http.StatusBadGateway,
-			Success:        false,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:         nil,
-			RequestBody:  params.Request,
-			RequestTime:  time.Now(),
-			ResponseTime: time.Now(),
-		}); err != nil {
-			return err
-		}
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
-		if err := svc.jobService.FinalizeFailedJob(params.JobIdStr); err != nil {
-			return err
-		}
-
-		var apiErr *apperror.ExternalAPIError
-		if errors.As(err, &apiErr) {
-			return apperror.MapLoanError(apiErr)
-		}
+		// var apiErr *apperror.ExternalAPIError
+		// if errors.As(err, &apiErr) {
+		// 	return apperror.MapLoanError(apiErr)
+		// }
 
 		return apperror.Internal("failed to process loan record checker", err)
 	}
@@ -265,4 +225,25 @@ func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
 	}
 
 	return nil
+}
+
+func (svc *service) logFailedTransaction(params *loanCheckerContext, trxId, msg string, status int) error {
+	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+		TransactionID:  trxId,
+		MemberID:       params.MemberId,
+		CompanyID:      params.CompanyId,
+		ProductID:      params.ProductId,
+		ProductGroupID: params.ProductGroupId,
+		JobID:          params.JobId,
+		Message:        msg,
+		Status:         status,
+		Success:        false,
+		ResponseBody: &transaction.ResponseBody{
+			Input:    params.Request,
+			DateTime: time.Now().Format(constant.FormatDateAndTime),
+		},
+		RequestBody:  params.Request,
+		RequestTime:  time.Now(),
+		ResponseTime: time.Now(),
+	})
 }
