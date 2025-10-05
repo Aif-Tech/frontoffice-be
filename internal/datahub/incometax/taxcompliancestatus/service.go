@@ -194,23 +194,9 @@ func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, 
 }
 
 func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) error {
+	trxId := helper.GenerateTrx(constant.TrxIdTaxCompliance)
 	if err := validator.ValidateStruct(params.Request); err != nil {
-		_ = svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Success:        false,
-			Message:        err.Error(),
-			Status:         http.StatusBadRequest,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:        nil,
-			RequestBody: params.Request,
-		})
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
 	}
@@ -221,40 +207,36 @@ func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) err
 		params.Request,
 	)
 	if err != nil {
-		if err := svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Message:        result.Message,
-			Status:         result.StatusCode,
-			Success:        false,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:         nil,
-			RequestBody:  params.Request,
-			RequestTime:  time.Now(),
-			ResponseTime: time.Now(),
-		}); err != nil {
-			return err
-		}
-
-		if err := svc.jobService.FinalizeFailedJob(params.JobIdStr); err != nil {
-
-			return err
-		}
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
 		return apperror.Internal("failed to process tax compliance status", err)
 	}
 
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
+	_ = svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
 		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return apperror.MapRepoError(err, "failed to update log transaction")
-	}
+	})
 
 	return nil
+}
+
+func (svc *service) logFailedTransaction(params *taxComplianceContext, trxId, msg string, status int) error {
+	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+		TransactionID:  trxId,
+		MemberID:       params.MemberId,
+		CompanyID:      params.CompanyId,
+		ProductID:      params.ProductId,
+		ProductGroupID: params.ProductGroupId,
+		JobID:          params.JobId,
+		Message:        msg,
+		Status:         status,
+		Success:        false,
+		ResponseBody: &transaction.ResponseBody{
+			Input:    params.Request,
+			DateTime: time.Now().Format(constant.FormatDateAndTime),
+		},
+		RequestBody:  params.Request,
+		RequestTime:  time.Now(),
+		ResponseTime: time.Now(),
+	})
 }
