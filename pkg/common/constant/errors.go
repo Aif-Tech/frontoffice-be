@@ -78,6 +78,7 @@ const (
 
 	ErrSubscribtionNotFound     = "company has no subscription for this product"
 	ErrFetchProduct             = "failed to fetch  product"
+	ErrUnsupportedProduct       = "unsupported product type"
 	ErrFetchSubscribedProduct   = "failed to fetch subscribed product"
 	ErrQuotaExceeded            = "insufficient quota to complete request"
 	ErrCreatePhoneLiveJob       = "failed to create phone live status job"

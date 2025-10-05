@@ -83,7 +83,7 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 
 	handler, ok := handlers[productSlug]
 	if !ok {
-		return nil, apperror.BadRequest("unsupported product type")
+		return nil, apperror.BadRequest(constant.ErrUnsupportedProduct)
 	}
 
 	result, err := handler(apiKey, jobIdStr, memberId, companyId, reqBody)
@@ -120,7 +120,7 @@ func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, c
 
 	records, err := helper.ParseCSVFile(file, []string{"ID Card Number", "Phone Number"})
 	if err != nil {
-		return apperror.Internal(constant.FailedParseCSV, err)
+		return apperror.BadRequest(err.Error())
 	}
 
 	productSlug, err := mapProductSlug(slug)
@@ -222,58 +222,32 @@ func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, c
 }
 
 func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
+	type loanHandler struct {
+		TrxPrefix string
+		Func      multipleLoanFunc
+	}
+
+	handlers := map[string]loanHandler{
+		constant.SlugMultipleLoan7Days:  {constant.TrxIdMultipleLoan7Days, svc.repo.CallMultipleLoan7Days},
+		constant.SlugMultipleLoan30Days: {constant.TrxIdMultipleLoan30Days, svc.repo.CallMultipleLoan30Days},
+		constant.SlugMultipleLoan90Days: {constant.TrxIdMultipleLoan30Days, svc.repo.CallMultipleLoan90Days},
+	}
+
+	h, ok := handlers[params.ProductSlug]
+	if !ok {
+		return apperror.BadRequest(constant.ErrUnsupportedProduct)
+	}
+
+	trxId := helper.GenerateTrx(h.TrxPrefix)
 	if err := validator.ValidateStruct(params.Request); err != nil {
-		_ = svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Message:        err.Error(),
-			Status:         http.StatusBadRequest,
-			Success:        false,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:        nil,
-			RequestBody: params.Request,
-		})
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
 	}
 
-	handlers := map[string]multipleLoanFunc{
-		constant.SlugMultipleLoan7Days:  svc.repo.CallMultipleLoan7Days,
-		constant.SlugMultipleLoan30Days: svc.repo.CallMultipleLoan30Days,
-		constant.SlugMultipleLoan90Days: svc.repo.CallMultipleLoan90Days,
-	}
-
-	handler, ok := handlers[params.ProductSlug]
-	if !ok {
-		return apperror.BadRequest("unsupported product type")
-	}
-
-	result, err := handler(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
+	result, err := h.Func(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
 	if err != nil {
-		if err := svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Message:        result.Message,
-			Status:         result.StatusCode,
-			Success:        false,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:         nil,
-			RequestBody:  params.Request,
-			RequestTime:  time.Now(),
-			ResponseTime: time.Now(),
-		}); err != nil {
+		if err := svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway); err != nil {
 			return err
 		}
 
@@ -281,10 +255,10 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 			return err
 		}
 
-		var apiErr *apperror.ExternalAPIError
-		if errors.As(err, &apiErr) {
-			return apperror.MapLoanError(apiErr)
-		}
+		// var apiErr *apperror.ExternalAPIError
+		// if errors.As(err, &apiErr) {
+		// 	return apperror.MapLoanError(apiErr)
+		// }
 
 		return apperror.Internal("failed to process multiple loan", err)
 	}
@@ -296,4 +270,25 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 	}
 
 	return nil
+}
+
+func (svc *service) logFailedTransaction(params *multipleLoanContext, trxId, msg string, status int) error {
+	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+		TransactionID:  trxId,
+		MemberID:       params.MemberId,
+		CompanyID:      params.CompanyId,
+		ProductID:      params.ProductId,
+		ProductGroupID: params.ProductGroupId,
+		JobID:          params.JobId,
+		Message:        msg,
+		Status:         status,
+		Success:        false,
+		ResponseBody: &transaction.ResponseBody{
+			Input:    params.Request,
+			DateTime: time.Now().Format(constant.FormatDateAndTime),
+		},
+		RequestBody:  params.Request,
+		RequestTime:  time.Now(),
+		ResponseTime: time.Now(),
+	})
 }
