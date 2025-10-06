@@ -1,7 +1,6 @@
 package loanrecordchecker
 
 import (
-	"errors"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -74,10 +73,10 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 			return nil, err
 		}
 
-		var apiErr *apperror.ExternalAPIError
-		if errors.As(err, &apiErr) {
-			return nil, apperror.MapLoanError(apiErr)
-		}
+		// var apiErr *apperror.ExternalAPIError
+		// if errors.As(err, &apiErr) {
+		// 	return nil, apperror.MapLoanError(apiErr)
+		// }
 
 		return nil, apperror.Internal("failed to process loan record checker", err)
 	}

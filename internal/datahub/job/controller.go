@@ -190,6 +190,7 @@ var productSlugMap = map[string]string{
 	"tax-compliance-status":   constant.SlugTaxComplianceStatus,
 	"tax-score":               constant.SlugTaxScore,
 	"tax-verification-detail": constant.SlugTaxVerificationDetail,
+	"genretail-v3":            constant.SlugGenRetailV3,
 }
 
 func mapProductSlug(slug string) (string, error) {
