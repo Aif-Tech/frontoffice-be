@@ -191,30 +191,16 @@ func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, comp
 	close(errChan)
 
 	for err := range errChan {
-		log.Error().Err(err).Msg("error during bulk tax score prrocessing")
+		log.Error().Err(err).Msg("error during bulk tax verification prrocessing")
 	}
 
 	return svc.jobService.FinalizeJob(jobIdStr)
 }
 
 func (svc *service) processTaxVerification(params *taxVerificationContext) error {
+	trxId := helper.GenerateTrx(constant.TrxIdTaxVerification)
 	if err := validator.ValidateStruct(params.Request); err != nil {
-		_ = svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Success:        false,
-			Message:        err.Error(),
-			Status:         http.StatusBadRequest,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:        nil,
-			RequestBody: params.Request,
-		})
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
 	}
@@ -226,39 +212,36 @@ func (svc *service) processTaxVerification(params *taxVerificationContext) error
 	)
 
 	if err != nil {
-		if err := svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Message:        result.Message,
-			Status:         result.StatusCode,
-			Success:        false,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:         nil,
-			RequestBody:  params.Request,
-			RequestTime:  time.Now(),
-			ResponseTime: time.Now(),
-		}); err != nil {
-			return err
-		}
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
-		if err := svc.jobService.FinalizeFailedJob(params.JobIdStr); err != nil {
-			return err
-		}
-
-		return apperror.Internal("failed to process tax compliance status", err)
+		return apperror.Internal("failed to process tax verification detail", err)
 	}
 
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
+	_ = svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
 		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return apperror.MapRepoError(err, "failed to update log transaction")
-	}
+	})
 
 	return nil
+}
+
+func (svc *service) logFailedTransaction(params *taxVerificationContext, trxId, msg string, status int) error {
+	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+		TransactionID:  trxId,
+		MemberID:       params.MemberId,
+		CompanyID:      params.CompanyId,
+		ProductID:      params.ProductId,
+		ProductGroupID: params.ProductGroupId,
+		JobID:          params.JobId,
+		Message:        msg,
+		Status:         status,
+		Success:        false,
+		ResponseBody: &transaction.ResponseBody{
+			Input:    params.Request,
+			DateTime: time.Now().Format(constant.FormatDateAndTime),
+		},
+		RequestBody:  params.Request,
+		RequestTime:  time.Now(),
+		ResponseTime: time.Now(),
+	})
 }
