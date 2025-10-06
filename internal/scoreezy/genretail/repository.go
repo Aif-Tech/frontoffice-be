@@ -63,7 +63,6 @@ func (repo *repository) GenRetailV3API(memberId, jobId string, payload *genRetai
 	req.URL.RawQuery = q.Encode()
 
 	res, err := repo.client.Do(req)
-	fmt.Println("qqqqqq", res, err)
 	if err != nil {
 		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
@@ -105,6 +104,8 @@ func (repo *repository) GetLogsScoreezyAPI(filter *filterLogs) (*model.AifcoreAP
 	return repo.fetchLogsAPI("/api/core/logging/transaction/scoreezy/list",
 		map[string]string{
 			"company_id": filter.CompanyId,
+			"job_id":     filter.JobId,
+			"grade":      filter.Grade,
 			"size":       filter.Size,
 			"page":       filter.Page,
 		})
@@ -114,6 +115,7 @@ func (repo *repository) GetLogsByRangeDateAPI(filter *filterLogs) (*model.Aifcor
 	return repo.fetchLogsAPI("/api/core/logging/transaction/scoreezy/range",
 		map[string]string{
 			"company_id": filter.CompanyId,
+			"job_id":     filter.JobId,
 			"date_start": filter.StartDate,
 			"date_end":   filter.EndDate,
 			"grade":      filter.Grade,

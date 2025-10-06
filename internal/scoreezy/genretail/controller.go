@@ -108,6 +108,7 @@ func (ctrl *controller) BulkRequest(c *fiber.Ctx) error {
 func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 	filter := &filterLogs{
 		CompanyId: fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
+		JobId:     c.Query("job_id"),
 		StartDate: c.Query(constant.StartDate),
 		EndDate:   c.Query(constant.EndDate),
 		Grade:     c.Query("grade"),

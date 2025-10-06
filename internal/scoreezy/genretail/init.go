@@ -30,9 +30,8 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 	apiGroup.Post("/dummy-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.IsRequestValid(genRetailRequest{}), controller.DummyRequestScore)
 	apiGroup.Post("/single-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.IsRequestValid(genRetailRequest{}), controller.SingleRequest)
 	apiGroup.Post("/bulk-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.BulkRequest)
-	// apiGroup.Get("/logs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogsScoreezy)
+	apiGroup.Get("/logs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogsScoreezy)
+	apiGroup.Get("/logs/:trx_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogScoreezy)
 	// apiGroup.Get("/logs/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.ExportJobDetails)
-	// apiGroup.Get("/logs/:job_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogsScoreezy)
-	// apiGroup.Get("/logs/:job_id/:trx_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogScoreezy)
 	// genRetailAPI.Put("/upload-scoring-template", middleware.Auth(), middleware.IsRequestValid(UploadScoringRequest{}), middleware.GetJWTPayloadFromCookie(), middleware.DocUpload(), controller.UploadCSV)
 }

@@ -44,6 +44,7 @@ type filterLogs struct {
 	TrxId     string
 	StartDate string
 	EndDate   string
+	JobId     string
 	CompanyId string
 	Grade     string
 	Page      string

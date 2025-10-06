@@ -236,6 +236,10 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 	var result *model.AifcoreAPIResponse[[]*logTransScoreezy]
 	var err error
 
+	if filter.JobId == "" {
+		return nil, apperror.BadRequest("job id is required")
+	}
+
 	if filter.StartDate == "" && filter.EndDate == "" {
 		result, err = svc.repo.GetLogsScoreezyAPI(filter)
 		if err != nil {
