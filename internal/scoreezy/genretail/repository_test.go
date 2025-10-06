@@ -61,6 +61,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		result, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{
 				Name:     constant.DummyName,
 				IdCardNo: constant.DummyNIK,
@@ -89,6 +90,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		result, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{
 				Name:     constant.DummyName,
 				IdCardNo: constant.DummyNIK,
@@ -113,6 +115,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		_, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{
 				Name:     constant.DummyName,
 				IdCardNo: constant.DummyNIK,
@@ -131,6 +134,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		_, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{},
 		)
 
@@ -149,6 +153,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		result, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{},
 		)
 

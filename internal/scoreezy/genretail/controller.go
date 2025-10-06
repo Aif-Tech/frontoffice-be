@@ -88,12 +88,14 @@ func (ctrl *controller) BulkRequest(c *fiber.Ctx) error {
 		return apperror.Unauthorized(constant.InvalidUserSession)
 	}
 
+	quotaType := fmt.Sprintf("%v", c.Locals(constant.QuotaType))
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 
-	if err := ctrl.service.BulkGenRetailV3(memberId, companyId, file); err != nil {
+	if err := ctrl.service.BulkGenRetailV3(memberId, companyId, quotaType, file); err != nil {
 		return err
 	}
 

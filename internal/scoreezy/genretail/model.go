@@ -85,6 +85,7 @@ type genRetailContext struct {
 	MemberId  uint              `json:"member_id"`
 	CompanyId uint              `json:"company_id"`
 	ProductId uint              `json:"product_id"`
+	JobId     uint              `json:"job_id"`
 	Request   *genRetailRequest `json:"request"`
 }
 

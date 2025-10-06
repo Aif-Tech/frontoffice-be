@@ -3,6 +3,7 @@ package genretail
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
@@ -32,7 +33,7 @@ type repository struct {
 }
 
 type Repository interface {
-	GenRetailV3API(memberId string, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error)
+	GenRetailV3API(memberId, jobId string, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error)
 	GetLogsScoreezyAPI(filter *filterLogs) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error)
 	GetLogsByRangeDateAPI(filter *filterLogs) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error)
 	GetLogByTrxIdAPI(filter *filterLogs) (*logTransScoreezy, error)
@@ -41,25 +42,30 @@ type Repository interface {
 	// CountData(tierLevel uint, userId, companyId string) (int64, error)
 }
 
-func (repo *repository) GenRetailV3API(memberId string, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error) {
+func (repo *repository) GenRetailV3API(memberId, jobId string, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error) {
 	url := fmt.Sprintf("%s/api/score/genretail/v3", repo.cfg.Env.ScoreezyHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XUIDKey, memberId)
 
+	q := req.URL.Query()
+	q.Add("job_id", jobId)
+	req.URL.RawQuery = q.Encode()
+
 	res, err := repo.client.Do(req)
+	fmt.Println("qqqqqq", res, err)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 	defer res.Body.Close()
 
@@ -71,7 +77,7 @@ func (repo *repository) fetchLogsAPI(path string, query map[string]string) (*mod
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
@@ -83,7 +89,7 @@ func (repo *repository) fetchLogsAPI(path string, query map[string]string) (*mod
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 	defer resp.Body.Close()
 
@@ -121,14 +127,14 @@ func (repo *repository) GetLogByTrxIdAPI(filter *filterLogs) (*logTransScoreezy,
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 	defer resp.Body.Close()
 
