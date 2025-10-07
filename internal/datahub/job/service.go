@@ -29,7 +29,8 @@ type service struct {
 type Service interface {
 	CreateJob(req *CreateJobRequest) (*createJobRespData, error)
 	UpdateJobAPI(jobId string, req *UpdateJobRequest) error
-	GetJob(filter *logFilter) (*model.AifcoreAPIResponse[any], error)
+	GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error)
+	GetGenRetailJobs(filter *logFilter) (*jobsGenRetailResponse, error)
 	GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error)
 	ExportJobDetails(filter *logFilter, buf *bytes.Buffer) (string, error)
 	GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error)
@@ -37,6 +38,13 @@ type Service interface {
 	FinalizeJob(jobIdStr string) error
 	FinalizeFailedJob(jobIdStr string) error
 }
+
+const (
+	typePersonal = "personal"
+	// typeCompany  = "company"
+	hitTypeSingle = "single"
+	hitTypeBulk   = "bulk"
+)
 
 func (svc *service) CreateJob(req *CreateJobRequest) (*createJobRespData, error) {
 	result, err := svc.repo.CreateJobAPI(req)
@@ -70,13 +78,47 @@ func (svc *service) UpdateJobAPI(jobId string, req *UpdateJobRequest) error {
 	return nil
 }
 
-func (svc *service) GetJob(filter *logFilter) (*model.AifcoreAPIResponse[any], error) {
+func (svc *service) GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error) {
 	result, err := svc.repo.GetJobsAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch jobs")
 	}
 
 	return result, nil
+}
+
+func (svc *service) GetGenRetailJobs(filter *logFilter) (*jobsGenRetailResponse, error) {
+	result, err := svc.repo.GetJobsAPI(filter)
+	if err != nil {
+		return nil, apperror.MapRepoError(err, "failed to fetch jobs")
+	}
+
+	mappedJobs := []jobsScoreezy{}
+	for _, item := range result.Data.Jobs {
+		hitType := hitTypeSingle
+		if item.Total > 1 {
+			hitType = hitTypeBulk
+		}
+
+		mappedJobs = append(mappedJobs, jobsScoreezy{
+			Id:          item.Id,
+			MemberId:    item.MemberId,
+			CompanyId:   item.CompanyId,
+			ProductId:   item.ProductId,
+			Total:       item.Total,
+			HitType:     hitType,
+			ProductType: typePersonal,
+			CreatedAt:   item.StartTime,
+		})
+	}
+
+	response := &jobsGenRetailResponse{
+		Success: result.Success,
+		Message: result.Message,
+		Data:    &jobsGenRetailData{Logs: mappedJobs, TotalData: result.Data.TotalData},
+	}
+
+	return response, nil
 }
 
 func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {

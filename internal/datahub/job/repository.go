@@ -37,7 +37,7 @@ type repository struct {
 type Repository interface {
 	CreateJobAPI(payload *CreateJobRequest) (*createJobRespData, error)
 	UpdateJobAPI(jobId string, req map[string]interface{}) error
-	GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse[any], error)
+	GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error)
 	GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error)
 	GetJobsSummaryAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error)
 }
@@ -108,7 +108,7 @@ func (repo *repository) UpdateJobAPI(jobId string, payload map[string]interface{
 	return nil
 }
 
-func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse[any], error) {
+func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error) {
 	url := fmt.Sprintf("%s/api/core/product/%s/jobs", repo.cfg.Env.AifcoreHost, filter.ProductSlug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -137,7 +137,7 @@ func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse
 	}
 	defer resp.Body.Close()
 
-	return helper.ParseAifcoreAPIResponse[any](resp)
+	return helper.ParseAifcoreAPIResponse[*jobListResponse](resp)
 }
 
 func (repo *repository) GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {

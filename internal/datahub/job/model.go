@@ -52,6 +52,45 @@ type logTransInput struct {
 	NPWPOrNIK   *string `json:"npwp_or_nik,omitempty"`
 }
 
+type jobListResponse struct {
+	Jobs      []job `json:"jobs"`
+	TotalData int64 `json:"total_data"`
+}
+
+type job struct {
+	Id           uint   `json:"id"`
+	ProductId    uint   `json:"product_id"`
+	MemberId     uint   `json:"member_id"`
+	CompanyId    uint   `json:"company_id"`
+	Total        int    `json:"total"`
+	SuccessCount int    `json:"success_count"`
+	Status       string `json:"status"`
+	StartTime    string `json:"start_time"`
+	EndTime      string `json:"end_time"`
+}
+
+type jobsGenRetailResponse struct {
+	Success bool               `json:"success"`
+	Message string             `json:"message"`
+	Data    *jobsGenRetailData `json:"data"`
+}
+
+type jobsGenRetailData struct {
+	Logs      []jobsScoreezy `json:"logs"`
+	TotalData int64          `json:"total_data"`
+}
+
+type jobsScoreezy struct {
+	Id          uint   `json:"id"`
+	MemberId    uint   `json:"member_id"`
+	CompanyId   uint   `json:"company_id"`
+	ProductId   uint   `json:"product_id"`
+	HitType     string `json:"hit_type"`
+	ProductType string `json:"product_type"`
+	Total       int    `json:"total"`
+	CreatedAt   string `json:"created_at"`
+}
+
 type jobDetailResponse struct {
 	TotalData                  int64                     `json:"total_data"`
 	TotalDataPercentageSuccess int64                     `json:"total_data_percentage_success"`

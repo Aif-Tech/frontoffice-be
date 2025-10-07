@@ -20,14 +20,15 @@ type controller struct {
 }
 
 type Controller interface {
-	GetJob(c *fiber.Ctx) error
+	GetJobs(c *fiber.Ctx) error
+	GetGenRetailJobs(c *fiber.Ctx) error
 	GetJobDetails(c *fiber.Ctx) error
 	ExportJobDetails(c *fiber.Ctx) error
 	GetJobDetailsByDateRange(c *fiber.Ctx) error
 	ExportJobDetailsByDateRange(c *fiber.Ctx) error
 }
 
-func (ctrl *controller) GetJob(c *fiber.Ctx) error {
+func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 	slug := c.Params("product_slug")
 
 	productSlug, err := mapProductSlug(slug)
@@ -46,7 +47,27 @@ func (ctrl *controller) GetJob(c *fiber.Ctx) error {
 		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
 	}
 
-	result, err := ctrl.Svc.GetJob(filter)
+	result, err := ctrl.Svc.GetJobs(filter)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(result)
+}
+
+func (ctrl *controller) GetGenRetailJobs(c *fiber.Ctx) error {
+	filter := &logFilter{
+		Page:        c.Query(constant.Page, "1"),
+		Size:        c.Query(constant.Size, "10"),
+		StartDate:   c.Query(constant.StartDate, ""),
+		EndDate:     c.Query(constant.EndDate, ""),
+		ProductSlug: constant.SlugGenRetailV3,
+		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
+		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
+		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+	}
+
+	result, err := ctrl.Svc.GetGenRetailJobs(filter)
 	if err != nil {
 		return err
 	}
@@ -190,7 +211,7 @@ var productSlugMap = map[string]string{
 	"tax-compliance-status":   constant.SlugTaxComplianceStatus,
 	"tax-score":               constant.SlugTaxScore,
 	"tax-verification-detail": constant.SlugTaxVerificationDetail,
-	"genretail-v3":            constant.SlugGenRetailV3,
+	"gen-retail":              constant.SlugGenRetailV3,
 }
 
 func mapProductSlug(slug string) (string, error) {
