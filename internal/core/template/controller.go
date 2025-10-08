@@ -27,8 +27,8 @@ func (ctrl *controller) ListTemplates(c *fiber.Ctx) error {
 		return apperror.Internal("failed to fetch template list", err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
-		"success",
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
+		constant.Success,
 		templates,
 	))
 }
@@ -52,9 +52,7 @@ func (ctrl *controller) DownloadTemplate(c *fiber.Ctx) error {
 
 	path, err := ctrl.svc.DownloadTemplate(req)
 	if err != nil {
-		statusCode, resp := helper.GetError(constant.TemplateNotFound)
-
-		return c.Status(statusCode).JSON(resp)
+		return err
 	}
 
 	return c.Download(path)

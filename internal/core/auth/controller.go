@@ -80,7 +80,7 @@ func (ctrl *controller) RegisterMember(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusCreated).JSON(helper.SuccessResponse[any](
 		fmt.Sprintf("we've sent an email to %s with a link to activate the account", reqBody.Email),
 		nil,
 	))
@@ -101,7 +101,7 @@ func (ctrl *controller) VerifyUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"your account has been verified",
 		nil,
 	))
@@ -127,7 +127,7 @@ func (ctrl *controller) Logout(c *fiber.Ctx) error {
 		log.Warn().Err(err).Msg("failed to log logout event")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"succeed to logout",
 		nil,
 	))
@@ -143,7 +143,7 @@ func (ctrl *controller) RequestActivation(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		fmt.Sprintf("we've sent an email to %s with a link to activate the account", email),
 		nil,
 	))
@@ -161,7 +161,7 @@ func (ctrl *controller) ChangePassword(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"succeed to change password",
 		nil,
 	))
@@ -194,7 +194,7 @@ func (ctrl *controller) RefreshAccessToken(c *fiber.Ctx) error {
 		return apperror.Internal("failed to set access token cookie", err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"access token refreshed",
 		nil,
 	))
@@ -224,7 +224,9 @@ func (ctrl *controller) Login(c *fiber.Ctx) error {
 		return apperror.Internal("failed to set refresh token cookie", err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess("succeed to login", loginResp))
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
+		"succeed to login", loginResp,
+	))
 }
 
 func (ctrl *controller) RequestPasswordReset(c *fiber.Ctx) error {
@@ -237,7 +239,7 @@ func (ctrl *controller) RequestPasswordReset(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		fmt.Sprintf("we've sent an email to %s with a link to reset your password", reqBody.Email),
 		nil,
 	))
@@ -258,7 +260,7 @@ func (ctrl *controller) PasswordReset(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"succeed to reset password",
 		nil,
 	))

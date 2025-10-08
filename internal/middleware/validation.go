@@ -14,13 +14,13 @@ func IsRequestValid(model interface{}) fiber.Handler {
 		request := reflect.New(reflect.TypeOf(model)).Interface()
 
 		if err := c.BodyParser(request); err != nil {
-			resp := helper.ResponseFailed("Invalid request format")
+			resp := helper.ErrorResponse(constant.InvalidRequestFormat)
 
 			return c.Status(fiber.StatusBadRequest).JSON(resp)
 		}
 
 		if errValid := validator.ValidateStruct(request); errValid != nil {
-			resp := helper.ResponseFailed(errValid.Error())
+			resp := helper.ErrorResponse(errValid.Error())
 
 			return c.Status(fiber.StatusBadRequest).JSON(resp)
 		}

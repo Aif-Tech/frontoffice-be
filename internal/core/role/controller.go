@@ -31,7 +31,7 @@ func (ctrl *controller) GetRoleById(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeed to get a role by Id",
 		role,
 	))
@@ -49,7 +49,7 @@ func (ctrl *controller) GetRoles(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeed to get list of roles",
 		roles,
 	))

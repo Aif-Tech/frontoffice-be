@@ -33,9 +33,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 
 	result, err := ctrl.svc.CallTaxVerification(apiKey, memberId, companyId, reqBody)
 	if err != nil {
-		statusCode, resp := helper.GetError(err.Error())
-
-		return c.Status(statusCode).JSON(resp)
+		return err
 	}
 
 	return c.Status(result.StatusCode).JSON(result)
@@ -65,7 +63,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"success",
 		nil,
 	))

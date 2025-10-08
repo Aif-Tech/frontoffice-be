@@ -48,7 +48,7 @@ func (ctrl *controller) GetBy(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeed to get a user",
 		member,
 	))
@@ -67,7 +67,7 @@ func (ctrl *controller) GetById(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeed to get a user",
 		member,
 	))
@@ -90,11 +90,11 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeed to get member list",
-		map[string]interface{}{
-			"data":       users,
-			"total_data": meta.Total,
+		&memberListResponse{
+			Data:      users,
+			TotalData: meta.Total,
 		},
 	))
 }
@@ -113,7 +113,7 @@ func (ctrl *controller) UpdateProfile(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeed to update profile",
 		updateResp,
 	))
@@ -128,7 +128,7 @@ func (ctrl *controller) UploadProfileImage(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"success to upload profile image",
 		resp,
 	))
@@ -159,7 +159,7 @@ func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"success to update user",
 		nil,
 	))
@@ -177,7 +177,7 @@ func (ctrl *controller) DeleteById(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"succeed to delete member",
 		nil,
 	))

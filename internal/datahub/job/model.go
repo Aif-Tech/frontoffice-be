@@ -69,13 +69,7 @@ type job struct {
 	EndTime      string `json:"end_time"`
 }
 
-type jobsGenRetailResponse struct {
-	Success bool               `json:"success"`
-	Message string             `json:"message"`
-	Data    *jobsGenRetailData `json:"data"`
-}
-
-type jobsGenRetailData struct {
+type jobGenRetailData struct {
 	Logs      []jobsScoreezy `json:"logs"`
 	TotalData int64          `json:"total_data"`
 }

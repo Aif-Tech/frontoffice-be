@@ -30,7 +30,7 @@ type Service interface {
 	CreateJob(req *CreateJobRequest) (*createJobRespData, error)
 	UpdateJobAPI(jobId string, req *UpdateJobRequest) error
 	GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error)
-	GetGenRetailJobs(filter *logFilter) (*jobsGenRetailResponse, error)
+	GetGenRetailJobs(filter *logFilter) (*model.APIResponse[*jobGenRetailData], error)
 	GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error)
 	ExportJobDetails(filter *logFilter, buf *bytes.Buffer) (string, error)
 	GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error)
@@ -87,7 +87,7 @@ func (svc *service) GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobLi
 	return result, nil
 }
 
-func (svc *service) GetGenRetailJobs(filter *logFilter) (*jobsGenRetailResponse, error) {
+func (svc *service) GetGenRetailJobs(filter *logFilter) (*model.APIResponse[*jobGenRetailData], error) {
 	result, err := svc.repo.GetJobsAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch jobs")
@@ -112,13 +112,12 @@ func (svc *service) GetGenRetailJobs(filter *logFilter) (*jobsGenRetailResponse,
 		})
 	}
 
-	response := &jobsGenRetailResponse{
-		Success: result.Success,
-		Message: result.Message,
-		Data:    &jobsGenRetailData{Logs: mappedJobs, TotalData: result.Data.TotalData},
-	}
-
-	return response, nil
+	return helper.SuccessResponse(
+		constant.Success,
+		&jobGenRetailData{
+			Logs:      mappedJobs,
+			TotalData: result.Data.TotalData,
+		}), nil
 }
 
 func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {

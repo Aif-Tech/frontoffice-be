@@ -14,7 +14,7 @@ func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		constant.SucceedGetLogTrans,
 		logs,
 	))
@@ -33,7 +33,7 @@ func (ctrl *controller) GetLogScoreezyByDate(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		constant.SucceedGetLogTrans,
 		logs,
 	))
@@ -54,7 +54,7 @@ func (ctrl *controller) GetLogScoreezyByDateRange(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		constant.SucceedGetLogTrans,
 		logs,
 	))
@@ -73,7 +73,7 @@ func (ctrl *controller) GetLogScoreezyByMonth(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		constant.SucceedGetLogTrans,
 		logs,
 	))

@@ -24,7 +24,7 @@ func Auth() func(c *fiber.Ctx) error {
 }
 
 func jwtError(c *fiber.Ctx, err error) error {
-	resp := helper.ResponseFailed(err.Error())
+	resp := helper.ErrorResponse(err.Error())
 	return c.Status(fiber.StatusUnauthorized).JSON(resp)
 }
 
@@ -66,41 +66,42 @@ func GetJWTPayloadFromCookie() fiber.Handler {
 
 		claims, err := helper.ExtractClaimsFromJWT(token, secret)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		userId, err := helper.ExtractUserIdFromClaims(claims)
 		if err != nil {
-			statusCode, resp := helper.GetError(err.Error())
-			return c.Status(statusCode).JSON(resp)
+			resp := helper.ErrorResponse(err.Error())
+
+			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		companyId, err := helper.ExtractCompanyIdFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		roleId, err := helper.ExtractRoleIdFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		quotaType, err := helper.ExtractQuotaTypeFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		apiKey, err := helper.ExtractApiKeyFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
@@ -127,27 +128,28 @@ func GetJWTPayloadPasswordResetFromCookie() fiber.Handler {
 
 		claims, err := helper.ExtractClaimsFromJWT(token, secret)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		userId, err := helper.ExtractUserIdFromClaims(claims)
 		if err != nil {
-			statusCode, resp := helper.GetError(err.Error())
-			return c.Status(statusCode).JSON(resp)
+			resp := helper.ErrorResponse(err.Error())
+
+			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		companyId, err := helper.ExtractUserIdFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		tierLevel, err := helper.ExtractUserIdFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
@@ -172,26 +174,28 @@ func GetPayloadFromRefreshToken() fiber.Handler {
 
 		claims, err := helper.ExtractClaimsFromJWT(token, secret)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
+
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		userId, err := helper.ExtractUserIdFromClaims(claims)
 		if err != nil {
-			statusCode, resp := helper.GetError(err.Error())
-			return c.Status(statusCode).JSON(resp)
+			resp := helper.ErrorResponse(err.Error())
+
+			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		companyId, err := helper.ExtractCompanyIdFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		roleId, err := helper.ExtractRoleIdFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
@@ -216,17 +220,20 @@ func AdminAuth() fiber.Handler {
 
 		claims, err := helper.ExtractClaimsFromJWT(token, secret)
 		if err != nil {
-			statusCode, resp := helper.GetError(err.Error())
-			return c.Status(statusCode).JSON(resp)
+			resp := helper.ErrorResponse(err.Error())
+
+			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 
 		roleId, err := helper.ExtractRoleIdFromClaims(claims)
 		if err != nil {
-			resp := helper.ResponseFailed(err.Error())
+			resp := helper.ErrorResponse(err.Error())
+
 			return c.Status(fiber.StatusBadRequest).JSON(resp)
 		}
 		if roleId == 2 {
-			resp := helper.ResponseFailed(constant.RequestProhibited)
+			resp := helper.ErrorResponse(constant.RequestProhibited)
+
 			return c.Status(fiber.StatusUnauthorized).JSON(resp)
 		}
 

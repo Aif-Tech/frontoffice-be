@@ -40,12 +40,10 @@ func (ctrl *controller) SaveGrading(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := helper.ResponseSuccess(
-		"succees to create grades",
+	return c.Status(fiber.StatusCreated).JSON(helper.SuccessResponse[any](
+		constant.Success,
 		nil,
-	)
-
-	return c.Status(fiber.StatusCreated).JSON(res)
+	))
 }
 
 func (ctrl *controller) GetGrades(c *fiber.Ctx) error {
@@ -57,8 +55,8 @@ func (ctrl *controller) GetGrades(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
-		"succeed to get grades",
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
+		constant.Success,
 		grades,
 	))
 }

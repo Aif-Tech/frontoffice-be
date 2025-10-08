@@ -99,8 +99,8 @@ func (ctrl *controller) BulkRequest(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
-		"success",
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
+		constant.Success,
 		nil,
 	))
 }
@@ -121,11 +121,10 @@ func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": constant.Success,
-		"data":    gradesResponseData{Logs: result.Data},
-		"meta":    result.Meta,
-	})
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
+		constant.Success,
+		gradesResponseData{Logs: result.Data},
+	))
 }
 
 func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
@@ -139,7 +138,7 @@ func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(constant.Success, result))
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(constant.Success, result))
 }
 
 func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
@@ -258,7 +257,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 // 		"data":       bulkSearch,
 // 	}
 
-// 	resp := helper.ResponseSuccess(
+// 	resp := helper.SuccessResponse(
 // 		"succeed to upload data",
 // 		fullResponsePage,
 // 	)
@@ -285,7 +284,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 // 		"data":       bulkSearch,
 // 	}
 
-// 	resp := helper.ResponseSuccess(
+// 	resp := helper.SuccessResponse(
 // 		"succeed to get bulk search data",
 // 		fullResponsePage,
 // 	)

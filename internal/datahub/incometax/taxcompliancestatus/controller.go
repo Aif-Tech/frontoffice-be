@@ -63,7 +63,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		constant.Success,
 		nil,
 	))

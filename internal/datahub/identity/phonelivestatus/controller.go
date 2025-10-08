@@ -43,7 +43,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"success",
 		nil,
 	))
@@ -65,7 +65,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"success",
 		nil,
 	))
@@ -88,7 +88,7 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeeded to get phone live status jobs",
 		jobs,
 	))
@@ -115,7 +115,7 @@ func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeeded to get phone live status job details",
 		jobDetail,
 	))
@@ -168,7 +168,7 @@ func (ctrl *controller) GetJobsSummary(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		"succeeded to get phone live status jobs summary",
 		jobsSummary,
 	))

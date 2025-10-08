@@ -50,6 +50,11 @@ type registerResponseData struct {
 	MemberId uint `json:"member_id"`
 }
 
+type memberListResponse struct {
+	Data      []*MstMember `json:"data"`
+	TotalData any          `json:"total_data"`
+}
+
 type updateUserRequest struct {
 	Name       *string `json:"name"`
 	Email      *string `json:"email" validate:"email~Only email pattern are allowed"`
