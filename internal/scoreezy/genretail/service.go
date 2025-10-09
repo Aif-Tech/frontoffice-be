@@ -129,7 +129,7 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 
 	records, err := helper.ParseCSVFile(file, []string{"Name", "Loan Number", "ID Card Number", "Phone Number"})
 	if err != nil {
-		return apperror.Internal(constant.FailedParseCSV, err)
+		return apperror.BadRequest(err.Error())
 	}
 
 	memberIdStr := helper.ConvertUintToString(memberId)
@@ -214,6 +214,8 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 				errChan <- err
 			}
 		}(req)
+
+		time.Sleep(2 * time.Millisecond)
 
 		batchCount++
 		if batchCount == 100 {
