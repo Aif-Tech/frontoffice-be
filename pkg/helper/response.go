@@ -13,11 +13,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SuccessResponse[T any](message string, data T) *model.APIResponse[T] {
+func SuccessResponse[T any](message string, data T, meta ...*model.Meta) *model.APIResponse[T] {
+	var m *model.Meta
+	if len(meta) > 0 {
+		m = meta[0]
+	}
+
 	return &model.APIResponse[T]{
 		Success: true,
 		Message: message,
 		Data:    &data,
+		Meta:    m,
 	}
 }
 
