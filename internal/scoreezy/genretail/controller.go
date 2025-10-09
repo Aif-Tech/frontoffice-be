@@ -122,6 +122,7 @@ func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
 		constant.Success,
 		gradesResponseData{Logs: result.Data},
+		result.Meta,
 	))
 }
 
