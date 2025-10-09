@@ -1,10 +1,10 @@
 package loanrecordchecker
 
 import (
-	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
+	"mime/multipart"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,12 +25,17 @@ type Controller interface {
 }
 
 func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
-	reqBody := c.Locals(constant.Request).(*loanRecordCheckerRequest)
-	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
-	memberIdStr := fmt.Sprintf("%v", c.Locals(constant.UserId))
-	companyIdStr := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
+	reqBody, ok := c.Locals(constant.Request).(*loanRecordCheckerRequest)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
+	}
 
-	result, err := ctrl.svc.LoanRecordChecker(apiKey, memberIdStr, companyIdStr, reqBody)
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
+	result, err := ctrl.svc.LoanRecordChecker(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
 	if err != nil {
 		return err
 	}
@@ -39,26 +44,17 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
-	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
-	quotaType := fmt.Sprintf("%v", c.Locals(constant.QuotaType))
-
-	memberId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
-	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
+	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
-	companyId, err := helper.InterfaceToUint(c.Locals(constant.CompanyId))
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
-		return apperror.Unauthorized(constant.InvalidCompanySession)
+		return apperror.Unauthorized(err.Error())
 	}
 
-	file, err := c.FormFile("file")
-	if err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
-	err = ctrl.svc.BulkLoanRecordChecker(apiKey, quotaType, memberId, companyId, file)
-	if err != nil {
+	if err := ctrl.svc.BulkLoanRecordChecker(authCtx.APIKey, authCtx.QuotaTypeStr(), authCtx.UserId, authCtx.CompanyId, file); err != nil {
 		return err
 	}
 

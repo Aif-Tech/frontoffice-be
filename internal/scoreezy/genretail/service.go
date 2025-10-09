@@ -123,10 +123,6 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 }
 
 func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, file *multipart.FileHeader) error {
-	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
 	records, err := helper.ParseCSVFile(file, []string{"Name", "Loan Number", "ID Card Number", "Phone Number"})
 	if err != nil {
 		return apperror.BadRequest(err.Error())

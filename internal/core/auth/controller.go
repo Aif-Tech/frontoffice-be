@@ -63,20 +63,15 @@ func (ctrl *controller) RegisterMember(c *fiber.Ctx) error {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
-	currentUserId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
+		return apperror.Unauthorized(err.Error())
 	}
 
-	companyId, err := helper.InterfaceToUint(c.Locals(constant.CompanyId))
-	if err != nil {
-		return apperror.Unauthorized(constant.InvalidCompanySession)
-	}
-
-	reqBody.CompanyId = companyId
+	reqBody.CompanyId = authCtx.CompanyId
 	reqBody.RoleId = uint(memberRoleId)
 
-	if err := ctrl.svc.AddMember(currentUserId, reqBody); err != nil {
+	if err := ctrl.svc.AddMember(authCtx.UserId, reqBody); err != nil {
 		return err
 	}
 
@@ -108,22 +103,16 @@ func (ctrl *controller) VerifyUser(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) Logout(c *fiber.Ctx) error {
-	memberId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
-	}
-
-	companyId, err := helper.InterfaceToUint(c.Locals(constant.CompanyId))
-	if err != nil {
-		return apperror.Unauthorized(constant.InvalidCompanySession)
+		return apperror.Unauthorized(err.Error())
 	}
 
 	// Clear access & refresh token cookies
 	clearAuthCookie(c, "aif_token")
 	clearAuthCookie(c, "aif_refresh_token")
 
-	err = ctrl.svc.Logout(memberId, companyId)
-	if err != nil {
+	if err := ctrl.svc.Logout(authCtx.UserId, authCtx.CompanyId); err != nil {
 		log.Warn().Err(err).Msg("failed to log logout event")
 	}
 
@@ -155,9 +144,12 @@ func (ctrl *controller) ChangePassword(c *fiber.Ctx) error {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
-	userId := fmt.Sprintf("%v", c.Locals(constant.UserId))
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
 
-	if err := ctrl.svc.ChangePassword(userId, reqBody); err != nil {
+	if err := ctrl.svc.ChangePassword(authCtx.UserIdStr(), reqBody); err != nil {
 		return err
 	}
 
@@ -168,24 +160,12 @@ func (ctrl *controller) ChangePassword(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) RefreshAccessToken(c *fiber.Ctx) error {
-	memberId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
+		return apperror.Unauthorized(err.Error())
 	}
 
-	companyId, err := helper.InterfaceToUint(c.Locals(constant.CompanyId))
-	if err != nil {
-		return apperror.Unauthorized(constant.InvalidCompanySession)
-	}
-
-	roleId, err := helper.InterfaceToUint(c.Locals("tierLevel"))
-	if err != nil {
-		return apperror.Unauthorized("invalid tier level session")
-	}
-
-	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
-
-	accessToken, err := ctrl.svc.RefreshAccessToken(memberId, companyId, roleId, apiKey)
+	accessToken, err := ctrl.svc.RefreshAccessToken(authCtx.UserId, authCtx.CompanyId, authCtx.RoleId, authCtx.APIKey)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package phonelivestatus
 import (
 	"bytes"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
@@ -82,11 +81,6 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 			return err
 		}
 
-		var apiErr *apperror.ExternalAPIError
-		if errors.As(err, &apiErr) {
-			return apperror.MapLoanError(apiErr)
-		}
-
 		return apperror.Internal("failed to process phone live status", err)
 	}
 
@@ -100,13 +94,9 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 }
 
 func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, file *multipart.FileHeader) error {
-	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
 	records, err := helper.ParseCSVFile(file, []string{"Phone Number"})
 	if err != nil {
-		return apperror.Internal(constant.FailedParseCSV, err)
+		return apperror.BadRequest(err.Error())
 	}
 
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugPhoneLiveStatus)

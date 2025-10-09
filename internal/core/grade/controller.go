@@ -1,7 +1,6 @@
 package grade
 
 import (
-	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
@@ -23,15 +22,18 @@ type Controller interface {
 }
 
 func (ctrl *controller) SaveGrading(c *fiber.Ctx) error {
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
-
 	reqBody, ok := c.Locals(constant.Request).(*createGradeRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	if err := ctrl.Svc.SaveGrading(&createGradePayload{
-		CompanyId:   companyId,
+		CompanyId:   authCtx.CompanyIdStr(),
 		ProductSlug: constant.SlugGenRetailV3,
 		Request: createGradeRequest{
 			reqBody.Grades,
@@ -47,10 +49,12 @@ func (ctrl *controller) SaveGrading(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetGrades(c *fiber.Ctx) error {
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
-	productSlug := constant.SlugGenRetailV3
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
 
-	grades, err := ctrl.Svc.GetGrades(productSlug, companyId)
+	grades, err := ctrl.Svc.GetGrades(constant.SlugGenRetailV3, authCtx.CompanyIdStr())
 	if err != nil {
 		return err
 	}

@@ -91,13 +91,9 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 }
 
 func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
 	records, err := helper.ParseCSVFile(file, []string{"NPWP"})
 	if err != nil {
-		return apperror.Internal(constant.FailedParseCSV, err)
+		return apperror.BadRequest(err.Error())
 	}
 
 	memberIdStr := strconv.Itoa(int(memberId))

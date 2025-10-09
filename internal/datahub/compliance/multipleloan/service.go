@@ -1,7 +1,6 @@
 package multipleloan
 
 import (
-	"errors"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -92,12 +91,7 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 			return nil, err
 		}
 
-		var apiErr *apperror.ExternalAPIError
-		if errors.As(err, &apiErr) {
-			return nil, apperror.MapLoanError(apiErr)
-		}
-
-		return nil, apperror.Internal("failed to process loan record checker", err)
+		return nil, apperror.Internal("failed to process multiple loan checker", err)
 	}
 
 	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
@@ -114,10 +108,6 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 }
 
 func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, companyId uint, file *multipart.FileHeader) error {
-	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
 	records, err := helper.ParseCSVFile(file, []string{"ID Card Number", "Phone Number"})
 	if err != nil {
 		return apperror.BadRequest(err.Error())
@@ -249,11 +239,6 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
-
-		// var apiErr *apperror.ExternalAPIError
-		// if errors.As(err, &apiErr) {
-		// 	return apperror.MapLoanError(apiErr)
-		// }
 
 		return apperror.Internal("failed to process multiple loan", err)
 	}

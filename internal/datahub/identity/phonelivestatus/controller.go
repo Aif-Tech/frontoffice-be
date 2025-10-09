@@ -6,6 +6,7 @@ import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
+	"mime/multipart"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -32,14 +33,17 @@ type Controller interface {
 }
 
 func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
-	reqBody := c.Locals(constant.Request).(*phoneLiveStatusRequest)
+	reqBody, ok := c.Locals(constant.Request).(*phoneLiveStatusRequest)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
+	}
 
-	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
-	memberId := fmt.Sprintf("%v", c.Locals(constant.UserId))
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
-
-	err := ctrl.svc.PhoneLiveStatus(apiKey, memberId, companyId, reqBody)
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
+	if err := ctrl.svc.PhoneLiveStatus(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody); err != nil {
 		return err
 	}
 
@@ -50,18 +54,17 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
-	apiKey := fmt.Sprintf("%v", c.Locals(constant.APIKey))
-	memberId := fmt.Sprintf("%v", c.Locals(constant.UserId))
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
-	quotaType := fmt.Sprintf("%v", c.Locals(constant.QuotaType))
-
-	file, err := c.FormFile("file")
-	if err != nil {
-		return apperror.BadRequest(err.Error())
+	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
-	err = ctrl.svc.BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType, file)
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
+	if err := ctrl.svc.BulkPhoneLiveStatus(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), authCtx.QuotaTypeStr(), file); err != nil {
 		return err
 	}
 
@@ -72,15 +75,20 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	filter := &phoneLiveStatusFilter{
 		Page:        c.Query(constant.Page, "1"),
 		Size:        c.Query(constant.Size, "10"),
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
 		ProductSlug: constant.SlugPhoneLiveStatus,
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
+		TierLevel:   authCtx.RoleIdStr(),
 	}
 
 	jobs, err := ctrl.svc.GetJobs(filter)
@@ -95,15 +103,20 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	filter := &phoneLiveStatusFilter{
 		Page:        c.Query(constant.Page, "1"),
 		Size:        c.Query(constant.Size, "10"),
 		Keyword:     c.Query(constant.Keyword),
 		JobId:       c.Params("id"),
 		ProductSlug: constant.SlugPhoneLiveStatus,
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
+		TierLevel:   authCtx.RoleIdStr(),
 	}
 
 	if filter.JobId == "" {
@@ -122,15 +135,20 @@ func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	masked, _ := strconv.ParseBool(c.Query("masked"))
 	filter := &phoneLiveStatusFilter{
 		JobId:       c.Params("id"),
 		ProductSlug: constant.SlugPhoneLiveStatus,
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
+		TierLevel:   authCtx.RoleIdStr(),
 		Size:        constant.SizeUnlimited,
 		Masked:      masked,
 	}
@@ -149,13 +167,18 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetJobsSummary(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	filter := &phoneLiveStatusFilter{
 		ProductSlug: constant.SlugPhoneLiveStatus,
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
+		TierLevel:   authCtx.RoleIdStr(),
 		Size:        constant.SizeUnlimited,
 	}
 
@@ -175,14 +198,19 @@ func (ctrl *controller) GetJobsSummary(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) ExportJobsSummary(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	masked, _ := strconv.ParseBool(c.Query("masked"))
 	filter := &phoneLiveStatusFilter{
 		ProductSlug: constant.SlugPhoneLiveStatus,
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
+		TierLevel:   authCtx.RoleIdStr(),
 		Size:        constant.SizeUnlimited,
 		Masked:      masked,
 	}

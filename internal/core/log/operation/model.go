@@ -24,7 +24,7 @@ type mstMember struct {
 }
 
 type mstRole struct {
-	RoleID uint   `json:"role_id" gorm:"primaryKey;autoIncrement"`
+	RoleId uint   `json:"role_id" gorm:"primaryKey;autoIncrement"`
 	Name   string `json:"name"`
 }
 

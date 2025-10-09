@@ -1,7 +1,6 @@
 package member
 
 import (
-	"fmt"
 	"front-office/internal/core/log/operation"
 	"front-office/internal/core/role"
 	"front-office/pkg/apperror"
@@ -74,10 +73,13 @@ func (ctrl *controller) GetById(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetList(c *fiber.Ctx) error {
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
 
 	filter := &MemberParams{
-		CompanyId: companyId,
+		CompanyId: authCtx.CompanyIdStr(),
 		Page:      c.Query(constant.Page, "1"),
 		Limit:     c.Query("limit", "10"),
 		Keyword:   c.Query("keyword", ""),
@@ -100,15 +102,17 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) UpdateProfile(c *fiber.Ctx) error {
-	req := c.Locals(constant.Request).(*updateProfileRequest)
-
-	userId := fmt.Sprintf("%v", c.Locals(constant.UserId))
-	roleId, err := helper.InterfaceToUint(c.Locals(constant.RoleId))
-	if err != nil {
-		return apperror.Unauthorized("invalid role id session")
+	reqBody, ok := c.Locals(constant.Request).(*updateProfileRequest)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
-	updateResp, err := ctrl.svc.UpdateProfile(userId, roleId, req)
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
+	updateResp, err := ctrl.svc.UpdateProfile(authCtx.UserIdStr(), authCtx.RoleId, reqBody)
 	if err != nil {
 		return err
 	}
@@ -120,10 +124,17 @@ func (ctrl *controller) UpdateProfile(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) UploadProfileImage(c *fiber.Ctx) error {
-	userId := fmt.Sprintf("%v", c.Locals(constant.UserId))
-	filename := fmt.Sprintf("%v", c.Locals("filename"))
+	filename, err := helper.GetStringLocal(c, "filename")
+	if err != nil {
+		return apperror.BadRequest(err.Error())
+	}
 
-	resp, err := ctrl.svc.UploadProfileImage(userId, &filename)
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
+	resp, err := ctrl.svc.UploadProfileImage(authCtx.UserIdStr(), &filename)
 	if err != nil {
 		return err
 	}
@@ -135,27 +146,22 @@ func (ctrl *controller) UploadProfileImage(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
-	req := c.Locals(constant.Request).(*updateUserRequest)
+	reqBody, ok := c.Locals(constant.Request).(*updateUserRequest)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
+	}
+
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
 
 	memberId := c.Params("id")
 	if memberId == "" {
 		return apperror.BadRequest(constant.MissingUserId)
 	}
 
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
-
-	currentUserId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
-	if err != nil {
-		return apperror.Unauthorized("invalid user id session")
-	}
-
-	roleId, err := helper.InterfaceToUint(c.Locals(constant.RoleId))
-	if err != nil {
-		return apperror.Unauthorized("invalid role id session")
-	}
-
-	err = ctrl.svc.UpdateMemberById(currentUserId, roleId, companyId, memberId, req)
-	if err != nil {
+	if err := ctrl.svc.UpdateMemberById(authCtx.UserId, authCtx.RoleId, authCtx.CompanyIdStr(), memberId, reqBody); err != nil {
 		return err
 	}
 
@@ -166,14 +172,17 @@ func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) DeleteById(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	id := c.Params("id")
 	if id == "" {
 		return apperror.BadRequest(constant.MissingUserId)
 	}
 
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
-
-	if err := ctrl.svc.DeleteMemberById(id, companyId); err != nil {
+	if err := ctrl.svc.DeleteMemberById(id, authCtx.CompanyIdStr()); err != nil {
 		return err
 	}
 

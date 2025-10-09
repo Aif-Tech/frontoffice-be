@@ -73,11 +73,6 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 			return nil, err
 		}
 
-		// var apiErr *apperror.ExternalAPIError
-		// if errors.As(err, &apiErr) {
-		// 	return nil, apperror.MapLoanError(apiErr)
-		// }
-
 		return nil, apperror.Internal("failed to process loan record checker", err)
 	}
 
@@ -95,13 +90,9 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 }
 
 func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
 	records, err := helper.ParseCSVFile(file, []string{"Name", "ID Card Number", "Phone Number"})
 	if err != nil {
-		return apperror.Internal(constant.FailedParseCSV, err)
+		return apperror.BadRequest(err.Error())
 	}
 
 	memberIdStr := strconv.Itoa(int(memberId))
@@ -208,11 +199,6 @@ func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
-
-		// var apiErr *apperror.ExternalAPIError
-		// if errors.As(err, &apiErr) {
-		// 	return apperror.MapLoanError(apiErr)
-		// }
 
 		return apperror.Internal("failed to process loan record checker", err)
 	}

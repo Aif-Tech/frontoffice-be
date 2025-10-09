@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
+	"front-office/pkg/helper"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,6 +30,11 @@ type Controller interface {
 }
 
 func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	slug := c.Params("product_slug")
 
 	productSlug, err := mapProductSlug(slug)
@@ -42,9 +48,9 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
 		ProductSlug: productSlug,
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
+		TierLevel:   authCtx.RoleIdStr(),
 	}
 
 	result, err := ctrl.Svc.GetJobs(filter)
@@ -56,15 +62,20 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetGenRetailJobs(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	filter := &logFilter{
 		Page:        c.Query(constant.Page, "1"),
 		Size:        c.Query(constant.Size, "10"),
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
 		ProductSlug: constant.SlugGenRetailV3,
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		TierLevel:   fmt.Sprintf("%v", c.Locals(constant.RoleId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
+		TierLevel:   authCtx.RoleIdStr(),
 	}
 
 	result, err := ctrl.Svc.GetGenRetailJobs(filter)
@@ -76,6 +87,11 @@ func (ctrl *controller) GetGenRetailJobs(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	slug := c.Params("product_slug")
 
 	productSlug, err := mapProductSlug(slug)
@@ -84,8 +100,8 @@ func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
 		Page:        c.Query(constant.Page, ""),
 		Size:        c.Query(constant.Size, ""),
 		Keyword:     c.Query("keyword"),
@@ -102,6 +118,11 @@ func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetJobDetailsByDateRange(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	slug := c.Params("product_slug")
 
 	productSlug, err := mapProductSlug(slug)
@@ -116,8 +137,8 @@ func (ctrl *controller) GetJobDetailsByDateRange(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    fmt.Sprintf("%v", c.Locals(constant.UserId)),
-		CompanyId:   fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
 		Page:        c.Query(constant.Page, "1"),
 		Size:        c.Query(constant.Size, "10"),
 		Keyword:     c.Query("keyword"),
@@ -135,8 +156,11 @@ func (ctrl *controller) GetJobDetailsByDateRange(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
-	memberId := c.Locals(constant.UserId).(uint)
-	companyId := c.Locals(constant.CompanyId).(uint)
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	slug := c.Params("product_slug")
 	masked, _ := strconv.ParseBool(c.Query("masked"))
 
@@ -146,8 +170,8 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    strconv.FormatUint(uint64(memberId), 10),
-		CompanyId:   strconv.FormatUint(uint64(companyId), 10),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
 		ProductSlug: productSlug,
 		JobId:       c.Params("job_id"),
 		Size:        constant.SizeUnlimited,
@@ -162,12 +186,16 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 
 	c.Set(constant.HeaderContentType, constant.TextOrCSVContentType)
 	c.Set(constant.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s", filename))
+
 	return c.SendStream(bytes.NewReader(buf.Bytes()))
 }
 
 func (ctrl *controller) ExportJobDetailsByDateRange(c *fiber.Ctx) error {
-	memberId := c.Locals(constant.UserId).(uint)
-	companyId := c.Locals(constant.CompanyId).(uint)
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	slug := c.Params("product_slug")
 	masked, _ := strconv.ParseBool(c.Query("masked"))
 
@@ -183,8 +211,8 @@ func (ctrl *controller) ExportJobDetailsByDateRange(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    strconv.FormatUint(uint64(memberId), 10),
-		CompanyId:   strconv.FormatUint(uint64(companyId), 10),
+		MemberId:    authCtx.UserIdStr(),
+		CompanyId:   authCtx.CompanyIdStr(),
 		ProductSlug: productSlug,
 		StartDate:   startDate,
 		EndDate:     endDate,
@@ -200,6 +228,7 @@ func (ctrl *controller) ExportJobDetailsByDateRange(c *fiber.Ctx) error {
 
 	c.Set(constant.HeaderContentType, constant.TextOrCSVContentType)
 	c.Set(constant.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s", filename))
+
 	return c.SendStream(bytes.NewReader(buf.Bytes()))
 }
 
