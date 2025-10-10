@@ -41,14 +41,16 @@ type gradesResponseData struct {
 }
 
 type filterLogs struct {
-	TrxId     string
-	StartDate string
-	EndDate   string
-	JobId     string
-	CompanyId string
-	Grade     string
-	Page      string
-	Size      string
+	TrxId       string
+	StartDate   string
+	EndDate     string
+	JobId       string
+	CompanyId   string
+	Name        string
+	Grade       string
+	ProductType string
+	Page        string
+	Size        string
 }
 
 type GenRetailV3ClientReturnSuccess struct {

@@ -103,11 +103,13 @@ func (repo *repository) fetchLogsAPI(path string, query map[string]string) (*mod
 func (repo *repository) GetLogsScoreezyAPI(filter *filterLogs) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error) {
 	return repo.fetchLogsAPI("/api/core/logging/transaction/scoreezy/list",
 		map[string]string{
-			"company_id": filter.CompanyId,
-			"job_id":     filter.JobId,
-			"grade":      filter.Grade,
-			"size":       filter.Size,
-			"page":       filter.Page,
+			"company_id":   filter.CompanyId,
+			"job_id":       filter.JobId,
+			"name":         filter.Name,
+			"grade":        filter.Grade,
+			"product_type": filter.ProductType,
+			"size":         filter.Size,
+			"page":         filter.Page,
 		})
 }
 

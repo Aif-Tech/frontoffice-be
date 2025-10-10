@@ -6,6 +6,7 @@ import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/helper"
 	"mime/multipart"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -105,13 +106,15 @@ func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 	}
 
 	filter := &filterLogs{
-		CompanyId: authCtx.CompanyIdStr(),
-		JobId:     c.Query("job_id"),
-		StartDate: c.Query(constant.StartDate),
-		EndDate:   c.Query(constant.EndDate),
-		Grade:     c.Query("grade"),
-		Page:      c.Query(constant.Page),
-		Size:      c.Query(constant.Size),
+		CompanyId:   authCtx.CompanyIdStr(),
+		JobId:       c.Query("job_id"),
+		StartDate:   c.Query(constant.StartDate),
+		EndDate:     c.Query(constant.EndDate),
+		Name:        strings.ToLower(strings.TrimSpace(c.Query("name"))),
+		ProductType: strings.ToLower(strings.TrimSpace(c.Query("product_type"))),
+		Grade:       strings.ToLower(c.Query("grade")),
+		Page:        c.Query(constant.Page),
+		Size:        c.Query(constant.Size),
 	}
 
 	result, err := ctrl.service.GetLogsScoreezy(filter)

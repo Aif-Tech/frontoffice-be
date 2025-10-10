@@ -239,6 +239,17 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 	}
 
 	if filter.StartDate == "" && filter.EndDate == "" {
+		validProductTypes := map[string]bool{
+			"personal": true,
+			"company":  true,
+		}
+
+		if filter.ProductType != "" {
+			if !validProductTypes[filter.ProductType] {
+				return nil, apperror.BadRequest(fmt.Sprintf("invalid product type: %s", filter.ProductType))
+			}
+		}
+
 		result, err = svc.repo.GetLogsScoreezyAPI(filter)
 		if err != nil {
 			return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
