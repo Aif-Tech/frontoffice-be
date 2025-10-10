@@ -108,6 +108,8 @@ func (repo *repository) GetLogsScoreezyAPI(filter *filterLogs) (*model.AifcoreAP
 			"name":         filter.Name,
 			"grade":        filter.Grade,
 			"product_type": filter.ProductType,
+			"start_date":   filter.StartDate,
+			"end_date":     filter.EndDate,
 			"size":         filter.Size,
 			"page":         filter.Page,
 		})

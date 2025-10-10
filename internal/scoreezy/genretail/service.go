@@ -238,38 +238,32 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 		return nil, apperror.BadRequest("job id is required")
 	}
 
-	if filter.StartDate == "" && filter.EndDate == "" {
-		validProductTypes := map[string]bool{
-			"personal": true,
-			"company":  true,
-		}
+	validProductTypes := map[string]bool{
+		"personal": true,
+		"company":  true,
+	}
 
-		if filter.ProductType != "" {
-			if !validProductTypes[filter.ProductType] {
-				return nil, apperror.BadRequest(fmt.Sprintf("invalid product type: %s", filter.ProductType))
-			}
+	if filter.ProductType != "" {
+		if !validProductTypes[filter.ProductType] {
+			return nil, apperror.BadRequest(fmt.Sprintf("invalid product type: %s", filter.ProductType))
 		}
+	}
 
-		result, err = svc.repo.GetLogsScoreezyAPI(filter)
-		if err != nil {
-			return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
-		}
-	} else {
-		if filter.StartDate != "" && filter.EndDate == "" {
-			filter.EndDate = filter.StartDate
-		}
-
+	if filter.StartDate != "" {
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
 			return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
 		}
+	}
+
+	if filter.EndDate != "" {
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
 			return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
 		}
+	}
 
-		result, err = svc.repo.GetLogsByRangeDateAPI(filter)
-		if err != nil {
-			return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
-		}
+	result, err = svc.repo.GetLogsScoreezyAPI(filter)
+	if err != nil {
+		return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
 	}
 
 	for _, log := range result.Data {
