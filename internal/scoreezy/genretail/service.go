@@ -62,7 +62,7 @@ const (
 
 type Service interface {
 	GenRetailV3(memberId, companyId uint, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error)
-	BulkGenRetailV3(memberId, companyId uint, quotaType string, file *multipart.FileHeader) error
+	BulkGenRetailV3(memberId, companyId uint, quotaType string, file *multipart.FileHeader) (uint, error)
 	GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error)
 	GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error)
 	ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (string, error)
@@ -122,20 +122,20 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 	return result, err
 }
 
-func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, file *multipart.FileHeader) error {
+func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, file *multipart.FileHeader) (uint, error) {
 	records, err := helper.ParseCSVFile(file, []string{"Name", "Loan Number", "ID Card Number", "Phone Number"})
 	if err != nil {
-		return apperror.BadRequest(err.Error())
+		return 0, apperror.BadRequest(err.Error())
 	}
 
 	memberIdStr := helper.ConvertUintToString(memberId)
 	companyIdStr := helper.ConvertUintToString(companyId)
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugGenRetailV3)
 	if err != nil {
-		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+		return 0, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 	if subscribedResp.Data.ProductId == 0 {
-		return apperror.NotFound(constant.ErrSubscribtionNotFound)
+		return 0, apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
@@ -146,22 +146,22 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 		QuotaType:    quotaType,
 	})
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchQuota)
+		return 0, apperror.MapRepoError(err, constant.FailedFetchQuota)
 	}
 
 	totalRequests := len(records) - 1
 	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
-		return apperror.Forbidden(constant.ErrQuotaExceeded)
+		return 0, apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
 	// make sure parameter settings are set
 	gradeResp, err := svc.gradeRepo.GetGradesAPI(constant.SlugGenRetailV3, strconv.FormatUint(uint64(companyId), 10))
 	if err != nil {
-		return apperror.MapRepoError(err, "failed to get grades")
+		return 0, apperror.MapRepoError(err, "failed to get grades")
 	}
 
 	if len(gradeResp.Grades) < 1 {
-		return apperror.BadRequest(constant.ParamSettingIsNotSet)
+		return 0, apperror.BadRequest(constant.ParamSettingIsNotSet)
 	}
 
 	var reqs []*genRetailRequest
@@ -185,7 +185,7 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 		Total:     totalRequests,
 	})
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedCreateJob)
+		return 0, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
 
 	var (
@@ -227,7 +227,7 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 		logger.Error().Err(err).Msg("error during bulk gen retail processing")
 	}
 
-	return nil
+	return jobRes.JobId, nil
 }
 
 func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error) {

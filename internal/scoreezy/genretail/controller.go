@@ -89,13 +89,14 @@ func (ctrl *controller) BulkRequest(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	if err := ctrl.service.BulkGenRetailV3(authCtx.UserId, authCtx.CompanyId, authCtx.QuotaTypeStr(), file); err != nil {
+	jobId, err := ctrl.service.BulkGenRetailV3(authCtx.UserId, authCtx.CompanyId, authCtx.QuotaTypeStr(), file)
+	if err != nil {
 		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		constant.Success,
-		nil,
+		fiber.Map{"job_id": jobId},
 	))
 }
 
