@@ -211,8 +211,6 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 			}
 		}(req)
 
-		time.Sleep(20 * time.Millisecond) // add delay between processSingleGenRetail calls to avoid identical trx_id generation
-
 		batchCount++
 		if batchCount == 100 {
 			time.Sleep(time.Second)
