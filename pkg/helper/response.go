@@ -13,33 +13,43 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type BaseResponseSuccess struct {
-	Message    string      `json:"message"`
-	Success    bool        `json:"success"`
-	Data       interface{} `json:"data"`
-	StatusCode int         `json:"-"`
-}
+func SuccessResponse[T any](message string, data T, meta ...*model.Meta) *model.APIResponse[T] {
+	var m *model.Meta
+	if len(meta) > 0 {
+		m = meta[0]
+	}
 
-type BaseResponseFailed struct {
-	Message string `json:"message"`
-}
-
-func ResponseSuccess(
-	message string,
-	data interface{},
-) BaseResponseSuccess {
-	return BaseResponseSuccess{
-		Message: message,
+	return &model.APIResponse[T]{
 		Success: true,
-		Data:    data,
+		Message: message,
+		Data:    &data,
+		Meta:    m,
 	}
 }
 
-func ResponseFailed(message string) BaseResponseFailed {
-	return BaseResponseFailed{
+func ErrorResponse(message string) *model.APIResponse[any] {
+	return &model.APIResponse[any]{
+		Success: false,
 		Message: message,
 	}
 }
+
+// func SuccessResponse(
+// 	message string,
+// 	data interface{},
+// ) BaseResponseSuccess {
+// 	return BaseResponseSuccess{
+// 		Message: message,
+// 		Success: true,
+// 		Data:    data,
+// 	}
+// }
+
+// func ErrorResponse(message string) BaseResponseFailed {
+// 	return BaseResponseFailed{
+// 		Message: message,
+// 	}
+// }
 
 func GetError(errorMessage string) (int, interface{}) {
 	var statusCode int
@@ -87,7 +97,7 @@ func GetError(errorMessage string) (int, interface{}) {
 		statusCode = fiber.StatusInternalServerError
 	}
 
-	resp := ResponseFailed(errorMessage)
+	resp := ErrorResponse(errorMessage)
 	return statusCode, resp
 }
 

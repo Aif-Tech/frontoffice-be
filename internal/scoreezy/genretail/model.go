@@ -41,12 +41,16 @@ type gradesResponseData struct {
 }
 
 type filterLogs struct {
-	TrxId     string
-	StartDate string
-	EndDate   string
-	CompanyId string
-	Grade     string
-	Size      string
+	TrxId       string
+	StartDate   string
+	EndDate     string
+	JobId       string
+	CompanyId   string
+	Name        string
+	Grade       string
+	ProductType string
+	Page        string
+	Size        string
 }
 
 type GenRetailV3ClientReturnSuccess struct {
@@ -56,20 +60,24 @@ type GenRetailV3ClientReturnSuccess struct {
 }
 
 type logTransScoreezy struct {
-	LogTrxId             uint                  `json:"log_trx_id" gorm:"primaryKey;autoIncrement"`
-	TrxId                string                `json:"trx_id"`
-	CompanyId            uint                  `json:"company_id"`
-	Status               string                `json:"status"`  // Free or Pay
-	Success              bool                  `json:"success"` // true or false
-	Message              string                `json:"message"`
-	ProbabilityToDefault string                `json:"probability_to_default"`
-	Grade                string                `json:"grade"`
-	LoanNo               string                `json:"loan_no"`
-	Data                 *dataLogTransScoreezy `json:"data" swaggertype:"object"`
-	CreatedAt            time.Time             `json:"created_at" format:"date-time"`
+	LogTrxId  uint                  `json:"log_trx_id"`
+	CompanyId uint                  `json:"company_id"`
+	Data      *dataLogTransScoreezy `json:"data" swaggertype:"object"`
+	CreatedAt time.Time             `json:"created_at" format:"date-time"`
 }
 
 type dataLogTransScoreezy struct {
+	TrxId                string `json:"trx_id"`
+	Type                 string `json:"type"`
+	Data                 *data  `json:"data"`
+	ProbabilityToDefault string `json:"probability_to_default"`
+	Grade                string `json:"grade"`
+	Message              string `json:"message"`
+	Status               string `json:"status"`  // Free or Pay
+	Success              bool   `json:"success"` // true or false
+}
+
+type data struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_no"`
 	IdCardNo    string `json:"id_card_no"`
@@ -80,6 +88,7 @@ type genRetailContext struct {
 	MemberId  uint              `json:"member_id"`
 	CompanyId uint              `json:"company_id"`
 	ProductId uint              `json:"product_id"`
+	JobId     uint              `json:"job_id"`
 	Request   *genRetailRequest `json:"request"`
 }
 

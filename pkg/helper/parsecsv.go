@@ -3,7 +3,7 @@ package helper
 import (
 	"encoding/csv"
 	"errors"
-	"front-office/pkg/common/constant"
+	"fmt"
 	"log"
 	"mime/multipart"
 )
@@ -32,11 +32,12 @@ func ParseCSVFile(file *multipart.FileHeader, expectedHeaders []string) ([][]str
 
 	header := csvData[0]
 	if len(header) < len(expectedHeaders) {
-		return nil, errors.New(constant.HeaderTemplateNotValid)
+		return nil, fmt.Errorf("invalid csv header length: expected %d, got %d", len(expectedHeaders), len(header))
 	}
+
 	for i, expectedHeader := range expectedHeaders {
 		if header[i] != expectedHeader {
-			return nil, errors.New(constant.HeaderTemplateNotValid)
+			return nil, fmt.Errorf("invalid csv header at column %d: expected %q, got %q", i+1, expectedHeader, header[i])
 		}
 	}
 

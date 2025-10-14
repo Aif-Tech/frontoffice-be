@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/helper"
+	"mime/multipart"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -58,18 +60,17 @@ func (ctrl *controller) DummyRequestScore(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) SingleRequest(c *fiber.Ctx) error {
-	req := c.Locals(constant.Request).(*genRetailRequest)
-	memberId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
-	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
+	reqBody, ok := c.Locals(constant.Request).(*genRetailRequest)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
-	companyId, err := helper.InterfaceToUint(c.Locals(constant.CompanyId))
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
+		return apperror.Unauthorized(err.Error())
 	}
 
-	result, err := ctrl.service.GenRetailV3(memberId, companyId, req)
+	result, err := ctrl.service.GenRetailV3(authCtx.UserId, authCtx.CompanyId, reqBody)
 	if err != nil {
 		return err
 	}
@@ -78,37 +79,43 @@ func (ctrl *controller) SingleRequest(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) BulkRequest(c *fiber.Ctx) error {
-	memberId, err := helper.InterfaceToUint(c.Locals(constant.UserId))
-	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
+	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
+	if !ok {
+		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
-	companyId, err := helper.InterfaceToUint(c.Locals(constant.CompanyId))
+	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
-		return apperror.Unauthorized(constant.InvalidUserSession)
+		return apperror.Unauthorized(err.Error())
 	}
 
-	file, err := c.FormFile("file")
+	jobId, err := ctrl.service.BulkGenRetailV3(authCtx.UserId, authCtx.CompanyId, authCtx.QuotaTypeStr(), file)
 	if err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
-	if err := ctrl.service.BulkGenRetailV3(memberId, companyId, file); err != nil {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(
-		"success",
-		nil,
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
+		constant.Success,
+		fiber.Map{"job_id": jobId},
 	))
 }
 
 func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	filter := &filterLogs{
-		CompanyId: fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
-		StartDate: c.Query(constant.StartDate),
-		EndDate:   c.Query(constant.EndDate),
-		Grade:     c.Query("grade"),
+		CompanyId:   authCtx.CompanyIdStr(),
+		JobId:       c.Query("job_id"),
+		StartDate:   c.Query(constant.StartDate),
+		EndDate:     c.Query(constant.EndDate),
+		Name:        strings.ToLower(strings.TrimSpace(c.Query("name"))),
+		ProductType: strings.ToLower(strings.TrimSpace(c.Query("product_type"))),
+		Grade:       strings.ToLower(c.Query("grade")),
+		Page:        c.Query(constant.Page),
+		Size:        c.Query(constant.Size),
 	}
 
 	result, err := ctrl.service.GetLogsScoreezy(filter)
@@ -116,16 +123,21 @@ func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": constant.Success,
-		"data":    gradesResponseData{Logs: result.Data},
-		"meta":    result.Meta,
-	})
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(
+		constant.Success,
+		gradesResponseData{Logs: result.Data},
+		result.Meta,
+	))
 }
 
 func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	filter := &filterLogs{
-		CompanyId: fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
+		CompanyId: authCtx.CompanyIdStr(),
 		TrxId:     c.Params("trx_id"),
 	}
 
@@ -134,12 +146,17 @@ func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.ResponseSuccess(constant.Success, result))
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(constant.Success, result))
 }
 
 func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	filter := &filterLogs{
-		CompanyId: fmt.Sprintf("%v", c.Locals(constant.CompanyId)),
+		CompanyId: authCtx.CompanyIdStr(),
 		StartDate: c.Query(constant.StartDate),
 		EndDate:   c.Query(constant.EndDate),
 		Size:      constant.SizeUnlimited,
@@ -253,7 +270,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 // 		"data":       bulkSearch,
 // 	}
 
-// 	resp := helper.ResponseSuccess(
+// 	resp := helper.SuccessResponse(
 // 		"succeed to upload data",
 // 		fullResponsePage,
 // 	)
@@ -280,7 +297,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 // 		"data":       bulkSearch,
 // 	}
 
-// 	resp := helper.ResponseSuccess(
+// 	resp := helper.SuccessResponse(
 // 		"succeed to get bulk search data",
 // 		fullResponsePage,
 // 	)

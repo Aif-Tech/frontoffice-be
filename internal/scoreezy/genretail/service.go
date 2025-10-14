@@ -7,7 +7,9 @@ import (
 	"front-office/internal/core/grade"
 	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
+	"front-office/internal/core/member"
 	"front-office/internal/core/product"
+	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
@@ -15,10 +17,10 @@ import (
 	"log"
 	"mime/multipart"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	logger "github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
@@ -29,8 +31,18 @@ func NewService(
 	transRepo transaction.Repository,
 	productRepo product.Repository,
 	logRepo operation.Repository,
+	jobRepo job.Repository,
+	memberRepo member.Repository,
 ) Service {
-	return &service{repo, gradeRepo, transRepo, productRepo, logRepo}
+	return &service{
+		repo,
+		gradeRepo,
+		transRepo,
+		productRepo,
+		logRepo,
+		jobRepo,
+		memberRepo,
+	}
 }
 
 type service struct {
@@ -39,11 +51,18 @@ type service struct {
 	transRepo   transaction.Repository
 	productRepo product.Repository
 	logRepo     operation.Repository
+	jobRepo     job.Repository
+	memberRepo  member.Repository
 }
+
+const (
+	typePersonal = "personal"
+	// typeCompany  = "company"
+)
 
 type Service interface {
 	GenRetailV3(memberId, companyId uint, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error)
-	BulkGenRetailV3(memberId, companyId uint, file *multipart.FileHeader) error
+	BulkGenRetailV3(memberId, companyId uint, quotaType string, file *multipart.FileHeader) (uint, error)
 	GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error)
 	GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error)
 	ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (string, error)
@@ -53,18 +72,38 @@ type Service interface {
 }
 
 func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error) {
+	memberIdStr := helper.ConvertUintToString(memberId)
+	companyIdStr := helper.ConvertUintToString(companyId)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugGenRetailV3)
+	if err != nil {
+		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
+	}
+
 	// make sure parameter settings are set
-	productSlug := constant.SlugGenRetailV3
-	grade, err := svc.gradeRepo.GetGradesAPI(productSlug, strconv.FormatUint(uint64(companyId), 10))
+	gradeResp, err := svc.gradeRepo.GetGradesAPI(constant.SlugGenRetailV3, strconv.FormatUint(uint64(companyId), 10))
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to get grades")
 	}
 
-	if len(grade.Grades) < 1 {
+	if len(gradeResp.Grades) < 1 {
 		return nil, apperror.BadRequest(constant.ParamSettingIsNotSet)
 	}
 
-	result, err := svc.repo.GenRetailV3API(strconv.FormatUint(uint64(memberId), 10), payload)
+	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
+		ProductId: subscribedResp.Data.ProductId,
+		MemberId:  memberIdStr,
+		CompanyId: companyIdStr,
+		Total:     1,
+	})
+	if err != nil {
+		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
+	}
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
+
+	result, err := svc.repo.GenRetailV3API(strconv.FormatUint(uint64(memberId), 10), jobIdStr, payload)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to process gen retail v3")
 	}
@@ -83,34 +122,46 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 	return result, err
 }
 
-func (svc *service) BulkGenRetailV3(memberId, companyId uint, file *multipart.FileHeader) error {
-	// make sure parameter settings are set
-	productSlug := constant.SlugGenRetailV3
-	grade, err := svc.gradeRepo.GetGradesAPI(productSlug, strconv.FormatUint(uint64(companyId), 10))
-	if err != nil {
-		return apperror.MapRepoError(err, "failed to get grades")
-	}
-
-	if len(grade.Grades) < 1 {
-		return apperror.BadRequest(constant.ParamSettingIsNotSet)
-	}
-
-	product, err := svc.productRepo.GetProductAPI(productSlug)
-	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
-	}
-
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
-
-	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
+func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, file *multipart.FileHeader) (uint, error) {
 	records, err := helper.ParseCSVFile(file, []string{"Name", "Loan Number", "ID Card Number", "Phone Number"})
 	if err != nil {
-		return apperror.Internal(constant.FailedParseCSV, err)
+		return 0, apperror.BadRequest(err.Error())
+	}
+
+	memberIdStr := helper.ConvertUintToString(memberId)
+	companyIdStr := helper.ConvertUintToString(companyId)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugGenRetailV3)
+	if err != nil {
+		return 0, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return 0, apperror.NotFound(constant.ErrSubscribtionNotFound)
+	}
+
+	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
+	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
+		MemberId:     memberIdStr,
+		CompanyId:    companyIdStr,
+		SubscribedId: subscribedIdStr,
+		QuotaType:    quotaType,
+	})
+	if err != nil {
+		return 0, apperror.MapRepoError(err, constant.FailedFetchQuota)
+	}
+
+	totalRequests := len(records) - 1
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
+		return 0, apperror.Forbidden(constant.ErrQuotaExceeded)
+	}
+
+	// make sure parameter settings are set
+	gradeResp, err := svc.gradeRepo.GetGradesAPI(constant.SlugGenRetailV3, strconv.FormatUint(uint64(companyId), 10))
+	if err != nil {
+		return 0, apperror.MapRepoError(err, "failed to get grades")
+	}
+
+	if len(gradeResp.Grades) < 1 {
+		return 0, apperror.BadRequest(constant.ParamSettingIsNotSet)
 	}
 
 	var reqs []*genRetailRequest
@@ -125,6 +176,16 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, file *multipart.Fi
 			IdCardNo: rec[2],
 			PhoneNo:  rec[3],
 		})
+	}
+
+	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
+		ProductId: subscribedResp.Data.ProductId,
+		MemberId:  memberIdStr,
+		CompanyId: companyIdStr,
+		Total:     totalRequests,
+	})
+	if err != nil {
+		return 0, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
 
 	var (
@@ -142,7 +203,8 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, file *multipart.Fi
 			if err := svc.processSingleGenRetail(&genRetailContext{
 				MemberId:  memberId,
 				CompanyId: companyId,
-				ProductId: product.ProductId,
+				ProductId: subscribedResp.Data.ProductId,
+				JobId:     jobRes.JobId,
 				Request:   req,
 			}); err != nil {
 				errChan <- err
@@ -163,36 +225,49 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, file *multipart.Fi
 		logger.Error().Err(err).Msg("error during bulk gen retail processing")
 	}
 
-	return nil
+	return jobRes.JobId, nil
 }
 
 func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error) {
 	var result *model.AifcoreAPIResponse[[]*logTransScoreezy]
 	var err error
 
-	if filter.StartDate == "" && filter.EndDate == "" {
-		result, err = svc.repo.GetLogsScoreezyAPI(filter)
-		if err != nil {
-			return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
+	if filter.JobId == "" {
+		return nil, apperror.BadRequest("job id is required")
+	}
+
+	validProductTypes := map[string]bool{
+		"personal": true,
+		"company":  true,
+	}
+
+	if filter.ProductType != "" {
+		if !validProductTypes[filter.ProductType] {
+			return nil, apperror.BadRequest(fmt.Sprintf("invalid product type: %s", filter.ProductType))
 		}
-
-		return result, nil
 	}
 
-	if filter.StartDate != "" && filter.EndDate == "" {
-		filter.EndDate = filter.StartDate
+	if filter.StartDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
+			return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+		}
 	}
 
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
-		return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
-	}
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
-		return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+	if filter.EndDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
+			return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+		}
 	}
 
-	result, err = svc.repo.GetLogsByRangeDateAPI(filter)
+	result, err = svc.repo.GetLogsScoreezyAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch logs scoreezy")
+	}
+
+	for _, log := range result.Data {
+		if log.Data != nil {
+			log.Data.Type = deriveTypeFromTrxId(log.Data.TrxId)
+		}
 	}
 
 	return result, nil
@@ -245,7 +320,44 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 	}
 
 	for _, log := range logs {
-		row := []string{log.CreatedAt.Format(constant.FormatDateAndTime), log.Data.Name, log.Data.LoanNo, log.Data.IdCardNo, log.Data.PhoneNumber, log.ProbabilityToDefault, log.Grade, log.Message}
+		var (
+			createdAt            string
+			name                 string
+			loanID               string
+			idCardNo             string
+			phoneNumber          string
+			probabilityToDefault string
+			grade                string
+			message              string
+		)
+
+		if log.CreatedAt.IsZero() {
+			createdAt = ""
+		} else {
+			createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
+		}
+
+		if log.Data != nil && log.Data.Data != nil {
+			name = log.Data.Data.Name
+			loanID = log.Data.Data.LoanNo
+			idCardNo = log.Data.Data.IdCardNo
+			phoneNumber = log.Data.Data.PhoneNumber
+			probabilityToDefault = log.Data.ProbabilityToDefault
+			grade = log.Data.Grade
+			message = log.Data.Message
+		}
+
+		row := []string{
+			createdAt,
+			name,
+			loanID,
+			idCardNo,
+			phoneNumber,
+			probabilityToDefault,
+			grade,
+			message,
+		}
+
 		if err := w.Write(row); err != nil {
 			return err
 		}
@@ -266,10 +378,11 @@ func formatCSVFileName(base, startDate, endDate string) string {
 func (svc *service) processSingleGenRetail(params *genRetailContext) error {
 	if err := validator.ValidateStruct(params.Request); err != nil {
 		_ = svc.transRepo.CreateLogScoreezyAPI(&transaction.LogTransScoreezy{
-			TrxId:     uuid.NewString(),
+			TrxId:     helper.GenerateTrx(constant.TrxIdGenRetailV3),
 			MemberId:  params.MemberId,
 			CompanyId: params.CompanyId,
 			ProductId: params.ProductId,
+			JobId:     params.JobId,
 			Message:   err.Error(),
 			Status:    "FREE",
 			Success:   false,
@@ -278,13 +391,60 @@ func (svc *service) processSingleGenRetail(params *genRetailContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.GenRetailV3API(strconv.FormatUint(uint64(params.MemberId), 10), params.Request)
+	_, err := svc.repo.GenRetailV3API(
+		strconv.FormatUint(uint64(params.MemberId), 10),
+		strconv.FormatUint(uint64(params.JobId), 10),
+		params.Request,
+	)
 	if err != nil {
 		return apperror.MapRepoError(err, "failed to process gen retail v3")
 	}
 
 	return nil
 }
+
+func deriveTypeFromTrxId(trxId string) string {
+	switch {
+	case strings.Contains(trxId, constant.TrxIdGenRetailV3):
+		return typePersonal
+	default:
+		return ""
+	}
+}
+
+// func (svc *service) finalizeJob(jobIdStr string) error {
+// 	count, err := svc.transRepo.ProcessedLogCountAPI(jobIdStr)
+// 	if err != nil {
+// 		return apperror.MapRepoError(err, "failed to get success count")
+// 	}
+
+// 	if err := svc.jobRepo.UpdateJobAPI(jobIdStr, map[string]interface{}{
+// 		"success_count": helper.IntPtr(int(count.ProcessedCount)),
+// 		"status":        helper.StringPtr(constant.JobStatusDone),
+// 		"end_at":        helper.TimePtr(time.Now()),
+// 	}); err != nil {
+// 		return apperror.MapRepoError(err, "failed to update job status")
+// 	}
+
+// 	return nil
+// }
+
+// func (svc *service) finalizeFailedJob(jobIdStr string) error {
+// 	count, err := svc.transRepo.ProcessedLogCountAPI(jobIdStr)
+// 	if err != nil {
+// 		return apperror.MapRepoError(err, "failed to get processed count request")
+// 	}
+
+// 	if err := svc.jobRepo.UpdateJobAPI(jobIdStr, map[string]interface{}{
+// 		"success_count": helper.IntPtr(int(count.ProcessedCount)),
+// 		"status":        helper.StringPtr(constant.JobStatusFailed),
+// 		"end_at":        helper.TimePtr(time.Now()),
+// 	}); err != nil {
+// 		return apperror.MapRepoError(err, "failed to update job status")
+// 	}
+
+// 	return nil
+// }
 
 // func (svc *service) BulkSearchUploadSvc(req []BulkSearchRequest, tempType, apiKey, userId, companyId string) error {
 // 	var bulkSearches []*BulkSearch

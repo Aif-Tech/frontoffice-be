@@ -61,6 +61,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		result, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{
 				Name:     constant.DummyName,
 				IdCardNo: constant.DummyNIK,
@@ -89,6 +90,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		result, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{
 				Name:     constant.DummyName,
 				IdCardNo: constant.DummyNIK,
@@ -113,6 +115,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		_, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{
 				Name:     constant.DummyName,
 				IdCardNo: constant.DummyNIK,
@@ -131,6 +134,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		_, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{},
 		)
 
@@ -149,6 +153,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		result, err := repo.GenRetailV3API(
 			constant.DummyMemberId,
+			constant.JobId,
 			&genRetailRequest{},
 		)
 
@@ -287,7 +292,9 @@ func TestGetLogByTrxIdAPI(t *testing.T) {
 		mockData := model.AifcoreAPIResponse[any]{
 			Success: true,
 			Data: &logTransScoreezy{
-				TrxId: constant.DummyId,
+				Data: &dataLogTransScoreezy{
+					TrxId: constant.DummyId,
+				},
 			},
 		}
 		body, err := json.Marshal(mockData)
@@ -304,7 +311,7 @@ func TestGetLogByTrxIdAPI(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.Equal(t, constant.DummyId, result.TrxId)
+		assert.Equal(t, constant.DummyId, result.Data.TrxId)
 		mockClient.AssertExpectations(t)
 	})
 

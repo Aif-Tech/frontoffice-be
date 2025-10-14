@@ -5,7 +5,9 @@ import (
 	"front-office/internal/core/grade"
 	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
+	"front-office/internal/core/member"
 	"front-office/internal/core/product"
+	"front-office/internal/datahub/job"
 	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
 
@@ -18,17 +20,18 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 	transRepo := transaction.NewRepository(cfg, client, nil)
 	productRepo := product.NewRepository(cfg, client)
 	logRepo := operation.NewRepository(cfg, client, nil)
+	jobRepo := job.NewRepository(cfg, client, nil)
+	memberRepo := member.NewRepository(cfg, client, nil)
 
-	service := NewService(repo, gradeRepo, transRepo, productRepo, logRepo)
+	service := NewService(repo, gradeRepo, transRepo, productRepo, logRepo, jobRepo, memberRepo)
 
 	controller := NewController(service)
 
-	genRetailGroup := apiGroup.Group("gen-retail")
-	genRetailGroup.Post("/dummy-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.IsRequestValid(genRetailRequest{}), controller.DummyRequestScore)
-	genRetailGroup.Post("/single-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.IsRequestValid(genRetailRequest{}), controller.SingleRequest)
-	genRetailGroup.Post("/bulk-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.BulkRequest)
-	genRetailGroup.Get("/logs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogsScoreezy)
-	genRetailGroup.Get("/logs/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.ExportJobDetails)
-	genRetailGroup.Get("/logs/:trx_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogScoreezy)
-	// genRetailAPI.Put("/upload-scoring-template", middleware.Auth(), middleware.IsRequestValid(UploadScoringRequest{}), middleware.GetJWTPayloadFromCookie(), middleware.DocUpload(), controller.UploadCSV)
+	apiGroup.Post("/dummy-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(genRetailRequest{}), controller.DummyRequestScore)
+	apiGroup.Post("/single-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(genRetailRequest{}), controller.SingleRequest)
+	apiGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(), controller.BulkRequest)
+	apiGroup.Get("/logs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogsScoreezy)
+	apiGroup.Get("/logs/:trx_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogScoreezy)
+	// apiGroup.Get("/logs/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.ExportJobDetails)
+	// genRetailAPI.Put("/upload-scoring-template", middleware.Auth(), middleware.ValidateRequest(UploadScoringRequest{}), middleware.GetJWTPayloadFromCookie(), middleware.DocUpload(), controller.UploadCSV)
 }

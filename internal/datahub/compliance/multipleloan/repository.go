@@ -3,6 +3,7 @@ package multipleloan
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
@@ -42,12 +43,12 @@ func (repo *repository) CallMultipleLoan7Days(apiKey, jobId, memberId, companyId
 
 	bodyBytes, err := repo.marshalFn(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -61,16 +62,11 @@ func (repo *repository) CallMultipleLoan7Days(apiKey, jobId, memberId, companyId
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseProCatAPIResponse[dataMultipleLoanResponse](resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiResp, err
+	return helper.ParseProCatAPIResponse[dataMultipleLoanResponse](resp)
 }
 
 func (repo *repository) CallMultipleLoan30Days(apiKey, jobId, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
@@ -78,12 +74,12 @@ func (repo *repository) CallMultipleLoan30Days(apiKey, jobId, memberId, companyI
 
 	bodyBytes, err := repo.marshalFn(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -97,16 +93,11 @@ func (repo *repository) CallMultipleLoan30Days(apiKey, jobId, memberId, companyI
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseProCatAPIResponse[dataMultipleLoanResponse](resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiResp, err
+	return helper.ParseProCatAPIResponse[dataMultipleLoanResponse](resp)
 }
 
 func (repo *repository) CallMultipleLoan90Days(apiKey, jobId, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
@@ -114,12 +105,12 @@ func (repo *repository) CallMultipleLoan90Days(apiKey, jobId, memberId, companyI
 
 	bodyBytes, err := repo.marshalFn(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgMarshalReqBody, err)
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
@@ -133,14 +124,9 @@ func (repo *repository) CallMultipleLoan90Days(apiKey, jobId, memberId, companyI
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf(constant.ErrMsgHTTPReqFailed, err)
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseProCatAPIResponse[dataMultipleLoanResponse](resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiResp, err
+	return helper.ParseProCatAPIResponse[dataMultipleLoanResponse](resp)
 }

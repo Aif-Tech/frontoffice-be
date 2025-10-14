@@ -3,9 +3,12 @@ package helper
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"time"
 	"unicode"
+
+	randMath "math/rand"
 )
 
 func GenerateAPIKey() string {
@@ -33,6 +36,20 @@ func GeneratePassword() (string, error) {
 	}
 
 	return string(b), nil
+}
+
+func GenerateTrx(productInitial string) string {
+	now := time.Now()
+	micro := now.Nanosecond() / 1000
+	random := randMath.Intn(100)
+
+	return fmt.Sprintf(
+		"%s-%s-%06d-%02d",
+		productInitial,
+		now.Format("20060102-150405"),
+		micro,
+		random,
+	)
 }
 
 func ValidatePasswordStrength(password string) bool {

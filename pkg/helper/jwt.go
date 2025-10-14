@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -34,14 +35,22 @@ func GenerateToken(
 	return t, nil
 }
 
-func ExtractClaimsFromJWT(token, secret string) (*jwt.MapClaims, error) {
+func ExtractClaimsFromJWT(tokenStr, secret string) (*jwt.MapClaims, error) {
 	claims := &jwt.MapClaims{}
 
-	_, err := jwt.ParseWithClaims(token, claims, func(requestToken *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+
 		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid JWT token")
 	}
 
 	return claims, nil
@@ -53,13 +62,26 @@ func extractUintClaim(claims *jwt.MapClaims, key string) (uint, error) {
 		return 0, errors.New("missing key in claims: " + key)
 	}
 
-	strVal := fmt.Sprintf("%v", val)
-	parsedVal, err := strconv.ParseUint(strVal, 10, 32)
-	if err != nil {
-		return 0, fmt.Errorf("invalid %s format: %v", key, err)
+	switch v := val.(type) {
+	case float64:
+		return uint(v), nil
+	case int:
+		return uint(v), nil
+	case json.Number:
+		num, err := v.Int64()
+		if err != nil {
+			return 0, fmt.Errorf("invalid %s: %v", key, err)
+		}
+		return uint(num), nil
+	case string:
+		parsed, err := strconv.ParseUint(v, 10, 32)
+		if err != nil {
+			return 0, fmt.Errorf("invalid %s format: %v", key, err)
+		}
+		return uint(parsed), nil
+	default:
+		return 0, fmt.Errorf("unsupported claim type for %s: %T", key, v)
 	}
-
-	return uint(parsedVal), nil
 }
 
 func extractStringClaim(claims *jwt.MapClaims, key string) (string, error) {
@@ -68,12 +90,16 @@ func extractStringClaim(claims *jwt.MapClaims, key string) (string, error) {
 		return "", errors.New("missing key in claims: " + key)
 	}
 
-	strVal, ok := val.(string)
-	if !ok {
-		return "", fmt.Errorf("claim %s is not a string", key)
+	switch v := val.(type) {
+	case string:
+		return v, nil
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64), nil
+	case int:
+		return strconv.Itoa(v), nil
+	default:
+		return "", fmt.Errorf("unsupported claim type for %s: %T", key, v)
 	}
-
-	return strVal, nil
 }
 
 func ExtractUserIdFromClaims(claims *jwt.MapClaims) (uint, error) {

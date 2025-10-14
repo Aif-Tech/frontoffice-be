@@ -10,7 +10,7 @@ import (
 	"front-office/internal/core/role"
 	"front-office/internal/core/template"
 	"front-office/internal/datahub"
-	"front-office/internal/scoreezy/genretail"
+	"front-office/internal/scoreezy"
 	"front-office/pkg/httpclient"
 
 	"time"
@@ -31,15 +31,13 @@ func SetupInit(routeGroup fiber.Router, cfg *application.Config) {
 	gradeGroup := routeGroup.Group("grades")
 	grade.SetupInit(gradeGroup, cfg, client)
 
-	genRetailGroup := routeGroup.Group("scoreezy")
-	genretail.SetupInit(genRetailGroup, cfg, client)
-
 	logGroup := routeGroup.Group("logs")
 	transaction.SetupInit(logGroup, cfg, client)
 	operation.SetupInit(logGroup, cfg, client)
 
 	productGroup := routeGroup.Group("products")
 	datahub.SetupInit(productGroup, cfg)
+	scoreezy.SetupInit(productGroup, cfg, client)
 
 	templateGroup := routeGroup.Group("templates")
 	template.SetupInit(templateGroup)

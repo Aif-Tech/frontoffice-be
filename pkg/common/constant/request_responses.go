@@ -13,11 +13,13 @@ const (
 
 	SizeUnlimited = "-1"
 
-	Request   = "request"
-	APIKey    = "apiKey"
-	UserId    = "userId"
-	CompanyId = "companyId"
-	RoleId    = "roleId"
+	Request       = "request"
+	APIKey        = "apiKey"
+	UserId        = "userId"
+	CompanyId     = "companyId"
+	RoleId        = "roleId"
+	ValidatedFile = "validatedFile"
+
 	QuotaType = "quota_type"
 	Page      = "page"
 	Size      = "size"

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
-	"front-office/pkg/helper"
 	"os"
 	"path/filepath"
 
@@ -55,65 +54,6 @@ func FileUpload() fiber.Handler {
 		}
 
 		c.Locals("filename", filename)
-
-		return c.Next()
-	}
-}
-
-func DocUpload() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		// get the file upload and type information
-		file, err := c.FormFile("file")
-		tempType := c.FormValue("tempType")
-
-		if err != nil {
-			statusCode, resp := helper.GetError(err.Error())
-			return c.Status(statusCode).JSON(resp)
-		}
-
-		validExtensions := []string{".csv"}
-		ext := filepath.Ext(file.Filename)
-		valid := false
-		for _, allowedExt := range validExtensions {
-			if ext == allowedExt {
-				valid = true
-				break
-			}
-		}
-
-		if !valid {
-			statusCode, resp := helper.GetError(constant.InvalidDocumentFile)
-			return c.Status(statusCode).JSON(resp)
-		}
-
-		c.Locals("tempType", tempType)
-
-		return c.Next()
-	}
-}
-
-func UploadCSVFile() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		file, err := c.FormFile("file")
-		if err != nil {
-			statusCode, resp := helper.GetError(err.Error())
-			return c.Status(statusCode).JSON(resp)
-		}
-
-		validExtensions := []string{".csv"}
-		ext := filepath.Ext(file.Filename)
-		valid := false
-		for _, allowedExt := range validExtensions {
-			if ext == allowedExt {
-				valid = true
-				break
-			}
-		}
-
-		if !valid {
-			statusCode, resp := helper.GetError(constant.InvalidDocumentFile)
-			return c.Status(statusCode).JSON(resp)
-		}
 
 		return c.Next()
 	}

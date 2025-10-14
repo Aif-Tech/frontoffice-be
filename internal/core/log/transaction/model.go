@@ -15,6 +15,7 @@ type LogTransScoreezy struct {
 	CompanyId            uint             `json:"company_id"`
 	IpClient             string           `json:"ip_client"`
 	ProductId            uint             `json:"product_id"`
+	JobId                uint             `json:"job_id"`
 	Status               string           `json:"status"`  // Free or Pay
 	Success              bool             `json:"success"` // true or false
 	Message              string           `json:"message"`

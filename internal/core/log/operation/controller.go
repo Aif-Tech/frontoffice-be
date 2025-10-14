@@ -1,9 +1,9 @@
 package operation
 
 import (
-	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
+	"front-office/pkg/helper"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +23,11 @@ type Controller interface {
 }
 
 func (ctrl *controller) GetList(c *fiber.Ctx) error {
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	page := c.Query(constant.Page, "1")
 	size := c.Query(constant.Size, "10")
 	role := strings.ToLower(c.Query("role"))
@@ -38,7 +42,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 	}
 
 	filter := &logOperationFilter{
-		CompanyId: companyId,
+		CompanyId: authCtx.CompanyIdStr(),
 		Page:      page,
 		Size:      size,
 		Role:      role,
@@ -57,7 +61,11 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
-	companyId := fmt.Sprintf("%v", c.Locals(constant.CompanyId))
+	authCtx, err := helper.GetAuthContext(c)
+	if err != nil {
+		return apperror.Unauthorized(err.Error())
+	}
+
 	page := c.Query(constant.Page, "1")
 	size := c.Query(constant.Size, "10")
 	startDate := c.Query(constant.StartDate)
@@ -70,7 +78,7 @@ func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
 	filter := &logRangeFilter{
 		Page:      page,
 		Size:      size,
-		CompanyId: companyId,
+		CompanyId: authCtx.CompanyIdStr(),
 		StartDate: startDate,
 		EndDate:   endDate,
 	}

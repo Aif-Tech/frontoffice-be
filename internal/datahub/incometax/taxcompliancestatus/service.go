@@ -2,7 +2,7 @@ package taxcompliancestatus
 
 import (
 	"front-office/internal/core/log/transaction"
-	"front-office/internal/core/product"
+	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
@@ -21,14 +21,14 @@ import (
 
 func NewService(
 	repo Repository,
-	productRepo product.Repository,
+	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
 		repo,
-		productRepo,
+		memberRepo,
 		jobRepo,
 		transactionRepo,
 		jobService,
@@ -37,7 +37,7 @@ func NewService(
 
 type service struct {
 	repo            Repository
-	productRepo     product.Repository
+	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
@@ -45,20 +45,20 @@ type service struct {
 
 type Service interface {
 	TaxComplianceStatus(apiKey, memberId, companyId string, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error)
-	BulkTaxComplianceStatus(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkTaxComplianceStatus(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
 func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error) {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugTaxComplianceStatus)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxComplianceStatus)
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedFetchProduct)
+		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if product.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ProductNotFound)
+	if subscribedResp.Data.ProductId == 0 {
+		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberId,
 		CompanyId: companyId,
 		Total:     1,
@@ -90,31 +90,43 @@ func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqB
 	return result, nil
 }
 
-func (svc *service) BulkTaxComplianceStatus(apiKey string, memberId, companyId uint, file *multipart.FileHeader) error {
-	product, err := svc.productRepo.GetProductAPI(constant.SlugTaxComplianceStatus)
-	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedFetchProduct)
-	}
-	if product.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
-
-	if err := helper.ValidateUploadedFile(file, 30*1024*1024, []string{".csv"}); err != nil {
-		return apperror.BadRequest(err.Error())
-	}
-
+func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
 	records, err := helper.ParseCSVFile(file, []string{"NPWP"})
 	if err != nil {
-		return apperror.Internal(constant.FailedParseCSV, err)
+		return apperror.BadRequest(err.Error())
 	}
 
 	memberIdStr := strconv.Itoa(int(memberId))
 	companyIdStr := strconv.Itoa(int(companyId))
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugTaxComplianceStatus)
+	if err != nil {
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+	}
+	if subscribedResp.Data.ProductId == 0 {
+		return apperror.NotFound(constant.ProductNotFound)
+	}
+
+	subsribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
+	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
+		MemberId:     memberIdStr,
+		CompanyId:    companyIdStr,
+		SubscribedId: subsribedIdStr,
+		QuotaType:    quotaType,
+	})
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedFetchQuota)
+	}
+
+	totalRequest := len(records) - 1
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequest {
+		return apperror.Forbidden(constant.ErrQuotaExceeded)
+	}
+
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-		ProductId: product.ProductId,
+		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberIdStr,
 		CompanyId: companyIdStr,
-		Total:     len(records) - 1,
+		Total:     totalRequest,
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedCreateJob)
@@ -151,8 +163,8 @@ func (svc *service) BulkTaxComplianceStatus(apiKey string, memberId, companyId u
 				CompanyIdStr:   companyIdStr,
 				MemberId:       memberId,
 				CompanyId:      companyId,
-				ProductId:      product.ProductId,
-				ProductGroupId: product.ProductGroupId,
+				ProductId:      subscribedResp.Data.ProductId,
+				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
 				Request:        taxComplianceReq,
 			}); err != nil {
@@ -178,23 +190,9 @@ func (svc *service) BulkTaxComplianceStatus(apiKey string, memberId, companyId u
 }
 
 func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) error {
+	trxId := helper.GenerateTrx(constant.TrxIdTaxCompliance)
 	if err := validator.ValidateStruct(params.Request); err != nil {
-		_ = svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Success:        false,
-			Message:        err.Error(),
-			Status:         http.StatusBadRequest,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:        nil,
-			RequestBody: params.Request,
-		})
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
 	}
@@ -205,40 +203,36 @@ func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) err
 		params.Request,
 	)
 	if err != nil {
-		if err := svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-			MemberID:       params.MemberId,
-			CompanyID:      params.CompanyId,
-			ProductID:      params.ProductId,
-			ProductGroupID: params.ProductGroupId,
-			JobID:          params.JobId,
-			Message:        result.Message,
-			Status:         result.StatusCode,
-			Success:        false,
-			ResponseBody: &transaction.ResponseBody{
-				Input:    params.Request,
-				DateTime: time.Now().Format(constant.FormatDateAndTime),
-			},
-			Data:         nil,
-			RequestBody:  params.Request,
-			RequestTime:  time.Now(),
-			ResponseTime: time.Now(),
-		}); err != nil {
-			return err
-		}
-
-		if err := svc.jobService.FinalizeFailedJob(params.JobIdStr); err != nil {
-
-			return err
-		}
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
 		return apperror.Internal("failed to process tax compliance status", err)
 	}
 
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
+	_ = svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
 		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return apperror.MapRepoError(err, "failed to update log transaction")
-	}
+	})
 
 	return nil
+}
+
+func (svc *service) logFailedTransaction(params *taxComplianceContext, trxId, msg string, status int) error {
+	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+		TransactionID:  trxId,
+		MemberID:       params.MemberId,
+		CompanyID:      params.CompanyId,
+		ProductID:      params.ProductId,
+		ProductGroupID: params.ProductGroupId,
+		JobID:          params.JobId,
+		Message:        msg,
+		Status:         status,
+		Success:        false,
+		ResponseBody: &transaction.ResponseBody{
+			Input:    params.Request,
+			DateTime: time.Now().Format(constant.FormatDateAndTime),
+		},
+		RequestBody:  params.Request,
+		RequestTime:  time.Now(),
+		ResponseTime: time.Now(),
+	})
 }
