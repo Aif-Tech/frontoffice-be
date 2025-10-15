@@ -13,3 +13,9 @@ var CSVHeaderLoanRecord = []string{
 	CSVHeaderPhone,
 	CSVHeaderLoanNumber,
 }
+
+var CSVHeaderMultipleLoan = []string{
+	CSVHeaderIDCard,
+	CSVHeaderPhone,
+	CSVHeaderLoanNumber,
+}
