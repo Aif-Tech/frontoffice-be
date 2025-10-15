@@ -44,6 +44,7 @@ type RefLogTrx struct {
 type phoneLiveStatusRequest struct {
 	PhoneNumber string `json:"phone_number" validate:"required~phone number is required, min(10)~phone number must be at least 10 characters, indophone~invalid number"`
 	TrxId       string `json:"trx_id"`
+	LoanNo      string `json:"loan_no" validate:"required~Loan No cannot be empty."`
 }
 
 type phoneLiveStatusRespData struct {

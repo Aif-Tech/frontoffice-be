@@ -94,7 +94,7 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 }
 
 func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, []string{"Phone Number"})
+	records, err := helper.ParseCSVFile(file, constant.CSVHeaderPhoneLive)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -138,6 +138,7 @@ func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType s
 	for i := 1; i < len(records); i++ { // Skip header
 		phoneReqs = append(phoneReqs, &phoneLiveStatusRequest{
 			PhoneNumber: records[i][0],
+			LoanNo:      records[i][1],
 		})
 	}
 
@@ -432,6 +433,7 @@ func (svc *service) logFailedTransaction(params *phoneLiveStatusContext, trxId, 
 		Message:        msg,
 		Status:         status,
 		Success:        false,
+		LoanNo:         params.Request.LoanNo,
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),

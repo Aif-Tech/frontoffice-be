@@ -19,3 +19,8 @@ var CSVHeaderMultipleLoan = []string{
 	CSVHeaderPhone,
 	CSVHeaderLoanNumber,
 }
+
+var CSVHeaderPhoneLive = []string{
+	CSVHeaderPhone,
+	CSVHeaderLoanNumber,
+}
