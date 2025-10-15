@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
+	"strings"
 )
 
 func ParseCSVFile(file *multipart.FileHeader, expectedHeaders []string) ([][]string, error) {
@@ -31,14 +32,24 @@ func ParseCSVFile(file *multipart.FileHeader, expectedHeaders []string) ([][]str
 	}
 
 	header := csvData[0]
-	if len(header) < len(expectedHeaders) {
-		return nil, fmt.Errorf("invalid csv header length: expected %d, got %d", len(expectedHeaders), len(header))
+	if len(header) == 0 {
+		return nil, errors.New("missing csv header row")
 	}
 
-	for i, expectedHeader := range expectedHeaders {
-		if header[i] != expectedHeader {
-			return nil, fmt.Errorf("invalid csv header at column %d: expected %q, got %q", i+1, expectedHeader, header[i])
+	headerMap := make(map[string]bool)
+	for _, h := range header {
+		headerMap[strings.ToLower(strings.TrimSpace(h))] = true
+	}
+
+	var missingHeaders []string
+	for _, expected := range expectedHeaders {
+		if !headerMap[strings.ToLower(strings.TrimSpace(expected))] {
+			missingHeaders = append(missingHeaders, expected)
 		}
+	}
+
+	if len(missingHeaders) > 0 {
+		return nil, fmt.Errorf("csv file missing required headers: %v", strings.Join(missingHeaders, ", "))
 	}
 
 	return csvData, nil
