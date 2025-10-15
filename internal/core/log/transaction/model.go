@@ -65,6 +65,7 @@ type LogTransProCatRequest struct {
 	Success         bool          `json:"success"` // true or false
 	Message         string        `json:"message"`
 	PricingStrategy string        `json:"pricing_strategy"` //PAY , FREE
+	LoanNo          string        `json:"loan_no"`
 	Notes           string        `json:"notes"`
 	Duration        time.Duration `json:"duration" format:"duration" example:"2h30m"`
 	RequestTime     time.Time     `json:"request_time" format:"date-time"`
