@@ -30,3 +30,8 @@ var CSVHeaderTaxCompliance = []string{
 	CSVHeaderNPWP,
 	CSVHeaderLoanNumber,
 }
+
+var CSVHeaderTaxScore = []string{
+	CSVHeaderNPWP,
+	CSVHeaderLoanNumber,
+}
