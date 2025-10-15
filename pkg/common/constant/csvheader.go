@@ -5,6 +5,7 @@ const (
 	CSVHeaderIDCard     = "ID Card Number"
 	CSVHeaderPhone      = "Phone Number"
 	CSVHeaderLoanNumber = "Loan Number"
+	CSVHeaderNPWP       = "NPWP"
 )
 
 var CSVHeaderLoanRecord = []string{
@@ -22,5 +23,10 @@ var CSVHeaderMultipleLoan = []string{
 
 var CSVHeaderPhoneLive = []string{
 	CSVHeaderPhone,
+	CSVHeaderLoanNumber,
+}
+
+var CSVHeaderTaxCompliance = []string{
+	CSVHeaderNPWP,
 	CSVHeaderLoanNumber,
 }
