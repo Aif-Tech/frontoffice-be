@@ -9,6 +9,7 @@ type logTransProductCatalog struct {
 	CompanyID              uint           `json:"company_id"`
 	JobID                  uint           `json:"job_id"`
 	ProductID              uint           `json:"product_id"`
+	LoanNo                 string         `json:"loan_no"`
 	Status                 string         `json:"status"`
 	Message                *string        `json:"message"`
 	Input                  *logTransInput `json:"input"`

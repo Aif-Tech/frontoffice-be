@@ -35,3 +35,8 @@ var CSVHeaderTaxScore = []string{
 	CSVHeaderNPWP,
 	CSVHeaderLoanNumber,
 }
+
+var CSVHeaderTaxVerification = []string{
+	CSVHeaderIDCard,
+	CSVHeaderLoanNumber,
+}
