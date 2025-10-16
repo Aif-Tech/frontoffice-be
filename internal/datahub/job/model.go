@@ -51,7 +51,7 @@ type logTransInput struct {
 	PhoneNumber *string `json:"phone_number,omitempty"`
 	NPWP        *string `json:"npwp,omitempty"`
 	NPWPOrNIK   *string `json:"npwp_or_nik,omitempty"`
-	LoanNo      *string `json:"loan_no,omitempty"`
+	LoanNo      string  `json:"loan_no,omitempty"`
 }
 
 type jobListResponse struct {

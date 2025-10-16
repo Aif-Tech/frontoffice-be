@@ -162,27 +162,27 @@ func (svc *service) exportJobDetailsToCSV(
 
 	switch filter.ProductSlug {
 	case constant.SlugLoanRecordChecker:
-		headers = []string{"Name", "NIK", "Phone Number", "Remarks", "Data Status", "Status", "Description"}
+		headers = constant.CSVExportHeaderLoanRecord
 		mapper = func(d *logTransProductCatalog) []string {
 			return mapLoanRecordCheckerRow(filter.IsMasked, d)
 		}
 	case constant.SlugMultipleLoan7Days, constant.SlugMultipleLoan30Days, constant.SlugMultipleLoan90Days:
-		headers = []string{"NIK", "Phone Number", "Query Count", "Status", "Description"}
+		headers = constant.CSVExportHeaderMultipleLoan
 		mapper = func(d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(filter.IsMasked, d)
 		}
 	case constant.SlugTaxComplianceStatus:
-		headers = []string{"NPWP", "Nama", "Alamat", "Data Status", "Status", "Description"}
+		headers = constant.CSVExportHeaderTaxCompliance
 		mapper = func(d *logTransProductCatalog) []string {
 			return mapTaxComplianceRow(filter.IsMasked, d)
 		}
 	case constant.SlugTaxScore:
-		headers = []string{"NPWP", "Nama", "Alamat", "Data Status", "Score", "Status", "Description"}
+		headers = constant.CSVExportHeaderTaxScore
 		mapper = func(d *logTransProductCatalog) []string {
 			return mapTaxScoreRow(filter.IsMasked, d)
 		}
 	case constant.SlugTaxVerificationDetail:
-		headers = []string{"Nama", "Alamat", "NPWP", "NPWP Verification", "Data Status", "Tax Compliance", "Status", "Description"}
+		headers = constant.CSVExportHeaderTaxVerification
 		mapper = func(d *logTransProductCatalog) []string {
 			return mapTaxVerificationRow(filter.IsMasked, d)
 		}
@@ -309,6 +309,7 @@ func mapLoanRecordCheckerRow(isMasked bool, d *logTransProductCatalog) []string 
 	}
 
 	return []string{
+		d.Input.LoanNo,
 		*d.Input.Name,
 		nik,
 		phoneNumber,
@@ -349,6 +350,7 @@ func mapMultipleLoanRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	return []string{
+		d.Input.LoanNo,
 		nik,
 		phoneNumber,
 		strconv.Itoa(queryCount),
@@ -359,7 +361,7 @@ func mapMultipleLoanRow(isMasked bool, d *logTransProductCatalog) []string {
 
 func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 	var (
-		description, nama, alamat, status, npwp string
+		description, nama, address, status, npwp string
 	)
 
 	if d.Message != nil {
@@ -368,7 +370,7 @@ func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 
 	if d.Data != nil {
 		nama = *d.Data.Nama
-		alamat = *d.Data.Alamat
+		address = *d.Data.Alamat
 		status = *d.Data.Status
 	}
 
@@ -384,9 +386,10 @@ func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	return []string{
+		d.Input.LoanNo,
 		npwp,
 		nama,
-		alamat,
+		address,
 		status,
 		d.Status,
 		description,
@@ -395,7 +398,7 @@ func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 
 func mapTaxScoreRow(isMasked bool, d *logTransProductCatalog) []string {
 	var (
-		description, nama, alamat, status, score, npwp string
+		description, name, address, status, score, npwp string
 	)
 
 	if d.Message != nil {
@@ -403,8 +406,8 @@ func mapTaxScoreRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		nama = *d.Data.Nama
-		alamat = *d.Data.Alamat
+		name = *d.Data.Nama
+		address = *d.Data.Alamat
 		status = *d.Data.Status
 		score = *d.Data.Score
 	}
@@ -421,9 +424,10 @@ func mapTaxScoreRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	return []string{
+		d.Input.LoanNo,
 		npwp,
-		nama,
-		alamat,
+		name,
+		address,
 		status,
 		score,
 		d.Status,
@@ -433,7 +437,7 @@ func mapTaxScoreRow(isMasked bool, d *logTransProductCatalog) []string {
 
 func mapTaxVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 	var (
-		description, nama, alamat, status, npwpVerification, taxCompliance, npwpOrNIK string
+		description, name, address, status, npwpVerification, taxCompliance, npwpOrNIK string
 	)
 
 	if d.Message != nil {
@@ -441,8 +445,8 @@ func mapTaxVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		nama = *d.Data.Nama
-		alamat = *d.Data.Alamat
+		name = *d.Data.Nama
+		address = *d.Data.Alamat
 		npwpVerification = *d.Data.NPWPVerification
 		// npwp = *d.Data.NPWP
 		status = *d.Data.Status
@@ -465,8 +469,9 @@ func mapTaxVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	return []string{
-		nama,
-		alamat,
+		d.Input.LoanNo,
+		name,
+		address,
 		npwpOrNIK,
 		// npwp,
 		npwpVerification,

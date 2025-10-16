@@ -114,7 +114,7 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 }
 
 func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVHeaderMultipleLoan)
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderMultipleLoan)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}

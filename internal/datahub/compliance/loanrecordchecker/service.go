@@ -96,7 +96,7 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 }
 
 func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVHeaderLoanRecord)
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderLoanRecord)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}

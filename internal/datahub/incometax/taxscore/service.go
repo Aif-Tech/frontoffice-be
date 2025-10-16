@@ -91,7 +91,7 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 }
 
 func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVHeaderTaxScore)
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxScore)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}

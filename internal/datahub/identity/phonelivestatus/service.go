@@ -94,7 +94,7 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 }
 
 func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVHeaderPhoneLive)
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderPhoneLive)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}

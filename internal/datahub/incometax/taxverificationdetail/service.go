@@ -95,7 +95,7 @@ func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, requ
 }
 
 func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVHeaderTaxVerification)
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxVerification)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}

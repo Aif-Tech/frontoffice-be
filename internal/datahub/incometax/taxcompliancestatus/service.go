@@ -91,7 +91,7 @@ func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqB
 }
 
 func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVHeaderTaxCompliance)
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxCompliance)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
