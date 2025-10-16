@@ -360,11 +360,6 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 		phoneType = raw.Data.PhoneType
 	}
 
-	createdAt, err := time.Parse("2006-01-02 15:04:05", raw.DateTime)
-	if err != nil {
-		return nil, fmt.Errorf("invalid datetime format: %v", err)
-	}
-
 	if masked {
 		phoneNumber = raw.RefTransProductCatalog.Input.PhoneNumber
 	} else {
@@ -384,7 +379,7 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 		Operator:         operator,
 		PricingStrategy:  raw.PricingStrategy,
 		TransactionId:    raw.TransactionId,
-		CreatedAt:        createdAt,
+		CreatedAt:        raw.DateTime,
 		RefLogTrx: RefLogTrx{
 			PhoneNumber: raw.RefTransProductCatalog.Input.PhoneNumber,
 		},

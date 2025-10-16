@@ -3,7 +3,6 @@ package phonelivestatus
 import (
 	"front-office/internal/core/company"
 	"front-office/internal/core/member"
-	"time"
 )
 
 type mstPhoneLiveStatusJob struct {
@@ -33,7 +32,7 @@ type mstPhoneLiveStatusJobDetail struct {
 	Operator         string    `json:"operator"`
 	PricingStrategy  string    `json:"pricing_strategy"`
 	TransactionId    string    `json:"transaction_id"`
-	CreatedAt        time.Time `json:"created_at"`
+	CreatedAt        string    `json:"created_at"`
 	RefLogTrx        RefLogTrx `json:"ref_log_trx"`
 }
 
