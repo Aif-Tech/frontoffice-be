@@ -16,10 +16,3 @@ type MstActivationToken struct {
 type CreateActivationTokenRequest struct {
 	Token string `json:"token"`
 }
-
-type CreateActivationTokenResponse struct {
-	Message    string              `json:"message"`
-	Success    bool                `json:"success"`
-	Data       *MstActivationToken `json:"data"`
-	StatusCode int                 `json:"-"`
-}

@@ -5,12 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"front-office/pkg/apperror"
-	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
 	"io"
 	"net/http"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 func SuccessResponse[T any](message string, data T, meta ...*model.Meta) *model.APIResponse[T] {
@@ -32,73 +29,6 @@ func ErrorResponse(message string) *model.APIResponse[any] {
 		Success: false,
 		Message: message,
 	}
-}
-
-// func SuccessResponse(
-// 	message string,
-// 	data interface{},
-// ) BaseResponseSuccess {
-// 	return BaseResponseSuccess{
-// 		Message: message,
-// 		Success: true,
-// 		Data:    data,
-// 	}
-// }
-
-// func ErrorResponse(message string) BaseResponseFailed {
-// 	return BaseResponseFailed{
-// 		Message: message,
-// 	}
-// }
-
-func GetError(errorMessage string) (int, interface{}) {
-	var statusCode int
-
-	switch errorMessage {
-	case constant.UserNotFoundForgotEmail:
-		statusCode = fiber.StatusOK
-	case constant.AlreadyVerified,
-		constant.ConfirmNewPasswordMismatch,
-		constant.ConfirmPasswordMismatch,
-		constant.DuplicateGrading,
-		constant.FieldGradingLabelEmpty,
-		constant.FieldMinGradeEmpty,
-		constant.FieldMaxGradeEmpty,
-		constant.FileSizeIsTooLarge,
-		constant.IncorrectPassword,
-		constant.InvalidActivationLink,
-		constant.InvalidStatusValue,
-		constant.InvalidDateFormat,
-		constant.InvalidEmailOrPassword,
-		constant.InvalidImageFile,
-		constant.InvalidPassword,
-		constant.InvalidPasswordResetLink,
-		constant.HeaderTemplateNotValid,
-		constant.OnlyUploadCSVfile,
-		constant.WrongCurrentPassword,
-		constant.ParamSettingIsNotSet:
-		statusCode = fiber.StatusBadRequest
-	case constant.RequestProhibited,
-		constant.TokenExpired,
-		constant.UnverifiedUser:
-		statusCode = fiber.StatusUnauthorized
-	case constant.DataNotFound,
-		constant.RecordNotFound:
-		statusCode = fiber.StatusNotFound
-		errorMessage = constant.DataNotFound
-	case constant.TemplateNotFound:
-		statusCode = fiber.StatusNotFound
-	case constant.DataAlreadyExist,
-		constant.EmailAlreadyExists:
-		statusCode = fiber.StatusConflict
-	case constant.UpstreamError:
-		statusCode = fiber.StatusBadGateway
-	default:
-		statusCode = fiber.StatusInternalServerError
-	}
-
-	resp := ErrorResponse(errorMessage)
-	return statusCode, resp
 }
 
 func ParseAifcoreAPIResponse[T any](response *http.Response) (*model.AifcoreAPIResponse[T], error) {

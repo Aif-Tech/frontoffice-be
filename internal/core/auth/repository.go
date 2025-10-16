@@ -35,9 +35,9 @@ type repository struct {
 type Repository interface {
 	// CreateAdmin(company *company.MstCompany, user *member.MstMember, activationToken *activationtoken.MstActivationToken) (*member.MstMember, error)
 	// CreateMember(user *member.MstMember, activationToken *activationtoken.MstActivationToken) (*member.MstMember, error)
-	VerifyMemberAPI(userId string, req *PasswordResetRequest) error
-	ChangePasswordAPI(userId string, req *ChangePasswordRequest) error
-	PasswordResetAPI(userId, token string, req *PasswordResetRequest) error
+	VerifyMemberAPI(userId string, req *passwordResetRequest) error
+	ChangePasswordAPI(userId string, req *changePasswordRequest) error
+	PasswordResetAPI(userId, token string, req *passwordResetRequest) error
 	AuthMemberAPI(req *userLoginRequest) (*loginResponseData, error)
 }
 
@@ -88,7 +88,7 @@ type Repository interface {
 // 	return user, nil
 // }
 
-func (repo *repository) VerifyMemberAPI(userId string, payload *PasswordResetRequest) error {
+func (repo *repository) VerifyMemberAPI(userId string, payload *passwordResetRequest) error {
 	url := fmt.Sprintf(`%v/api/core/member/%v/activation-tokens`, repo.cfg.Env.AifcoreHost, userId)
 
 	bodyBytes, err := repo.marshalFn(payload)
@@ -117,7 +117,7 @@ func (repo *repository) VerifyMemberAPI(userId string, payload *PasswordResetReq
 	return nil
 }
 
-func (repo *repository) PasswordResetAPI(userId, token string, payload *PasswordResetRequest) error {
+func (repo *repository) PasswordResetAPI(userId, token string, payload *passwordResetRequest) error {
 	url := fmt.Sprintf(`%v/api/core/member/%v/password-reset-tokens/%v`, repo.cfg.Env.AifcoreHost, userId, token)
 
 	bodyBytes, err := repo.marshalFn(payload)
@@ -146,7 +146,7 @@ func (repo *repository) PasswordResetAPI(userId, token string, payload *Password
 	return nil
 }
 
-func (repo *repository) ChangePasswordAPI(userId string, payload *ChangePasswordRequest) error {
+func (repo *repository) ChangePasswordAPI(userId string, payload *changePasswordRequest) error {
 	url := fmt.Sprintf(`%v/api/core/member/%v/change-password`, repo.cfg.Env.AifcoreHost, userId)
 
 	bodyBytes, err := repo.marshalFn(payload)
