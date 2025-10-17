@@ -13,6 +13,10 @@ const (
 	CSVHeaderScore            = "Score"
 	CSVHeaderNPWPVerification = "NPWP Verification"
 	CSVHeaderTaxCompliance    = "Tax Compliance"
+	CSVHeaderSubscriberStatus = "Subscriber Status"
+	CSVHeaderDeviceStatus     = "Device Status"
+	CSVHeaderOperator         = "Operator"
+	CSVHeaderPhoneType        = "Phone Type"
 	CSVHeaderStatus           = "Status"
 	CSVHeaderDescription      = "Description"
 )
@@ -48,6 +52,17 @@ var CSVTemplateHeaderTaxScore = []string{
 var CSVTemplateHeaderTaxVerification = []string{
 	CSVHeaderIDCard,
 	CSVHeaderLoanNumber,
+}
+
+var CSVExportHeaderPhoneLive = []string{
+	CSVHeaderLoanNumber,
+	CSVHeaderPhone,
+	CSVHeaderSubscriberStatus,
+	CSVHeaderDeviceStatus,
+	CSVHeaderOperator,
+	CSVHeaderPhoneType,
+	CSVHeaderStatus,
+	CSVHeaderDescription,
 }
 
 var CSVExportHeaderLoanRecord = []string{

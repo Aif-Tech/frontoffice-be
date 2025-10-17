@@ -252,7 +252,7 @@ func (svc *service) ExportJobDetails(filter *phoneLiveStatusFilter, buf *bytes.B
 		mappedDetails = append(mappedDetails, mapped)
 	}
 
-	if err := writeJobDetailsToCSV(buf, mappedDetails); err != nil {
+	if err := writeJobDetailsToCSV(mappedDetails, false, buf); err != nil {
 		return "", apperror.Internal("failed to write CSV", err)
 	}
 
@@ -308,7 +308,7 @@ func (svc *service) ExportJobsSummary(filter *phoneLiveStatusFilter, buf *bytes.
 		mappedDetails = append(mappedDetails, mapped)
 	}
 
-	if err := writeJobDetailsToCSV(buf, mappedDetails); err != nil {
+	if err := writeJobDetailsToCSV(mappedDetails, true, buf); err != nil {
 		return "", apperror.Internal("failed to write CSV", err)
 	}
 
@@ -370,6 +370,7 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 		MemberId:         raw.MemberID,
 		CompanyId:        raw.CompanyID,
 		JobId:            raw.JobID,
+		LoanNo:           raw.Input.LoanNo,
 		PhoneNumber:      phoneNumber,
 		Status:           raw.Status,
 		Message:          raw.Message,
@@ -386,10 +387,14 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 	}, nil
 }
 
-func writeJobDetailsToCSV(buf *bytes.Buffer, data []*mstPhoneLiveStatusJobDetail) error {
-	w := csv.NewWriter(buf)
-	headers := []string{"Phone Number", "Subscriber Status", "Device Status", "Operator", "Phone Type", "Status", "Description"}
+func writeJobDetailsToCSV(data []*mstPhoneLiveStatusJobDetail, includeDate bool, buf *bytes.Buffer) error {
+	headers := constant.CSVExportHeaderPhoneLive
 
+	if includeDate {
+		headers = append([]string{"Date"}, headers...)
+	}
+
+	w := csv.NewWriter(buf)
 	if err := w.Write(headers); err != nil {
 		return err
 	}
@@ -400,7 +405,13 @@ func writeJobDetailsToCSV(buf *bytes.Buffer, data []*mstPhoneLiveStatusJobDetail
 			desc = *d.Message
 		}
 
-		row := []string{d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
+		var row []string
+		if includeDate {
+			row = []string{d.CreatedAt, d.LoanNo, d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
+		} else {
+			row = []string{d.LoanNo, d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
+		}
+
 		if err := w.Write(row); err != nil {
 			return err
 		}

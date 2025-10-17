@@ -22,6 +22,7 @@ type mstPhoneLiveStatusJobDetail struct {
 	MemberId         uint      `json:"member_id"`
 	CompanyId        uint      `json:"company_id"`
 	JobId            uint      `json:"job_id"`
+	LoanNo           string    `json:"loan_no"`
 	PhoneNumber      string    `json:"phone_number" validate:"required~phone number is required, min(10)~phone number must be at least 10 characters, indophone~invalid number"`
 	InProgress       bool      `json:"in_progess"`
 	Status           string    `json:"status"`
@@ -150,6 +151,7 @@ type logTransData struct {
 
 type logTransInput struct {
 	PhoneNumber string `json:"phone_number,omitempty"`
+	LoanNo      string `json:"loan_no,omitempty"`
 }
 
 type phoneLiveStatusContext struct {
