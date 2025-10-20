@@ -295,7 +295,9 @@ func (svc *service) GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error
 }
 
 func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (string, error) {
+	includeDate := false
 	if filter.StartDate != "" {
+		includeDate = true
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
 			return "", apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
 		}
@@ -315,7 +317,7 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	var mappedDetails []*logTransScoreezy
 	mappedDetails = append(mappedDetails, result.Data...)
 
-	if err := writeToCSV(buf, mappedDetails); err != nil {
+	if err := writeToCSV(buf, includeDate, mappedDetails); err != nil {
 		return "", apperror.Internal("failed to write CSV", err)
 	}
 
@@ -324,15 +326,18 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	return filename, nil
 }
 
-func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
+func writeToCSV(buf *bytes.Buffer, includeDate bool, logs []*logTransScoreezy) error {
 	w := csv.NewWriter(buf)
-	if err := w.Write(constant.CSVExportHeaderGenRetail); err != nil {
+	defer w.Flush()
+
+	headers := buildHeaders(constant.CSVExportHeaderGenRetail, includeDate)
+	if err := w.Write(headers); err != nil {
 		return err
 	}
 
 	for _, log := range logs {
 		var (
-			// createdAt            string
+			createdAt            string
 			name                 string
 			loanID               string
 			idCardNo             string
@@ -343,12 +348,6 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 			identity             string
 			message              string
 		)
-
-		// if log.CreatedAt.IsZero() {
-		// 	createdAt = ""
-		// } else {
-		// 	createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
-		// }
 
 		if log.Data != nil && log.Data.Data != nil {
 			name = log.Data.Data.Name
@@ -363,7 +362,6 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 		}
 
 		row := []string{
-			// createdAt,
 			loanID,
 			name,
 			idCardNo,
@@ -375,13 +373,29 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 			message,
 		}
 
+		if includeDate {
+			if log.CreatedAt.IsZero() {
+				createdAt = ""
+			} else {
+				createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
+			}
+
+			row = append([]string{createdAt}, row...)
+		}
+
 		if err := w.Write(row); err != nil {
 			return err
 		}
 	}
 
-	w.Flush()
 	return w.Error()
+}
+
+func buildHeaders(base []string, includeDate bool) []string {
+	if includeDate {
+		return append([]string{"Date"}, base...)
+	}
+	return base
 }
 
 func formatCSVFileName(base, startDate, endDate string) string {
