@@ -108,7 +108,7 @@ func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 
 	filter := &filterLogs{
 		CompanyId:   authCtx.CompanyIdStr(),
-		JobId:       c.Query("job_id"),
+		JobId:       c.Query(constant.JobId),
 		StartDate:   c.Query(constant.StartDate),
 		EndDate:     c.Query(constant.EndDate),
 		Name:        strings.ToLower(strings.TrimSpace(c.Query("name"))),
@@ -157,13 +157,10 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 
 	filter := &filterLogs{
 		CompanyId: authCtx.CompanyIdStr(),
+		JobId:     c.Query(constant.JobId),
 		StartDate: c.Query(constant.StartDate),
 		EndDate:   c.Query(constant.EndDate),
 		Size:      constant.SizeUnlimited,
-	}
-
-	if filter.StartDate == "" || filter.EndDate == "" {
-		return apperror.BadRequest("start_date and end_date are required")
 	}
 
 	var buf bytes.Buffer

@@ -232,10 +232,6 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 	var result *model.AifcoreAPIResponse[[]*logTransScoreezy]
 	var err error
 
-	if filter.JobId == "" {
-		return nil, apperror.BadRequest("job id is required")
-	}
-
 	validProductTypes := map[string]bool{
 		"personal": true,
 		"company":  true,
@@ -274,6 +270,18 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 }
 
 func (svc *service) GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error) {
+	if filter.StartDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
+			return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+		}
+	}
+
+	if filter.EndDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
+			return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+		}
+	}
+
 	result, err := svc.repo.GetLogByTrxIdAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch log scoreezy")
@@ -287,14 +295,19 @@ func (svc *service) GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error
 }
 
 func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (string, error) {
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
-		return "", apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
-	}
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
-		return "", apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+	if filter.StartDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
+			return "", apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+		}
 	}
 
-	result, err := svc.repo.GetLogsByRangeDateAPI(filter)
+	if filter.EndDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
+			return "", apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+		}
+	}
+
+	result, err := svc.repo.GetLogsScoreezyAPI(filter)
 	if err != nil {
 		return "", apperror.MapRepoError(err, "failed to fetch logs scoreezy")
 	}
