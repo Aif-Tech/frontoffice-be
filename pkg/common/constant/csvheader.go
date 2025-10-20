@@ -86,7 +86,7 @@ var CSVExportHeaderMultipleLoan = []string{
 }
 
 var CSVExportHeaderTaxCompliance = []string{
-	CSVHeaderLoanNumber,
+	// CSVHeaderLoanNumber,
 	CSVHeaderNPWP,
 	CSVHeaderName,
 	CSVHeaderAddress,

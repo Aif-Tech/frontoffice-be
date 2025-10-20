@@ -386,7 +386,7 @@ func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	return []string{
-		d.Input.LoanNo,
+		// d.Input.LoanNo,
 		npwp,
 		nama,
 		address,
