@@ -140,8 +140,8 @@ func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, 
 		}
 
 		taxComplianceReqs = append(taxComplianceReqs, &taxComplianceStatusRequest{
-			Npwp:   record[0],
-			LoanNo: record[1],
+			Npwp: record[0],
+			// LoanNo: record[1],
 		})
 	}
 
@@ -228,7 +228,7 @@ func (svc *service) logFailedTransaction(params *taxComplianceContext, trxId, ms
 		Message:        msg,
 		Status:         status,
 		Success:        false,
-		LoanNo:         params.Request.LoanNo,
+		// LoanNo:         params.Request.LoanNo,
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),

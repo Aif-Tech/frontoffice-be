@@ -41,7 +41,7 @@ var CSVTemplateHeaderPhoneLive = []string{
 
 var CSVTemplateHeaderTaxCompliance = []string{
 	CSVHeaderNPWP,
-	CSVHeaderLoanNumber,
+	// CSVHeaderLoanNumber,
 }
 
 var CSVTemplateHeaderTaxScore = []string{
