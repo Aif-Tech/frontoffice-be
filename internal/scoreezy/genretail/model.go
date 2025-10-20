@@ -60,6 +60,8 @@ type dataLogTransScoreezy struct {
 	Data                 *data  `json:"data"`
 	ProbabilityToDefault string `json:"probability_to_default"`
 	Grade                string `json:"grade"`
+	Behavior             string `json:"behavior"`
+	Identity             string `json:"identity"`
 	Message              string `json:"message"`
 	Status               string `json:"status"`  // Free or Pay
 	Success              bool   `json:"success"` // true or false

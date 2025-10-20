@@ -1,24 +1,29 @@
 package constant
 
 const (
-	CSVHeaderName             = "Name"
-	CSVHeaderIDCard           = "ID Card Number"
-	CSVHeaderPhone            = "Phone Number"
-	CSVHeaderLoanNumber       = "Loan Number"
-	CSVHeaderNPWP             = "NPWP"
-	CSVHeaderRemarks          = "Remarks"
-	CSVHeaderQueryCount       = "Query Count"
-	CSVHeaderDataStatus       = "Data Status"
-	CSVHeaderAddress          = "Address"
-	CSVHeaderScore            = "Score"
-	CSVHeaderNPWPVerification = "NPWP Verification"
-	CSVHeaderTaxCompliance    = "Tax Compliance"
-	CSVHeaderSubscriberStatus = "Subscriber Status"
-	CSVHeaderDeviceStatus     = "Device Status"
-	CSVHeaderOperator         = "Operator"
-	CSVHeaderPhoneType        = "Phone Type"
-	CSVHeaderStatus           = "Status"
-	CSVHeaderDescription      = "Description"
+	CSVHeaderName                 = "Name"
+	CSVHeaderDateCreated          = "Date Created"
+	CSVHeaderIDCard               = "ID Card Number"
+	CSVHeaderPhone                = "Phone Number"
+	CSVHeaderLoanNumber           = "Loan Number"
+	CSVHeaderNPWP                 = "NPWP"
+	CSVHeaderRemarks              = "Remarks"
+	CSVHeaderQueryCount           = "Query Count"
+	CSVHeaderDataStatus           = "Data Status"
+	CSVHeaderAddress              = "Address"
+	CSVHeaderScore                = "Score"
+	CSVHeaderNPWPVerification     = "NPWP Verification"
+	CSVHeaderTaxCompliance        = "Tax Compliance"
+	CSVHeaderSubscriberStatus     = "Subscriber Status"
+	CSVHeaderDeviceStatus         = "Device Status"
+	CSVHeaderOperator             = "Operator"
+	CSVHeaderPhoneType            = "Phone Type"
+	CSVHeaderProbabilityToDefault = "Probability To Default"
+	CSVHeaderGrade                = "Grade"
+	CSVHeaderBehavior             = "Behavior"
+	CSVHeaderIdentity             = "Identity"
+	CSVHeaderStatus               = "Status"
+	CSVHeaderDescription          = "Description"
 )
 
 var CSVTemplateHeaderLoanRecord = []string{
@@ -115,5 +120,18 @@ var CSVExportHeaderTaxVerification = []string{
 	CSVHeaderDataStatus,
 	CSVHeaderTaxCompliance,
 	CSVHeaderStatus,
+	CSVHeaderDescription,
+}
+
+var CSVExportHeaderGenRetail = []string{
+	// CSVHeaderDateCreated,
+	CSVHeaderLoanNumber,
+	CSVHeaderName,
+	CSVHeaderIDCard,
+	CSVHeaderPhone,
+	CSVHeaderProbabilityToDefault,
+	CSVHeaderGrade,
+	CSVHeaderBehavior,
+	CSVHeaderIdentity,
 	CSVHeaderDescription,
 }

@@ -326,29 +326,29 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 
 func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 	w := csv.NewWriter(buf)
-	headers := []string{"Date Created", "Name", "Loan ID", "ID Card Number", "Phone Number", "Probability To Default", "Grade", "Description"}
-
-	if err := w.Write(headers); err != nil {
+	if err := w.Write(constant.CSVExportHeaderGenRetail); err != nil {
 		return err
 	}
 
 	for _, log := range logs {
 		var (
-			createdAt            string
+			// createdAt            string
 			name                 string
 			loanID               string
 			idCardNo             string
 			phoneNumber          string
 			probabilityToDefault string
 			grade                string
+			behavior             string
+			identity             string
 			message              string
 		)
 
-		if log.CreatedAt.IsZero() {
-			createdAt = ""
-		} else {
-			createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
-		}
+		// if log.CreatedAt.IsZero() {
+		// 	createdAt = ""
+		// } else {
+		// 	createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
+		// }
 
 		if log.Data != nil && log.Data.Data != nil {
 			name = log.Data.Data.Name
@@ -357,17 +357,21 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 			phoneNumber = log.Data.Data.PhoneNumber
 			probabilityToDefault = log.Data.ProbabilityToDefault
 			grade = log.Data.Grade
+			behavior = log.Data.Behavior
+			identity = log.Data.Identity
 			message = log.Data.Message
 		}
 
 		row := []string{
-			createdAt,
-			name,
+			// createdAt,
 			loanID,
+			name,
 			idCardNo,
 			phoneNumber,
 			probabilityToDefault,
 			grade,
+			behavior,
+			identity,
 			message,
 		}
 
