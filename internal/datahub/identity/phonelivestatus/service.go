@@ -388,13 +388,10 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 }
 
 func writeJobDetailsToCSV(data []*mstPhoneLiveStatusJobDetail, includeDate bool, buf *bytes.Buffer) error {
-	headers := constant.CSVExportHeaderPhoneLive
-
-	if includeDate {
-		headers = append([]string{"Date"}, headers...)
-	}
-
 	w := csv.NewWriter(buf)
+	defer w.Flush()
+
+	headers := buildHeaders(constant.CSVExportHeaderPhoneLive, includeDate)
 	if err := w.Write(headers); err != nil {
 		return err
 	}
@@ -405,11 +402,9 @@ func writeJobDetailsToCSV(data []*mstPhoneLiveStatusJobDetail, includeDate bool,
 			desc = *d.Message
 		}
 
-		var row []string
+		row := []string{d.LoanNo, d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
 		if includeDate {
-			row = []string{d.CreatedAt, d.LoanNo, d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
-		} else {
-			row = []string{d.LoanNo, d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
+			row = append([]string{d.CreatedAt}, row...)
 		}
 
 		if err := w.Write(row); err != nil {
@@ -417,8 +412,14 @@ func writeJobDetailsToCSV(data []*mstPhoneLiveStatusJobDetail, includeDate bool,
 		}
 	}
 
-	w.Flush()
 	return w.Error()
+}
+
+func buildHeaders(base []string, includeDate bool) []string {
+	if includeDate {
+		return append([]string{"Date"}, base...)
+	}
+	return base
 }
 
 func formatCSVFileName(base, startDate, endDate string) string {
