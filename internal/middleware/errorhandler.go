@@ -32,10 +32,10 @@ func ErrorHandler() fiber.ErrorHandler {
 			Err(err).
 			Str("method", method).
 			Str("path", path).
-			Msg("unhandled error")
+			Msg("internal server error")
 
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": fmt.Sprintf("something went wrong: %s", err),
+			"message": fmt.Sprintf("something went wrong: %v", err),
 		})
 	}
 }
