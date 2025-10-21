@@ -57,8 +57,8 @@ func LoadEnvironment() *Environment {
 
 	return &Environment{
 		Env:                            GetEnvironment("FO_APP_ENV"),
-		CloudProvider:                  GetEnvironment("CLOUD_PROVIDER"),
 		FrontendBaseUrl:                GetEnvironment("FO_FRONTEND_BASE_URL"),
+		CloudProvider:                  GetEnvironment("CLOUD_PROVIDER"),
 		Port:                           GetEnvironment("FO_APP_PORT"),
 		DbUser:                         GetEnvironment("DB_USER"),
 		DbPassword:                     GetEnvironment("DB_PASSWORD"),

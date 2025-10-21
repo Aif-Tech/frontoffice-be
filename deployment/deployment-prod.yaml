@@ -63,26 +63,11 @@ spec:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_FRONTEND_BASE_URL
-            - name: CLOUD_PROVIDER
-              valueFrom:
-                configMapKeyRef:
-                  name: frontoffice-be-config
-                  key: CLOUD_PROVIDER
             - name: FO_APP_PORT
               valueFrom:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_APP_PORT
-            - name: SLACK_TOKEN
-              valueFrom:
-                configMapKeyRef:
-                  name: frontoffice-be-config
-                  key: SLACK_TOKEN
-            - name: SLACK_CHANNEL
-              valueFrom:
-                configMapKeyRef:
-                  name: frontoffice-be-config
-                  key: SLACK_CHANNEL
             - name: FO_MAILJET_EMAIL
               valueFrom:
                 configMapKeyRef:
@@ -123,6 +108,11 @@ spec:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_JWT_RESET_PASSWORD_EXPIRES_MINUTES
+            - name: FO_JWT_VERIFICATION_EXPIRES_MINUTES
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-config
+                  key: FO_JWT_VERIFICATION_EXPIRES_MINUTES
             - name: FO_JWT_ACTIVATION_EXPIRES_MINUTES
               valueFrom:
                 configMapKeyRef:
@@ -143,11 +133,21 @@ spec:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_DATAHUB_HOST
+            - name: FO_DATAHUB_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-config
+                  key: FO_DATAHUB_KEY
             - name: FO_SCOREEZY_HOST
               valueFrom:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_SCOREEZY_HOST
+            - name: FO_SCOREEZY_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-config
+                  key: FO_SCOREEZY_KEY
 
 ---
 apiVersion: autoscaling/v1
