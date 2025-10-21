@@ -3,7 +3,6 @@ package phonelivestatus
 import (
 	"front-office/internal/core/company"
 	"front-office/internal/core/member"
-	"time"
 )
 
 type mstPhoneLiveStatusJob struct {
@@ -23,6 +22,7 @@ type mstPhoneLiveStatusJobDetail struct {
 	MemberId         uint      `json:"member_id"`
 	CompanyId        uint      `json:"company_id"`
 	JobId            uint      `json:"job_id"`
+	LoanNo           string    `json:"loan_no"`
 	PhoneNumber      string    `json:"phone_number" validate:"required~phone number is required, min(10)~phone number must be at least 10 characters, indophone~invalid number"`
 	InProgress       bool      `json:"in_progess"`
 	Status           string    `json:"status"`
@@ -33,7 +33,7 @@ type mstPhoneLiveStatusJobDetail struct {
 	Operator         string    `json:"operator"`
 	PricingStrategy  string    `json:"pricing_strategy"`
 	TransactionId    string    `json:"transaction_id"`
-	CreatedAt        time.Time `json:"created_at"`
+	CreatedAt        string    `json:"created_at"`
 	RefLogTrx        RefLogTrx `json:"ref_log_trx"`
 }
 
@@ -44,6 +44,7 @@ type RefLogTrx struct {
 type phoneLiveStatusRequest struct {
 	PhoneNumber string `json:"phone_number" validate:"required~phone number is required, min(10)~phone number must be at least 10 characters, indophone~invalid number"`
 	TrxId       string `json:"trx_id"`
+	LoanNo      string `json:"loan_no" validate:"required~Loan No cannot be empty."`
 }
 
 type phoneLiveStatusRespData struct {
@@ -150,6 +151,7 @@ type logTransData struct {
 
 type logTransInput struct {
 	PhoneNumber string `json:"phone_number,omitempty"`
+	LoanNo      string `json:"loan_no,omitempty"`
 }
 
 type phoneLiveStatusContext struct {

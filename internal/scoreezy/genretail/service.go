@@ -232,10 +232,6 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 	var result *model.AifcoreAPIResponse[[]*logTransScoreezy]
 	var err error
 
-	if filter.JobId == "" {
-		return nil, apperror.BadRequest("job id is required")
-	}
-
 	validProductTypes := map[string]bool{
 		"personal": true,
 		"company":  true,
@@ -274,6 +270,18 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 }
 
 func (svc *service) GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error) {
+	if filter.StartDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
+			return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+		}
+	}
+
+	if filter.EndDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
+			return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+		}
+	}
+
 	result, err := svc.repo.GetLogByTrxIdAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch log scoreezy")
@@ -287,14 +295,21 @@ func (svc *service) GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error
 }
 
 func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (string, error) {
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
-		return "", apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
-	}
-	if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
-		return "", apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+	includeDate := false
+	if filter.StartDate != "" {
+		includeDate = true
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
+			return "", apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+		}
 	}
 
-	result, err := svc.repo.GetLogsByRangeDateAPI(filter)
+	if filter.EndDate != "" {
+		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
+			return "", apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+		}
+	}
+
+	result, err := svc.repo.GetLogsScoreezyAPI(filter)
 	if err != nil {
 		return "", apperror.MapRepoError(err, "failed to fetch logs scoreezy")
 	}
@@ -302,7 +317,7 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	var mappedDetails []*logTransScoreezy
 	mappedDetails = append(mappedDetails, result.Data...)
 
-	if err := writeToCSV(buf, mappedDetails); err != nil {
+	if err := writeToCSV(buf, includeDate, mappedDetails); err != nil {
 		return "", apperror.Internal("failed to write CSV", err)
 	}
 
@@ -311,10 +326,11 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	return filename, nil
 }
 
-func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
+func writeToCSV(buf *bytes.Buffer, includeDate bool, logs []*logTransScoreezy) error {
 	w := csv.NewWriter(buf)
-	headers := []string{"Date Created", "Name", "Loan ID", "ID Card Number", "Phone Number", "Probability To Default", "Grade", "Description"}
+	defer w.Flush()
 
+	headers := buildHeaders(constant.CSVExportHeaderGenRetail, includeDate)
 	if err := w.Write(headers); err != nil {
 		return err
 	}
@@ -328,14 +344,10 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 			phoneNumber          string
 			probabilityToDefault string
 			grade                string
+			behavior             string
+			identity             string
 			message              string
 		)
-
-		if log.CreatedAt.IsZero() {
-			createdAt = ""
-		} else {
-			createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
-		}
 
 		if log.Data != nil && log.Data.Data != nil {
 			name = log.Data.Data.Name
@@ -344,18 +356,31 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 			phoneNumber = log.Data.Data.PhoneNumber
 			probabilityToDefault = log.Data.ProbabilityToDefault
 			grade = log.Data.Grade
+			behavior = log.Data.Behavior
+			identity = log.Data.Identity
 			message = log.Data.Message
 		}
 
 		row := []string{
-			createdAt,
-			name,
 			loanID,
+			name,
 			idCardNo,
 			phoneNumber,
 			probabilityToDefault,
 			grade,
+			behavior,
+			identity,
 			message,
+		}
+
+		if includeDate {
+			if log.CreatedAt.IsZero() {
+				createdAt = ""
+			} else {
+				createdAt = log.CreatedAt.Format(constant.FormatDateAndTime)
+			}
+
+			row = append([]string{createdAt}, row...)
 		}
 
 		if err := w.Write(row); err != nil {
@@ -363,8 +388,14 @@ func writeToCSV(buf *bytes.Buffer, logs []*logTransScoreezy) error {
 		}
 	}
 
-	w.Flush()
 	return w.Error()
+}
+
+func buildHeaders(base []string, includeDate bool) []string {
+	if includeDate {
+		return append([]string{"Date"}, base...)
+	}
+	return base
 }
 
 func formatCSVFileName(base, startDate, endDate string) string {
@@ -411,121 +442,3 @@ func deriveTypeFromTrxId(trxId string) string {
 		return ""
 	}
 }
-
-// func (svc *service) finalizeJob(jobIdStr string) error {
-// 	count, err := svc.transRepo.ProcessedLogCountAPI(jobIdStr)
-// 	if err != nil {
-// 		return apperror.MapRepoError(err, "failed to get success count")
-// 	}
-
-// 	if err := svc.jobRepo.UpdateJobAPI(jobIdStr, map[string]interface{}{
-// 		"success_count": helper.IntPtr(int(count.ProcessedCount)),
-// 		"status":        helper.StringPtr(constant.JobStatusDone),
-// 		"end_at":        helper.TimePtr(time.Now()),
-// 	}); err != nil {
-// 		return apperror.MapRepoError(err, "failed to update job status")
-// 	}
-
-// 	return nil
-// }
-
-// func (svc *service) finalizeFailedJob(jobIdStr string) error {
-// 	count, err := svc.transRepo.ProcessedLogCountAPI(jobIdStr)
-// 	if err != nil {
-// 		return apperror.MapRepoError(err, "failed to get processed count request")
-// 	}
-
-// 	if err := svc.jobRepo.UpdateJobAPI(jobIdStr, map[string]interface{}{
-// 		"success_count": helper.IntPtr(int(count.ProcessedCount)),
-// 		"status":        helper.StringPtr(constant.JobStatusFailed),
-// 		"end_at":        helper.TimePtr(time.Now()),
-// 	}); err != nil {
-// 		return apperror.MapRepoError(err, "failed to update job status")
-// 	}
-
-// 	return nil
-// }
-
-// func (svc *service) BulkSearchUploadSvc(req []BulkSearchRequest, tempType, apiKey, userId, companyId string) error {
-// 	var bulkSearches []*BulkSearch
-// 	uploadId := uuid.NewString()
-
-// 	for _, v := range req {
-// 		// check api aif-core to get grade data
-
-// 		genRetailRequest := &genRetailRequest{
-// 			LoanNo:   v.LoanNo,
-// 			Name:     v.Name,
-// 			IdCardNo: v.NIK,
-// 			PhoneNo:  v.PhoneNumber,
-// 		}
-
-// 		genRetailResponse, errRequest := svc.GenRetailV3(genRetailRequest, apiKey)
-// 		if errRequest != nil {
-// 			return errRequest
-// 		}
-
-// 		bulkSearch := &BulkSearch{
-// 			UploadId:             uploadId,
-// 			TransactionId:        genRetailResponse.Data.TransactionId, // from API
-// 			Name:                 v.Name,
-// 			IdCardNo:             v.NIK,
-// 			PhoneNo:              v.PhoneNumber,
-// 			LoanNo:               v.LoanNo,
-// 			ProbabilityToDefault: genRetailResponse.Data.ProbabilityToDefault, // from API
-// 			Grade:                genRetailResponse.Data.Grade,                // from API
-// 			Date:                 genRetailResponse.Data.Date,                 // from API
-// 			Type:                 tempType,
-// 			UserId:               userId,
-// 			CompanyId:            companyId,
-// 		}
-
-// 		bulkSearches = append(bulkSearches, bulkSearch)
-// 	}
-
-// 	err := svc.Repo.StoreImportData(bulkSearches, userId)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-// func (svc *service) GetBulkSearchSvc(tierLevel uint, userId, companyId string) ([]BulkSearchResponse, error) {
-
-// 	bulkSearches, err := svc.Repo.GetAllBulkSearch(tierLevel, userId, companyId)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var responseBulkSearches []BulkSearchResponse
-// 	for _, v := range bulkSearches {
-// 		bulkSearch := BulkSearchResponse{
-// 			TransactionId:        v.TransactionId,
-// 			Name:                 v.Name,
-// 			IdCardNo:             v.IdCardNo,
-// 			PhoneNo:              v.PhoneNo,
-// 			LoanNo:               v.LoanNo,
-// 			ProbabilityToDefault: v.ProbabilityToDefault,
-// 			Grade:                v.Grade,
-// 			Type:                 v.Type,
-// 			Date:                 v.Date,
-// 		}
-
-// 		if tierLevel != 2 {
-// 			// make sure only pick from the member uploads
-// 			if userId != v.UserId {
-// 				bulkSearch.PIC = v.User.Name
-// 			}
-// 		}
-
-// 		responseBulkSearches = append(responseBulkSearches, bulkSearch)
-// 	}
-
-// 	return responseBulkSearches, nil
-// }
-
-// func (svc *service) GetTotalDataBulk(tierLevel uint, userId, companyId string) (int64, error) {
-// 	count, err := svc.Repo.CountData(tierLevel, userId, companyId)
-// 	return count, err
-// }

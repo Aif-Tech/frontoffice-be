@@ -40,7 +40,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 }
 
 func TestVerifyMemberAPI(t *testing.T) {
-	passwordResetReq := &PasswordResetRequest{
+	passwordResetReq := &passwordResetRequest{
 		Password:        constant.DummyPassword,
 		ConfirmPassword: constant.DummyPassword,
 	}
@@ -116,7 +116,7 @@ func TestVerifyMemberAPI(t *testing.T) {
 }
 
 func TestPasswordResetAPI(t *testing.T) {
-	passwordResetReq := &PasswordResetRequest{
+	passwordResetReq := &passwordResetRequest{
 		Password:        constant.DummyPassword,
 		ConfirmPassword: constant.DummyPassword,
 	}
@@ -192,7 +192,7 @@ func TestPasswordResetAPI(t *testing.T) {
 }
 
 func TestChangePasswordAPI(t *testing.T) {
-	payload := &ChangePasswordRequest{
+	payload := &changePasswordRequest{
 		CurrentPassword:    constant.DummyPassword,
 		NewPassword:        constant.DummyPassword,
 		ConfirmNewPassword: constant.DummyPassword,

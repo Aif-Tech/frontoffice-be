@@ -1,6 +1,7 @@
 package loanrecordchecker
 
 import (
+	"errors"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -73,6 +74,11 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 			return nil, err
 		}
 
+		var apiErr *apperror.ExternalAPIError
+		if errors.As(err, &apiErr) {
+			return nil, apperror.MapLoanError(apiErr)
+		}
+
 		return nil, apperror.Internal("failed to process loan record checker", err)
 	}
 
@@ -90,7 +96,7 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 }
 
 func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, []string{"Name", "ID Card Number", "Phone Number"})
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderLoanRecord)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -138,7 +144,10 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 			continue
 		} // skip header
 		loanCheckerReqs = append(loanCheckerReqs, &loanRecordCheckerRequest{
-			Name: rec[0], Nik: rec[1], Phone: rec[2],
+			Name:   rec[0],
+			Nik:    rec[1],
+			Phone:  rec[2],
+			LoanNo: rec[3],
 		})
 	}
 
@@ -223,6 +232,7 @@ func (svc *service) logFailedTransaction(params *loanCheckerContext, trxId, msg 
 		Message:        msg,
 		Status:         status,
 		Success:        false,
+		LoanNo:         params.Request.LoanNo,
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),

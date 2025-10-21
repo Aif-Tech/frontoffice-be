@@ -94,7 +94,7 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 }
 
 func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, []string{"Phone Number"})
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderPhoneLive)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -138,6 +138,7 @@ func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType s
 	for i := 1; i < len(records); i++ { // Skip header
 		phoneReqs = append(phoneReqs, &phoneLiveStatusRequest{
 			PhoneNumber: records[i][0],
+			LoanNo:      records[i][1],
 		})
 	}
 
@@ -251,7 +252,7 @@ func (svc *service) ExportJobDetails(filter *phoneLiveStatusFilter, buf *bytes.B
 		mappedDetails = append(mappedDetails, mapped)
 	}
 
-	if err := writeJobDetailsToCSV(buf, mappedDetails); err != nil {
+	if err := writeJobDetailsToCSV(mappedDetails, false, buf); err != nil {
 		return "", apperror.Internal("failed to write CSV", err)
 	}
 
@@ -307,7 +308,7 @@ func (svc *service) ExportJobsSummary(filter *phoneLiveStatusFilter, buf *bytes.
 		mappedDetails = append(mappedDetails, mapped)
 	}
 
-	if err := writeJobDetailsToCSV(buf, mappedDetails); err != nil {
+	if err := writeJobDetailsToCSV(mappedDetails, true, buf); err != nil {
 		return "", apperror.Internal("failed to write CSV", err)
 	}
 
@@ -359,11 +360,6 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 		phoneType = raw.Data.PhoneType
 	}
 
-	createdAt, err := time.Parse("2006-01-02 15:04:05", raw.DateTime)
-	if err != nil {
-		return nil, fmt.Errorf("invalid datetime format: %v", err)
-	}
-
 	if masked {
 		phoneNumber = raw.RefTransProductCatalog.Input.PhoneNumber
 	} else {
@@ -374,6 +370,7 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 		MemberId:         raw.MemberID,
 		CompanyId:        raw.CompanyID,
 		JobId:            raw.JobID,
+		LoanNo:           raw.Input.LoanNo,
 		PhoneNumber:      phoneNumber,
 		Status:           raw.Status,
 		Message:          raw.Message,
@@ -383,17 +380,18 @@ func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStat
 		Operator:         operator,
 		PricingStrategy:  raw.PricingStrategy,
 		TransactionId:    raw.TransactionId,
-		CreatedAt:        createdAt,
+		CreatedAt:        raw.DateTime,
 		RefLogTrx: RefLogTrx{
 			PhoneNumber: raw.RefTransProductCatalog.Input.PhoneNumber,
 		},
 	}, nil
 }
 
-func writeJobDetailsToCSV(buf *bytes.Buffer, data []*mstPhoneLiveStatusJobDetail) error {
+func writeJobDetailsToCSV(data []*mstPhoneLiveStatusJobDetail, includeDate bool, buf *bytes.Buffer) error {
 	w := csv.NewWriter(buf)
-	headers := []string{"Phone Number", "Subscriber Status", "Device Status", "Operator", "Phone Type", "Status", "Description"}
+	defer w.Flush()
 
+	headers := buildHeaders(constant.CSVExportHeaderPhoneLive, includeDate)
 	if err := w.Write(headers); err != nil {
 		return err
 	}
@@ -404,14 +402,24 @@ func writeJobDetailsToCSV(buf *bytes.Buffer, data []*mstPhoneLiveStatusJobDetail
 			desc = *d.Message
 		}
 
-		row := []string{d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
+		row := []string{d.LoanNo, d.PhoneNumber, d.SubscriberStatus, d.DeviceStatus, d.Operator, d.PhoneType, d.Status, desc}
+		if includeDate {
+			row = append([]string{d.CreatedAt}, row...)
+		}
+
 		if err := w.Write(row); err != nil {
 			return err
 		}
 	}
 
-	w.Flush()
 	return w.Error()
+}
+
+func buildHeaders(base []string, includeDate bool) []string {
+	if includeDate {
+		return append([]string{"Date"}, base...)
+	}
+	return base
 }
 
 func formatCSVFileName(base, startDate, endDate string) string {
@@ -432,6 +440,7 @@ func (svc *service) logFailedTransaction(params *phoneLiveStatusContext, trxId, 
 		Message:        msg,
 		Status:         status,
 		Success:        false,
+		LoanNo:         params.Request.LoanNo,
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),

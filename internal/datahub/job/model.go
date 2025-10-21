@@ -9,6 +9,7 @@ type logTransProductCatalog struct {
 	CompanyID              uint           `json:"company_id"`
 	JobID                  uint           `json:"job_id"`
 	ProductID              uint           `json:"product_id"`
+	LoanNo                 string         `json:"loan_no"`
 	Status                 string         `json:"status"`
 	Message                *string        `json:"message"`
 	Input                  *logTransInput `json:"input"`
@@ -50,6 +51,7 @@ type logTransInput struct {
 	PhoneNumber *string `json:"phone_number,omitempty"`
 	NPWP        *string `json:"npwp,omitempty"`
 	NPWPOrNIK   *string `json:"npwp_or_nik,omitempty"`
+	LoanNo      string  `json:"loan_no,omitempty"`
 }
 
 type jobListResponse struct {

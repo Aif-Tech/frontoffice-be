@@ -1,6 +1,7 @@
 package multipleloan
 
 import (
+	"errors"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -91,6 +92,11 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 			return nil, err
 		}
 
+		var apiErr *apperror.ExternalAPIError
+		if errors.As(err, &apiErr) {
+			return nil, apperror.MapLoanError(apiErr)
+		}
+
 		return nil, apperror.Internal("failed to process multiple loan checker", err)
 	}
 
@@ -108,7 +114,7 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 }
 
 func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, []string{"ID Card Number", "Phone Number"})
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderMultipleLoan)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -161,7 +167,9 @@ func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, c
 			continue
 		} // skip header
 		multipleLoanReqs = append(multipleLoanReqs, &multipleLoanRequest{
-			Nik: rec[0], Phone: rec[1],
+			Nik:    rec[0],
+			Phone:  rec[1],
+			LoanNo: rec[2],
 		})
 	}
 
@@ -237,7 +245,12 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 
 	result, err := h.Func(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
 	if err != nil {
-		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+		statusCode := http.StatusBadGateway
+		if result != nil {
+			statusCode = result.StatusCode
+		}
+
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), statusCode)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
 		return apperror.Internal("failed to process multiple loan", err)
@@ -263,6 +276,7 @@ func (svc *service) logFailedTransaction(params *multipleLoanContext, trxId, msg
 		Message:        msg,
 		Status:         status,
 		Success:        false,
+		LoanNo:         params.Request.LoanNo,
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),

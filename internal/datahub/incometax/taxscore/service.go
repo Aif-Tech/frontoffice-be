@@ -91,7 +91,7 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 }
 
 func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, []string{"NPWP"})
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxScore)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -140,7 +140,8 @@ func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId u
 		}
 
 		taxScoreReqs = append(taxScoreReqs, &taxScoreRequest{
-			Npwp: record[0],
+			Npwp:   record[0],
+			LoanNo: record[1],
 		})
 	}
 
@@ -227,6 +228,7 @@ func (svc *service) logFailedTransaction(params *taxScoreContext, trxId, msg str
 		Message:        msg,
 		Status:         status,
 		Success:        false,
+		LoanNo:         params.Request.LoanNo,
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),

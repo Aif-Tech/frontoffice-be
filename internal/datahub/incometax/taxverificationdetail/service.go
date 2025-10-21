@@ -95,7 +95,7 @@ func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, requ
 }
 
 func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, []string{"ID Card Number"})
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxVerification)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
@@ -145,6 +145,7 @@ func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, comp
 
 		taxVerificationRequests = append(taxVerificationRequests, &taxVerificationRequest{
 			NpwpOrNik: record[0],
+			LoanNo:    record[1],
 		})
 	}
 
@@ -232,6 +233,7 @@ func (svc *service) logFailedTransaction(params *taxVerificationContext, trxId, 
 		Message:        msg,
 		Status:         status,
 		Success:        false,
+		LoanNo:         params.Request.LoanNo,
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),

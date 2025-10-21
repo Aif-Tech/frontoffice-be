@@ -82,7 +82,7 @@ func (ctrl *controller) RegisterMember(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) VerifyUser(c *fiber.Ctx) error {
-	reqBody, ok := c.Locals(constant.Request).(*PasswordResetRequest)
+	reqBody, ok := c.Locals(constant.Request).(*passwordResetRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
@@ -139,7 +139,7 @@ func (ctrl *controller) RequestActivation(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) ChangePassword(c *fiber.Ctx) error {
-	reqBody, ok := c.Locals(constant.Request).(*ChangePasswordRequest)
+	reqBody, ok := c.Locals(constant.Request).(*changePasswordRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
@@ -210,7 +210,7 @@ func (ctrl *controller) Login(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) RequestPasswordReset(c *fiber.Ctx) error {
-	reqBody, ok := c.Locals(constant.Request).(*RequestPasswordResetRequest)
+	reqBody, ok := c.Locals(constant.Request).(*requestPasswordResetRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
@@ -226,7 +226,7 @@ func (ctrl *controller) RequestPasswordReset(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) PasswordReset(c *fiber.Ctx) error {
-	reqBody, ok := c.Locals(constant.Request).(*PasswordResetRequest)
+	reqBody, ok := c.Locals(constant.Request).(*passwordResetRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}

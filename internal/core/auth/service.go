@@ -58,9 +58,9 @@ type Service interface {
 	AddMember(currentUserId uint, req *member.RegisterMemberRequest) error
 	RequestActivation(email string) error
 	RequestPasswordReset(email string) error
-	PasswordReset(token string, req *PasswordResetRequest) error
-	VerifyMember(token string, req *PasswordResetRequest) error
-	ChangePassword(userId string, req *ChangePasswordRequest) error
+	PasswordReset(token string, req *passwordResetRequest) error
+	VerifyMember(token string, req *passwordResetRequest) error
+	ChangePassword(userId string, req *changePasswordRequest) error
 }
 
 // func (svc *service) RegisterAdminSvc(req *RegisterAdminRequest) (*user.User, string, error) {
@@ -127,7 +127,7 @@ type Service interface {
 // 	return user, token, nil
 // }
 
-func (svc *service) VerifyMember(token string, req *PasswordResetRequest) error {
+func (svc *service) VerifyMember(token string, req *passwordResetRequest) error {
 	activationData, err := svc.activationRepo.GetActivationTokenAPI(token)
 	if err != nil {
 		return apperror.MapRepoError(err, "failed to retrieve activation token")
@@ -183,7 +183,7 @@ func (svc *service) VerifyMember(token string, req *PasswordResetRequest) error 
 	return nil
 }
 
-func (svc *service) PasswordReset(token string, req *PasswordResetRequest) error {
+func (svc *service) PasswordReset(token string, req *passwordResetRequest) error {
 	data, err := svc.passwordResetRepo.GetPasswordResetTokenAPI(token)
 	if err != nil {
 		return apperror.Forbidden(constant.InvalidPasswordResetLink)
@@ -458,7 +458,7 @@ func (svc *service) Logout(userId, companyId uint) error {
 	return nil
 }
 
-func (svc *service) ChangePassword(userId string, reqBody *ChangePasswordRequest) error {
+func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest) error {
 	user, err := svc.memberRepo.GetMemberAPI(&member.MemberParams{
 		Id: userId,
 	})
