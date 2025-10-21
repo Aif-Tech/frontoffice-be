@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"front-office/pkg/apperror"
 
 	"github.com/gofiber/fiber/v2"
@@ -34,7 +35,7 @@ func ErrorHandler() fiber.ErrorHandler {
 			Msg("unhandled error")
 
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "something went wrong",
+			"message": fmt.Sprintf("something went wrong: %s", err),
 		})
 	}
 }
