@@ -4,7 +4,6 @@ import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -40,20 +39,14 @@ func (ctrl *controller) DownloadTemplate(c *fiber.Ctx) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	if req.Product == "" {
-		return apperror.BadRequest("product parameter is required")
-	}
-
-	if req.Filename == "" {
-		req.Filename = "template.csv"
-	} else if !strings.HasSuffix(req.Filename, ".csv") {
-		req.Filename += ".csv"
-	}
-
 	path, err := ctrl.svc.DownloadTemplate(req)
 	if err != nil {
 		return err
 	}
+
+	c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Set("Pragma", "no-cache")
+	c.Set("Expires", "0")
 
 	return c.Download(path)
 }

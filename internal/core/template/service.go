@@ -1,7 +1,9 @@
 package template
 
 import (
+	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
+	"strings"
 )
 
 type Service interface {
@@ -17,6 +19,17 @@ func NewService(repo Repository) Service {
 	return &service{Repo: repo}
 }
 func (s *service) DownloadTemplate(req DownloadRequest) (string, error) {
+	if req.Product == "" {
+		return "", apperror.BadRequest("product parameter is required")
+	}
+
+	filename := req.Filename
+	if filename == "" {
+		filename = "template.csv"
+	} else if !strings.HasSuffix(filename, ".csv") {
+		filename += ".csv"
+	}
+
 	return s.Repo.GetTemplatePath(req.Product, req.Filename)
 }
 
