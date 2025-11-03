@@ -80,6 +80,8 @@ func getTemplateDescription(product string) string {
 		return "Loan record checker template"
 	case constant.MultipleLoanTemplates:
 		return "Multiple loan template"
+	case constant.NPWPVerificationTemplates:
+		return "NPWP verification template"
 	case constant.TaxComplianceStatusTemplates:
 		return "Tax compliance status template"
 	case constant.TaxScoreTemplates:
