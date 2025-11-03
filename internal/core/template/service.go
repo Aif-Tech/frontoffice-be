@@ -1,9 +1,12 @@
 package template
 
 import (
+	"errors"
+	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
-	"strings"
+	"os"
+	"regexp"
 )
 
 type Service interface {
@@ -18,19 +21,31 @@ type service struct {
 func NewService(repo Repository) Service {
 	return &service{Repo: repo}
 }
+
+const (
+	defaultTemplateVersion = "1.0.0"
+	templateFilePattern    = "template-v%s.csv"
+)
+
 func (s *service) DownloadTemplate(req DownloadRequest) (string, error) {
 	if req.Product == "" {
 		return "", apperror.BadRequest("product parameter is required")
 	}
 
-	filename := req.Filename
-	if filename == "" {
-		filename = "template.csv"
-	} else if !strings.HasSuffix(filename, ".csv") {
-		filename += ".csv"
+	version := req.Version
+	if version == "" {
+		version = defaultTemplateVersion
+	} else if !regexp.MustCompile(`^\d+\.\d+\.\d+$`).MatchString(version) {
+		return "", apperror.BadRequest("invalid version format (expected x.y.z)")
 	}
 
-	return s.Repo.GetTemplatePath(req.Product, req.Filename)
+	filename := fmt.Sprintf(templateFilePattern, version)
+	path, err := s.Repo.GetTemplatePath(req.Product, filename)
+	if errors.Is(err, os.ErrNotExist) {
+		return s.Repo.GetTemplatePath(req.Product, fmt.Sprintf(templateFilePattern, defaultTemplateVersion))
+	}
+
+	return path, nil
 }
 
 func (s *service) ListTemplates() (*Templates, error) {

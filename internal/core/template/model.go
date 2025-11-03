@@ -1,8 +1,8 @@
 package template
 
 type DownloadRequest struct {
-	Product  string `query:"product"`
-	Filename string `query:"filename"`
+	Product string `query:"product"`
+	Version string `query:"version"`
 }
 
 type Templates struct {
