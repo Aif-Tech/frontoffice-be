@@ -1,0 +1,25 @@
+package npwpverification
+
+import (
+	"front-office/configs/application"
+	"front-office/internal/core/log/transaction"
+	"front-office/internal/core/member"
+	"front-office/internal/datahub/job"
+	"front-office/internal/middleware"
+	"front-office/pkg/httpclient"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {
+	repository := NewRepository(cfg, client, nil)
+	memberRepo := member.NewRepository(cfg, client, nil)
+	jobRepo := job.NewRepository(cfg, client, nil)
+	transactionRepo := transaction.NewRepository(cfg, client, nil)
+	jobService := job.NewService(jobRepo, transactionRepo)
+	service := NewService(repository, memberRepo, jobRepo, transactionRepo, jobService)
+	controller := NewController(service)
+
+	npwpVerificationGroup := apiGroup.Group("npwp-verification")
+	npwpVerificationGroup.Post("/single-request", middleware.Auth(), middleware.ValidateRequest(npwpVerificationRequest{}), middleware.GetJWTPayloadFromCookie(), controller.SingleSearch)
+}

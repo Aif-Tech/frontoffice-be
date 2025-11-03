@@ -4,6 +4,7 @@ import (
 	"front-office/configs/application"
 	"front-office/internal/datahub/compliance/loanrecordchecker"
 	"front-office/internal/datahub/compliance/multipleloan"
+	"front-office/internal/datahub/identity/npwpverification"
 	"front-office/internal/datahub/identity/phonelivestatus"
 	"front-office/internal/datahub/incometax/taxcompliancestatus"
 	"front-office/internal/datahub/incometax/taxscore"
@@ -32,4 +33,5 @@ func SetupInit(routeAPI fiber.Router, cfg *application.Config) {
 
 	identityGroupAPI := routeAPI.Group("identity")
 	phonelivestatus.SetupInit(identityGroupAPI, cfg, client)
+	npwpverification.SetupInit(identityGroupAPI, cfg, client)
 }
