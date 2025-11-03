@@ -60,9 +60,6 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
-	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
@@ -98,12 +95,6 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 		}
 
 		return nil, apperror.Internal("failed to process multiple loan checker", err)
-	}
-
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return nil, apperror.MapRepoError(err, "failed to update transaction log")
 	}
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
@@ -254,12 +245,6 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
 		return apperror.Internal("failed to process multiple loan", err)
-	}
-
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return apperror.MapRepoError(err, "failed to update transaction job")
 	}
 
 	return nil

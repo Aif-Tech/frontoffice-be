@@ -53,9 +53,6 @@ func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqB
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
-	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
@@ -75,12 +72,6 @@ func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqB
 		}
 
 		return nil, apperror.MapRepoError(err, "failed to process tax compliance status")
-	}
-
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return nil, apperror.MapRepoError(err, "failed to update transaction log")
 	}
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
@@ -198,7 +189,7 @@ func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) err
 		return apperror.BadRequest(err.Error())
 	}
 
-	result, err := svc.repo.TaxComplianceStatusAPI(
+	_, err := svc.repo.TaxComplianceStatusAPI(
 		params.APIKey,
 		params.JobIdStr,
 		params.Request,
@@ -209,10 +200,6 @@ func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) err
 
 		return apperror.Internal("failed to process tax compliance status", err)
 	}
-
-	_ = svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	})
 
 	return nil
 }

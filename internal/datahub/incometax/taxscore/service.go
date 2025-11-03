@@ -53,9 +53,6 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
-	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
@@ -77,12 +74,6 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 		return nil, apperror.MapRepoError(err, "failed to process tax score")
 	}
 
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return nil, apperror.MapRepoError(err, "failed to update transaction log")
-	}
-
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return nil, err
 	}
@@ -101,9 +92,6 @@ func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId u
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugTaxScore)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
-	}
-	if subscribedResp.Data.ProductId == 0 {
-		return apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
@@ -198,7 +186,7 @@ func (svc *service) processTaxScore(params *taxScoreContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	result, err := svc.repo.TaxScoreAPI(
+	_, err := svc.repo.TaxScoreAPI(
 		params.APIKey,
 		params.JobIdStr,
 		params.Request,
@@ -209,10 +197,6 @@ func (svc *service) processTaxScore(params *taxScoreContext) error {
 
 		return apperror.Internal("failed to process tax score", err)
 	}
-
-	_ = svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	})
 
 	return nil
 }

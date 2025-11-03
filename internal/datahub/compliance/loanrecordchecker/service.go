@@ -53,9 +53,6 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
-	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
@@ -80,12 +77,6 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 		}
 
 		return nil, apperror.Internal("failed to process loan record checker", err)
-	}
-
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return nil, apperror.MapRepoError(err, "failed to update transaction log")
 	}
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
@@ -204,18 +195,12 @@ func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	result, err := svc.repo.LoanRecordCheckerAPI(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
+	_, err := svc.repo.LoanRecordCheckerAPI(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
 		return apperror.Internal("failed to process loan record checker", err)
-	}
-
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return apperror.MapRepoError(err, "failed to update log transaction")
 	}
 
 	return nil
