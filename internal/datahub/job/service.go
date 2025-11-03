@@ -186,6 +186,11 @@ func (svc *service) exportJobDetailsToCSV(
 		mapper = func(d *logTransProductCatalog) []string {
 			return mapTaxVerificationRow(filter.IsMasked, d)
 		}
+	case constant.SlugNPWPVerification:
+		headers = constant.CSVExportHeaderNPWPVerification
+		mapper = func(d *logTransProductCatalog) []string {
+			return mapNPWPVerificationRow(filter.IsMasked, d)
+		}
 	}
 
 	if includeDate {
@@ -477,6 +482,43 @@ func mapTaxVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 		npwpVerification,
 		status,
 		taxCompliance,
+		d.Status,
+		description,
+	}
+}
+
+func mapNPWPVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
+	var (
+		description, name, address, status, npwp string
+	)
+
+	if d.Message != nil {
+		description = *d.Message
+	}
+
+	if d.Data != nil {
+		name = *d.Data.Nama
+		address = *d.Data.Alamat
+		status = *d.Data.Status
+	}
+
+	var ref refTransProductCatalog
+	if raw, err := json.Marshal(d.RefTransProductCatalog); err == nil {
+		_ = json.Unmarshal(raw, &ref)
+	}
+
+	if isMasked {
+		npwp = ref.Input.NPWP
+	} else {
+		npwp = *d.Input.NPWP
+	}
+
+	return []string{
+		d.Input.LoanNo,
+		npwp,
+		name,
+		address,
+		status,
 		d.Status,
 		description,
 	}

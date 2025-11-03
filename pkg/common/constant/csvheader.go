@@ -123,6 +123,16 @@ var CSVExportHeaderTaxVerification = []string{
 	CSVHeaderDescription,
 }
 
+var CSVExportHeaderNPWPVerification = []string{
+	CSVHeaderLoanNumber,
+	CSVHeaderNPWP,
+	CSVHeaderName,
+	CSVHeaderAddress,
+	CSVHeaderDataStatus,
+	CSVHeaderStatus,
+	CSVHeaderDescription,
+}
+
 var CSVExportHeaderGenRetail = []string{
 	// CSVHeaderDateCreated,
 	CSVHeaderLoanNumber,

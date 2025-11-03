@@ -34,4 +34,5 @@ func SetupInit(routeAPI fiber.Router, cfg *application.Config) {
 	identityGroupAPI := routeAPI.Group("identity")
 	phonelivestatus.SetupInit(identityGroupAPI, cfg, client)
 	npwpverification.SetupInit(identityGroupAPI, cfg, client)
+	job.SetupInit(identityGroupAPI, cfg, client)
 }

@@ -240,6 +240,7 @@ var productSlugMap = map[string]string{
 	"tax-compliance-status":   constant.SlugTaxComplianceStatus,
 	"tax-score":               constant.SlugTaxScore,
 	"tax-verification-detail": constant.SlugTaxVerificationDetail,
+	"npwp-verification":       constant.SlugNPWPVerification,
 	"gen-retail":              constant.SlugGenRetailV3,
 }
 
