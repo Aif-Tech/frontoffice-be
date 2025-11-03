@@ -24,6 +24,7 @@ const (
 	Page      = "page"
 	Size      = "size"
 	JobId     = "job_id"
+	Masked    = "masked"
 	StartDate = "start_date"
 	EndDate   = "end_date"
 	Keyword   = "keyword"
