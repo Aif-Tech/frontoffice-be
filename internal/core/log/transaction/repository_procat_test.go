@@ -52,7 +52,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
@@ -60,7 +60,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -119,7 +119,7 @@ func TestProcessedLogCountAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
@@ -127,7 +127,7 @@ func TestProcessedLogCountAPI(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -172,7 +172,7 @@ func TestCreateLogTransAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -182,7 +182,7 @@ func TestCreateLogTransAPI(t *testing.T) {
 		err := repo.CreateLogTransAPI(addLogReq)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -197,14 +197,14 @@ func TestCreateLogTransAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.CreateLogTransAPI(addLogReq)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -248,7 +248,7 @@ func TestUpdateLogTransAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -258,7 +258,7 @@ func TestUpdateLogTransAPI(t *testing.T) {
 		err := repo.UpdateLogTransAPI(constant.DummyTransactionId, updateLogReq)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -273,14 +273,14 @@ func TestUpdateLogTransAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.UpdateLogTransAPI(constant.DummyTransactionId, updateLogReq)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
