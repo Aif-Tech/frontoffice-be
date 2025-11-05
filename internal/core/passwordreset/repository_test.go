@@ -64,7 +64,7 @@ func TestCreatePasswordResetTokenAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -73,7 +73,7 @@ func TestCreatePasswordResetTokenAPI(t *testing.T) {
 
 		err := repo.CreatePasswordResetTokenAPI(constant.DummyMemberId, payload)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -88,14 +88,14 @@ func TestCreatePasswordResetTokenAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.CreatePasswordResetTokenAPI(constant.DummyMemberId, payload)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -150,7 +150,7 @@ func TestGetPasswordResetTokenAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
@@ -158,7 +158,7 @@ func TestGetPasswordResetTokenAPI(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -211,14 +211,14 @@ func TestDeletePasswordResetTokenAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.DeletePasswordResetTokenAPI(constant.DummyId)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
