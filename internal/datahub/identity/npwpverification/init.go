@@ -22,4 +22,5 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 
 	npwpVerificationGroup := apiGroup.Group("npwp-verification")
 	npwpVerificationGroup.Post("/single-request", middleware.Auth(), middleware.ValidateRequest(npwpVerificationRequest{}), middleware.GetJWTPayloadFromCookie(), controller.SingleSearch)
+	npwpVerificationGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(), controller.BulkSearch)
 }

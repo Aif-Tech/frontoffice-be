@@ -6,8 +6,9 @@ const (
 	TrxIdMultipleLoan7Days  = "ML7"
 	TrxIdMultipleLoan30Days = "ML30"
 	TrxIdMultipleLoan90Days = "ML90"
+	TrxIdNPWPVerification   = "NPV"
+	TrxIdPhoneLiveStatus    = "PLS"
 	TrxIdTaxCompliance      = "TCS"
 	TrxIdTaxVerification    = "TVD"
 	TrxIdTaxScore           = "TXS"
-	TrxIdPhoneLiveStatus    = "PLS"
 )

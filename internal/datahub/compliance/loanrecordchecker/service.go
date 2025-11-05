@@ -98,9 +98,6 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
 
 	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
 	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{

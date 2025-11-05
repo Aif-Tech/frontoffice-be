@@ -93,9 +93,6 @@ func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, 
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
-	}
 
 	subsribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
 	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
