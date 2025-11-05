@@ -67,7 +67,7 @@ func TestVerifyMemberAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -76,7 +76,7 @@ func TestVerifyMemberAPI(t *testing.T) {
 
 		err := repo.VerifyMemberAPI(constant.DummyMemberId, passwordResetReq)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -90,14 +90,14 @@ func TestVerifyMemberAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.VerifyMemberAPI(constant.DummyMemberId, passwordResetReq)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -143,7 +143,7 @@ func TestPasswordResetAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -152,7 +152,7 @@ func TestPasswordResetAPI(t *testing.T) {
 
 		err := repo.PasswordResetAPI(constant.DummyMemberId, constant.DummyToken, passwordResetReq)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -166,14 +166,14 @@ func TestPasswordResetAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.PasswordResetAPI(constant.DummyMemberId, constant.DummyToken, passwordResetReq)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -220,7 +220,7 @@ func TestChangePasswordAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -229,7 +229,7 @@ func TestChangePasswordAPI(t *testing.T) {
 
 		err := repo.ChangePasswordAPI(constant.DummyMemberId, payload)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -243,14 +243,14 @@ func TestChangePasswordAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.ChangePasswordAPI(constant.DummyMemberId, payload)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -302,7 +302,7 @@ func TestAuthMemberAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -313,7 +313,7 @@ func TestAuthMemberAPI(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -329,7 +329,7 @@ func TestAuthMemberAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
@@ -337,7 +337,7 @@ func TestAuthMemberAPI(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
