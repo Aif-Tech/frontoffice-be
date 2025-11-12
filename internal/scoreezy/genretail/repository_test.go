@@ -79,7 +79,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -101,7 +101,7 @@ func TestGenRetailV3API(t *testing.T) {
 
 		assert.Nil(t, result)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -128,7 +128,7 @@ func TestGenRetailV3API(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrMsgHTTPReqFailed)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
@@ -139,7 +139,7 @@ func TestGenRetailV3API(t *testing.T) {
 		)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrMsgHTTPReqFailed)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -198,14 +198,14 @@ func TestGetLogsScoreezyAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrMsgHTTPReqFailed)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		_, err := repo.GetLogsScoreezyAPI(&filterLogs{})
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrMsgHTTPReqFailed)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -260,14 +260,14 @@ func TestGetLogsByRangeDateAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrMsgHTTPReqFailed)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		_, err := repo.GetLogsByRangeDateAPI(&filterLogs{})
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrMsgHTTPReqFailed)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -327,14 +327,14 @@ func TestGetLogByTrxIdAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrMsgHTTPReqFailed)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		_, err := repo.GetLogByTrxIdAPI(&filterLogs{})
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrMsgHTTPReqFailed)
 		mockClient.AssertExpectations(t)
 	})
 

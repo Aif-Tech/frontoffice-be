@@ -9,6 +9,7 @@ const (
 	DummyJobId         = "job-id"
 	DummyJobDetailId   = "job-detail-id"
 	DummyTransactionId = "transaction-id"
+	DummyLoanNo        = "loan-no"
 	DummyPhoneNumber   = "phone-number"
 	DummyPassword      = "dummy-password"
 	DummyProduct       = "dummy-product"

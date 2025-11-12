@@ -59,6 +59,11 @@ var CSVTemplateHeaderTaxVerification = []string{
 	CSVHeaderLoanNumber,
 }
 
+var CSVTemplateHeaderNPWPVerification = []string{
+	CSVHeaderNPWP,
+	CSVHeaderLoanNumber,
+}
+
 var CSVExportHeaderPhoneLive = []string{
 	CSVHeaderLoanNumber,
 	CSVHeaderPhone,
@@ -119,6 +124,16 @@ var CSVExportHeaderTaxVerification = []string{
 	CSVHeaderNPWPVerification,
 	CSVHeaderDataStatus,
 	CSVHeaderTaxCompliance,
+	CSVHeaderStatus,
+	CSVHeaderDescription,
+}
+
+var CSVExportHeaderNPWPVerification = []string{
+	CSVHeaderLoanNumber,
+	CSVHeaderNPWP,
+	CSVHeaderName,
+	CSVHeaderAddress,
+	CSVHeaderDataStatus,
 	CSVHeaderStatus,
 	CSVHeaderDescription,
 }

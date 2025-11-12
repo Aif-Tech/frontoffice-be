@@ -5,10 +5,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 	"unicode"
 
 	randMath "math/rand"
+)
+
+const (
+	maskChar = "*"
 )
 
 func GenerateAPIKey() string {
@@ -122,4 +127,42 @@ func IsNumeric(s string) bool {
 	}
 
 	return true
+}
+
+func MaskingHead(value string, num int) string {
+	if len(value) <= num {
+		return value
+	}
+
+	head := value[:len(value)-num]
+	tail := value[len(value)-num:]
+
+	mask := strings.Repeat(maskChar, len(head))
+
+	return mask + tail
+}
+
+func MaskingMiddle(value string) string {
+	totalLen := len(value)
+
+	if totalLen <= 4 {
+		return value
+	}
+
+	maskLen := 3
+	if totalLen <= 6 {
+		maskLen = 1
+	} else if totalLen <= 8 {
+		maskLen = 2
+	}
+
+	remain := totalLen - maskLen
+	headLen := remain / 2
+	tailLen := remain - headLen
+
+	head := value[:headLen]
+	tail := value[totalLen-tailLen:]
+	mask := strings.Repeat(maskChar, maskLen)
+
+	return head + mask + tail
 }

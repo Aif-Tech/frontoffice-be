@@ -37,6 +37,7 @@ type filterLogs struct {
 	Name        string
 	Grade       string
 	ProductType string
+	Masked      bool
 	Page        string
 	Size        string
 }
@@ -55,16 +56,17 @@ type logTransScoreezy struct {
 }
 
 type dataLogTransScoreezy struct {
-	TrxId                string `json:"trx_id"`
-	Type                 string `json:"type"`
-	Data                 *data  `json:"data"`
-	ProbabilityToDefault string `json:"probability_to_default"`
-	Grade                string `json:"grade"`
-	Behavior             string `json:"behavior"`
-	Identity             string `json:"identity"`
-	Message              string `json:"message"`
-	Status               string `json:"status"`  // Free or Pay
-	Success              bool   `json:"success"` // true or false
+	TrxId                string    `json:"trx_id"`
+	Type                 string    `json:"type"`
+	Data                 *data     `json:"data"`
+	ProbabilityToDefault string    `json:"probability_to_default"`
+	Grade                string    `json:"grade"`
+	Behavior             string    `json:"behavior"`
+	Identity             string    `json:"identity"`
+	RefTrans             *refTrans `json:"ref_trans"`
+	Message              string    `json:"message"`
+	Status               string    `json:"status"`  // Free or Pay
+	Success              bool      `json:"success"` // true or false
 }
 
 type data struct {
@@ -72,6 +74,11 @@ type data struct {
 	PhoneNumber string `json:"phone_no"`
 	IdCardNo    string `json:"id_card_no"`
 	LoanNo      string `json:"loan_no"`
+}
+
+type refTrans struct {
+	PhoneNumber string `json:"phone_no"`
+	IdCardNo    string `json:"id_card_no"`
 }
 
 type genRetailContext struct {

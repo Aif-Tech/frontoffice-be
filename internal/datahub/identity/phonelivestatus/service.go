@@ -60,9 +60,6 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return apperror.NotFound(constant.ErrSubscribtionNotFound)
-	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
@@ -75,19 +72,13 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.PhoneLiveStatusAPI(apiKey, jobIdStr, reqBody)
+	_, err = svc.repo.PhoneLiveStatusAPI(apiKey, jobIdStr, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return err
 		}
 
 		return apperror.Internal("failed to process phone live status", err)
-	}
-
-	if err := svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	}); err != nil {
-		return apperror.MapRepoError(err, "failed to update transaction log")
 	}
 
 	return svc.jobService.FinalizeJob(jobIdStr)
@@ -102,9 +93,6 @@ func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType s
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugPhoneLiveStatus)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
-	}
-	if subscribedResp.Data.ProductId == 0 {
-		return apperror.NotFound(constant.ProductNotFound)
 	}
 
 	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
@@ -325,7 +313,7 @@ func (svc *service) processSingle(params *phoneLiveStatusContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	result, err := svc.repo.PhoneLiveStatusAPI(params.APIKey, params.JobIdStr, params.Request)
+	_, err := svc.repo.PhoneLiveStatusAPI(params.APIKey, params.JobIdStr, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
@@ -337,10 +325,6 @@ func (svc *service) processSingle(params *phoneLiveStatusContext) error {
 
 		return apperror.Internal("failed to process phone live status", err)
 	}
-
-	_ = svc.transactionRepo.UpdateLogTransAPI(result.TransactionId, map[string]interface{}{
-		"success": helper.BoolPtr(true),
-	})
 
 	return nil
 }

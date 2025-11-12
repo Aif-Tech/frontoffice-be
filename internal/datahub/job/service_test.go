@@ -16,6 +16,7 @@ func TestMapLoanRecordCheckerRow(t *testing.T) {
 				Name:        helper.StringPtr(constant.DummyName),
 				NIK:         helper.StringPtr("unmasked-nik"),
 				PhoneNumber: helper.StringPtr("unmasked-phone"),
+				LoanNo:      constant.DummyLoanNo,
 			},
 			Data: &logTransData{
 				Remarks: helper.StringPtr("-"),
@@ -32,6 +33,7 @@ func TestMapLoanRecordCheckerRow(t *testing.T) {
 		})
 
 		expected := []string{
+			constant.DummyLoanNo,
 			constant.DummyName,
 			constant.DummyNIK,
 			constant.DummyPhoneNumber,
@@ -50,6 +52,7 @@ func TestMapLoanRecordCheckerRow(t *testing.T) {
 				Name:        helper.StringPtr(constant.DummyName),
 				NIK:         helper.StringPtr(constant.DummyNIK),
 				PhoneNumber: helper.StringPtr(constant.DummyPhoneNumber),
+				LoanNo:      constant.DummyLoanNo,
 			},
 			Data: &logTransData{
 				Remarks: helper.StringPtr("-"),
@@ -59,6 +62,7 @@ func TestMapLoanRecordCheckerRow(t *testing.T) {
 		})
 
 		expected := []string{
+			constant.DummyLoanNo,
 			constant.DummyName,
 			constant.DummyNIK,
 			constant.DummyPhoneNumber,

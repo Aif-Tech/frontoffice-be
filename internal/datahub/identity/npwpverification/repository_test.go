@@ -1,4 +1,4 @@
-package taxscore
+package npwpverification
 
 import (
 	"bytes"
@@ -39,15 +39,12 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	return repo, mockClient
 }
 
-func TestCallTaxScoreAPI(t *testing.T) {
+func TestCallLoanRecordCheckerAPI(t *testing.T) {
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
-		mockData := model.ProCatAPIResponse[taxScoreRespData]{
+		mockData := model.ProCatAPIResponse[npwpVerificationRespData]{
 			Success: true,
-			Message: "Succeed to Request Data.",
-			Data: taxScoreRespData{
-				Score: "0",
-			},
-			PricingStrategy: "PAY",
+			Message: "success",
+			Data:    npwpVerificationRespData{Name: constant.DummyName},
 		}
 		body, err := json.Marshal(mockData)
 		require.NoError(t, err)
@@ -59,14 +56,12 @@ func TestCallTaxScoreAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.True(t, result.Success)
-		assert.Equal(t, "Succeed to Request Data.", result.Message)
-		assert.Equal(t, "0", result.Data.Score)
-		assert.Equal(t, "PAY", result.PricingStrategy)
+		assert.Equal(t, constant.DummyName, result.Data.Name)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -79,7 +74,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 			Env: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -91,7 +86,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 			Env: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
 		assert.Error(t, err)
 	})
 
@@ -100,8 +95,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		req := &taxScoreRequest{}
-		_, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, req)
+		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -116,7 +110,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)

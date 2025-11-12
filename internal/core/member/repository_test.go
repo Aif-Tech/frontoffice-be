@@ -80,7 +80,7 @@ func TestAddMemberAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
@@ -88,7 +88,7 @@ func TestAddMemberAPI(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -143,14 +143,14 @@ func TestGetMemberAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		_, err := repo.GetMemberAPI(&MemberParams{})
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -213,7 +213,7 @@ func TestGetMemberListAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
@@ -222,7 +222,7 @@ func TestGetMemberListAPI(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Nil(t, meta)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -267,7 +267,7 @@ func TestUpdateMemberAPI(t *testing.T) {
 
 	t.Run(constant.TestCaseMarshalError, func(t *testing.T) {
 		fakeMarshal := func(v any) ([]byte, error) {
-			return nil, errors.New(constant.ErrFailedMarshalReq)
+			return nil, errors.New(constant.ErrInvalidRequestPayload)
 		}
 
 		repo := NewRepository(&application.Config{
@@ -277,7 +277,7 @@ func TestUpdateMemberAPI(t *testing.T) {
 		err := repo.UpdateMemberAPI(constant.DummyMemberId, map[string]interface{}{})
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrFailedMarshalReq)
+		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
 	})
 
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
@@ -292,14 +292,14 @@ func TestUpdateMemberAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.UpdateMemberAPI(constant.DummyMemberId, map[string]interface{}{})
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -351,14 +351,14 @@ func TestDeleteMemberAPI(t *testing.T) {
 	})
 
 	t.Run(constant.TestCaseHTTPRequestError, func(t *testing.T) {
-		expectedErr := errors.New(constant.ErrHTTPReqFailed)
+		expectedErr := errors.New(constant.ErrUpstreamUnavailable)
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		err := repo.DeleteMemberAPI(constant.DummyMemberId)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), constant.ErrHTTPReqFailed)
+		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
 		mockClient.AssertExpectations(t)
 	})
 

@@ -78,9 +78,6 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
-	if subscribedResp.Data.ProductId == 0 {
-		return nil, apperror.NotFound(constant.ErrSubscribtionNotFound)
-	}
 
 	// make sure parameter settings are set
 	gradeResp, err := svc.gradeRepo.GetGradesAPI(constant.SlugGenRetailV3, strconv.FormatUint(uint64(companyId), 10))
@@ -133,9 +130,6 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugGenRetailV3)
 	if err != nil {
 		return 0, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
-	}
-	if subscribedResp.Data.ProductId == 0 {
-		return 0, apperror.NotFound(constant.ErrSubscribtionNotFound)
 	}
 
 	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
@@ -261,8 +255,21 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 	}
 
 	for _, log := range result.Data {
-		if log.Data != nil {
-			log.Data.Type = deriveTypeFromTrxId(log.Data.TrxId)
+		if log.Data == nil {
+			continue
+		}
+
+		log.Data.Type = deriveTypeFromTrxId(log.Data.TrxId)
+
+		if log.Data.Data != nil {
+			if log.Data.RefTrans == nil {
+				log.Data.RefTrans = &refTrans{}
+			}
+
+			log.Data.RefTrans.IdCardNo = helper.MaskingHead(log.Data.Data.IdCardNo, 10)
+			log.Data.RefTrans.PhoneNumber = helper.MaskingMiddle(log.Data.Data.PhoneNumber)
+		} else {
+			log.Data.RefTrans = nil
 		}
 	}
 
@@ -291,6 +298,19 @@ func (svc *service) GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error
 		return nil, apperror.NotFound(constant.DataNotFound)
 	}
 
+	if result.Data.Data != nil {
+		if result.Data.Data != nil {
+			if result.Data.RefTrans == nil {
+				result.Data.RefTrans = &refTrans{}
+			}
+
+			result.Data.RefTrans.IdCardNo = helper.MaskingHead(result.Data.Data.IdCardNo, 10)
+			result.Data.RefTrans.PhoneNumber = helper.MaskingMiddle(result.Data.Data.PhoneNumber)
+		} else {
+			result.Data.RefTrans = nil
+		}
+	}
+
 	return result, nil
 }
 
@@ -317,7 +337,7 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	var mappedDetails []*logTransScoreezy
 	mappedDetails = append(mappedDetails, result.Data...)
 
-	if err := writeToCSV(buf, includeDate, mappedDetails); err != nil {
+	if err := writeToCSV(buf, includeDate, filter.Masked, mappedDetails); err != nil {
 		return "", apperror.Internal("failed to write CSV", err)
 	}
 
@@ -326,7 +346,7 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	return filename, nil
 }
 
-func writeToCSV(buf *bytes.Buffer, includeDate bool, logs []*logTransScoreezy) error {
+func writeToCSV(buf *bytes.Buffer, includeDate, masked bool, logs []*logTransScoreezy) error {
 	w := csv.NewWriter(buf)
 	defer w.Flush()
 
@@ -352,13 +372,20 @@ func writeToCSV(buf *bytes.Buffer, includeDate bool, logs []*logTransScoreezy) e
 		if log.Data != nil && log.Data.Data != nil {
 			name = log.Data.Data.Name
 			loanID = log.Data.Data.LoanNo
-			idCardNo = log.Data.Data.IdCardNo
-			phoneNumber = log.Data.Data.PhoneNumber
+
 			probabilityToDefault = log.Data.ProbabilityToDefault
 			grade = log.Data.Grade
 			behavior = log.Data.Behavior
 			identity = log.Data.Identity
 			message = log.Data.Message
+
+			if !masked {
+				idCardNo = log.Data.Data.IdCardNo
+				phoneNumber = log.Data.Data.PhoneNumber
+			} else {
+				idCardNo = helper.MaskingHead(log.Data.Data.IdCardNo, 10)
+				phoneNumber = helper.MaskingMiddle(log.Data.Data.PhoneNumber)
+			}
 		}
 
 		row := []string{

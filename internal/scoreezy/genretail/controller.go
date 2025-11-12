@@ -6,6 +6,7 @@ import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/helper"
 	"mime/multipart"
+	"strconv"
 	"strings"
 	"time"
 
@@ -155,7 +156,10 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
+	masked, _ := strconv.ParseBool(c.Query(constant.Masked))
+
 	filter := &filterLogs{
+		Masked:    masked,
 		CompanyId: authCtx.CompanyIdStr(),
 		JobId:     c.Query(constant.JobId),
 		StartDate: c.Query(constant.StartDate),

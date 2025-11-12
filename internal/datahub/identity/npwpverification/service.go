@@ -1,4 +1,4 @@
-package taxscore
+package npwpverification
 
 import (
 	"front-office/internal/core/log/transaction"
@@ -6,16 +6,14 @@ import (
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
-	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
-
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	logger "github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
 
@@ -44,14 +42,14 @@ type service struct {
 }
 
 type Service interface {
-	TaxScore(apiKey, memberId, companyId string, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error)
-	BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
+	NPWPVerification(apiKey, memberId, companyId string, payload *npwpVerificationRequest) error
+	BulkNPWPVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
-func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error) {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxScore)
+func (svc *service) NPWPVerification(apiKey, memberId, companyId string, payload *npwpVerificationRequest) error {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugNPWPVerification)
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
@@ -61,35 +59,31 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 		Total:     1,
 	})
 	if err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
+		return apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
-	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.TaxScoreAPI(apiKey, jobIdStr, request)
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
+	_, err = svc.repo.NPWPVerificationAPI(apiKey, jobIdStr, payload)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
-			return nil, err
+			return err
 		}
 
-		return nil, apperror.MapRepoError(err, "failed to process tax score")
+		return apperror.Internal("failed to process npwp verification", err)
 	}
 
-	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return svc.jobService.FinalizeJob(jobIdStr)
 }
 
-func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxScore)
+func (svc *service) BulkNPWPVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderNPWPVerification)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 
 	memberIdStr := strconv.Itoa(int(memberId))
 	companyIdStr := strconv.Itoa(int(companyId))
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugTaxScore)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugNPWPVerification)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
@@ -105,8 +99,8 @@ func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId u
 		return apperror.MapRepoError(err, constant.FailedFetchQuota)
 	}
 
-	totalRequests := len(records) - 1
-	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
+	totalRequest := len(records) - 1
+	if quotaType != "0" && quotaResp.Data.Quota < totalRequest {
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
@@ -114,38 +108,37 @@ func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId u
 		ProductId: subscribedResp.Data.ProductId,
 		MemberId:  memberIdStr,
 		CompanyId: companyIdStr,
-		Total:     len(records) - 1,
+		Total:     totalRequest,
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
-	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	var taxScoreReqs []*taxScoreRequest
-	for i, record := range records {
+	jobIdStr := strconv.Itoa(int(jobRes.JobId))
+	var npwpVerificationReqs []*npwpVerificationRequest
+	for i, rec := range records {
 		if i == 0 {
 			continue
 		}
-
-		taxScoreReqs = append(taxScoreReqs, &taxScoreRequest{
-			Npwp:   record[0],
-			LoanNo: record[1],
+		npwpVerificationReqs = append(npwpVerificationReqs, &npwpVerificationRequest{
+			Npwp:   rec[0],
+			LoanNo: rec[1],
 		})
 	}
 
 	var (
 		wg         sync.WaitGroup
-		errChan    = make(chan error, len(taxScoreReqs))
+		errChan    = make(chan error, len(npwpVerificationReqs))
 		batchCount = 0
 	)
 
-	for _, req := range taxScoreReqs {
+	for _, req := range npwpVerificationReqs {
 		wg.Add(1)
 
-		go func(taxScoreReq *taxScoreRequest) {
+		go func(npwpVerificationReq *npwpVerificationRequest) {
 			defer wg.Done()
 
-			if err := svc.processTaxScore(&taxScoreContext{
+			if err := svc.processNPWPVerification(&npwpVerificationContext{
 				APIKey:         apiKey,
 				JobIdStr:       jobIdStr,
 				MemberIdStr:    memberIdStr,
@@ -155,7 +148,7 @@ func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId u
 				ProductId:      subscribedResp.Data.ProductId,
 				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
-				Request:        taxScoreReq,
+				Request:        npwpVerificationReq,
 			}); err != nil {
 				errChan <- err
 			}
@@ -172,36 +165,32 @@ func (svc *service) BulkTaxScore(apiKey, quotaType string, memberId, companyId u
 	close(errChan)
 
 	for err := range errChan {
-		log.Error().Err(err).Msg("error during bulk tax score prrocessing")
+		logger.Error().Err(err).Msg("error during bulk npwp verification processing")
 	}
 
 	return svc.jobService.FinalizeJob(jobIdStr)
 }
 
-func (svc *service) processTaxScore(params *taxScoreContext) error {
-	trxId := helper.GenerateTrx(constant.TrxIdTaxScore)
+func (svc *service) processNPWPVerification(params *npwpVerificationContext) error {
+	trxId := helper.GenerateTrx(constant.TrxIdNPWPVerification)
 	if err := validator.ValidateStruct(params.Request); err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.TaxScoreAPI(
-		params.APIKey,
-		params.JobIdStr,
-		params.Request,
-	)
+	_, err := svc.repo.NPWPVerificationAPI(params.APIKey, params.JobIdStr, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
-		return apperror.Internal("failed to process tax score", err)
+		return apperror.Internal("failed to process npwp verification", err)
 	}
 
 	return nil
 }
 
-func (svc *service) logFailedTransaction(params *taxScoreContext, trxId, msg string, status int) error {
+func (svc *service) logFailedTransaction(params *npwpVerificationContext, trxId, msg string, status int) error {
 	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
 		TransactionID:  trxId,
 		MemberID:       params.MemberId,

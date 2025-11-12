@@ -31,6 +31,7 @@ func (r *repository) GetAvailableTemplates() (map[string][]string, error) {
 		constant.PhoneLiveTemplates,
 		constant.LoanRecordCheckerTemplates,
 		constant.MultipleLoanTemplates,
+		constant.NPWPVerificationTemplates,
 		constant.TaxComplianceStatusTemplates,
 		constant.TaxScoreTemplates,
 		constant.TaxVerificationTemplates,

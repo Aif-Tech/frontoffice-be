@@ -7,6 +7,7 @@ const (
 	PhoneLiveTemplates           = "phonelivestatus"
 	LoanRecordCheckerTemplates   = "loanrecordchecker"
 	MultipleLoanTemplates        = "multipleloan"
+	NPWPVerificationTemplates    = "npwpverification"
 	TaxComplianceStatusTemplates = "taxcompliancestatus"
 	TaxScoreTemplates            = "taxscore"
 	TaxVerificationTemplates     = "taxverificationdetail"
