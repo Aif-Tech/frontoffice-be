@@ -1,4 +1,4 @@
-package npwpverification
+package phonelivestatus
 
 import (
 	"bytes"
@@ -39,12 +39,12 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	return repo, mockClient
 }
 
-func TestCallNPWPVerificationAPI(t *testing.T) {
+func TestCallPhoneLiveStatusAPI(t *testing.T) {
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
-		mockData := model.ProCatAPIResponse[npwpVerificationRespData]{
+		mockData := model.ProCatAPIResponse[phoneLiveStatusRespData]{
 			Success: true,
 			Message: "success",
-			Data:    npwpVerificationRespData{Name: constant.DummyName},
+			Data:    phoneLiveStatusRespData{},
 		}
 		body, err := json.Marshal(mockData)
 		require.NoError(t, err)
@@ -56,12 +56,11 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.True(t, result.Success)
-		assert.Equal(t, constant.DummyName, result.Data.Name)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -74,7 +73,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 			Env: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -86,7 +85,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 			Env: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 		assert.Error(t, err)
 	})
 
@@ -95,7 +94,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -110,7 +109,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)
