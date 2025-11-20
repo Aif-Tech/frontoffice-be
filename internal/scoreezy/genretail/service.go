@@ -108,7 +108,7 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 	addLogRequest := &operation.AddLogRequest{
 		MemberId:  memberId,
 		CompanyId: companyId,
-		Action:    constant.EventCalculateScore,
+		Action:    constant.EventCalculateScoreSingle,
 	}
 
 	err = svc.logRepo.AddLogOperation(addLogRequest)
@@ -222,7 +222,7 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 	addLogRequest := &operation.AddLogRequest{
 		MemberId:  memberId,
 		CompanyId: companyId,
-		Action:    constant.EventCalculateScore,
+		Action:    constant.EventCalculateScoreBulk,
 	}
 
 	err = svc.logRepo.AddLogOperation(addLogRequest)
@@ -358,10 +358,18 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	if err != nil {
 		return "", apperror.Internal("failed to parse company id", err)
 	}
+
+	var action string
+	if len(result.Data) > 1 {
+		action = constant.EventDownloadScoreHistoryBulk
+	} else {
+		action = constant.EventDownloadScoreHistorySingle
+	}
+
 	addLogRequest := &operation.AddLogRequest{
 		MemberId:  filter.MemberId,
 		CompanyId: uint(companyIdUint),
-		Action:    constant.EventDownloadScoreHistory,
+		Action:    action,
 	}
 
 	err = svc.logRepo.AddLogOperation(addLogRequest)
