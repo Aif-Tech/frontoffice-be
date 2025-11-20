@@ -219,6 +219,17 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 		logger.Error().Err(err).Msg("error during bulk gen retail processing")
 	}
 
+	addLogRequest := &operation.AddLogRequest{
+		MemberId:  memberId,
+		CompanyId: companyId,
+		Action:    constant.EventCalculateScore,
+	}
+
+	err = svc.logRepo.AddLogOperation(addLogRequest)
+	if err != nil {
+		log.Println("Failed to log operation for calculate score")
+	}
+
 	return jobRes.JobId, nil
 }
 
