@@ -33,6 +33,7 @@ type filterLogs struct {
 	StartDate   string
 	EndDate     string
 	JobId       string
+	MemberId    uint
 	CompanyId   string
 	Name        string
 	Grade       string

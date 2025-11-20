@@ -343,6 +343,21 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 
 	filename := formatCSVFileName("job_summary", filter.StartDate, filter.EndDate)
 
+	companyIdUint, err := strconv.ParseUint(filter.CompanyId, 10, 32)
+	if err != nil {
+		return "", apperror.Internal("failed to parse company id", err)
+	}
+	addLogRequest := &operation.AddLogRequest{
+		MemberId:  filter.MemberId,
+		CompanyId: uint(companyIdUint),
+		Action:    constant.EventDownloadScoreHistory,
+	}
+
+	err = svc.logRepo.AddLogOperation(addLogRequest)
+	if err != nil {
+		log.Println("Failed to log operation for download history")
+	}
+
 	return filename, nil
 }
 
