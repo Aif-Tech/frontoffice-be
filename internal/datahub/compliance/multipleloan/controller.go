@@ -38,7 +38,7 @@ func (ctrl *controller) MultipleLoan(c *fiber.Ctx) error {
 
 	slug := c.Params("product_slug")
 
-	multipleLoanRes, err := ctrl.svc.MultipleLoan(authCtx.APIKey, slug, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
+	multipleLoanRes, err := ctrl.svc.MultipleLoan(authCtx, slug, reqBody)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package taxcompliancestatus
 
 import (
 	"front-office/configs/application"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -16,8 +17,9 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 	memberRepo := member.NewRepository(cfg, client, nil)
 	jobRepo := job.NewRepository(cfg, client, nil)
 	transactionRepo := transaction.NewRepository(cfg, client, nil)
+	operationRepo := operation.NewRepository(cfg, client, nil)
 
-	jobService := job.NewService(jobRepo, transactionRepo)
+	jobService := job.NewService(jobRepo, transactionRepo, operationRepo)
 	service := NewService(repo, memberRepo, jobRepo, transactionRepo, jobService)
 
 	controller := NewController(service)

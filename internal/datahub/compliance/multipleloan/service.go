@@ -44,27 +44,27 @@ type service struct {
 }
 
 type Service interface {
-	MultipleLoan(apiKey, slug, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
+	MultipleLoan(authCtx *model.AuthContext, slug string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
 	BulkMultipleLoan(apiKey, quotaType, slug string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
 type multipleLoanFunc func(string, string, string, string, *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
 
-func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
+func (svc *service) MultipleLoan(authCtx *model.AuthContext, slug string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
 	productSlug, err := mapProductSlug(slug)
 	if err != nil {
 		return nil, apperror.BadRequest("unsupported product slug")
 	}
 
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, productSlug)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), productSlug)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -83,7 +83,7 @@ func (svc *service) MultipleLoan(apiKey, slug, memberId, companyId string, reqBo
 		return nil, apperror.BadRequest(constant.ErrUnsupportedProduct)
 	}
 
-	result, err := handler(apiKey, jobIdStr, memberId, companyId, reqBody)
+	result, err := handler(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err

@@ -120,9 +120,9 @@ func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
-	req.Header.Set(constant.XMemberId, filter.MemberId)
-	req.Header.Set(constant.XCompanyId, filter.CompanyId)
-	req.Header.Set(constant.XTierLevel, filter.TierLevel)
+	req.Header.Set(constant.XMemberId, filter.AuthCtx.UserIdStr())
+	req.Header.Set(constant.XCompanyId, filter.AuthCtx.CompanyIdStr())
+	req.Header.Set(constant.XTierLevel, filter.AuthCtx.RoleIdStr())
 
 	q := req.URL.Query()
 	q.Add(constant.Page, filter.Page)
@@ -152,8 +152,8 @@ func (repo *repository) GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIRes
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
-	req.Header.Set(constant.XMemberId, filter.MemberId)
-	req.Header.Set(constant.XCompanyId, filter.CompanyId)
+	req.Header.Set(constant.XMemberId, filter.AuthCtx.UserIdStr())
+	req.Header.Set(constant.XCompanyId, filter.AuthCtx.CompanyIdStr())
 
 	q := req.URL.Query()
 	q.Add(constant.Page, filter.Page)
@@ -182,8 +182,8 @@ func (repo *repository) GetJobsSummaryAPI(filter *logFilter) (*model.AifcoreAPIR
 	}
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
-	req.Header.Set(constant.XMemberId, filter.MemberId)
-	req.Header.Set(constant.XCompanyId, filter.CompanyId)
+	req.Header.Set(constant.XMemberId, filter.AuthCtx.UserIdStr())
+	req.Header.Set(constant.XCompanyId, filter.AuthCtx.CompanyIdStr())
 
 	q := req.URL.Query()
 	q.Add(constant.Keyword, filter.Keyword)

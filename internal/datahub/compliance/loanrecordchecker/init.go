@@ -19,7 +19,7 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 	operationRepo := operation.NewRepository(cfg, client, nil)
 	memberRepo := member.NewRepository(cfg, client, nil)
 
-	jobService := job.NewService(jobRepo, transactionRepo)
+	jobService := job.NewService(jobRepo, transactionRepo, operationRepo)
 	service := NewService(repo, memberRepo, jobRepo, operationRepo, transactionRepo, jobService)
 
 	controller := NewController(service)

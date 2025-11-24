@@ -5,25 +5,29 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
+	"log"
 	"strconv"
 	"time"
 )
 
-func NewService(repo Repository, transactionRepo transaction.Repository) Service {
+func NewService(repo Repository, transactionRepo transaction.Repository, operationRepo operation.Repository) Service {
 	return &service{
 		repo,
 		transactionRepo,
+		operationRepo,
 	}
 }
 
 type service struct {
 	repo            Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 }
 
 type Service interface {
@@ -158,11 +162,13 @@ func (svc *service) exportJobDetailsToCSV(
 	}
 
 	headers := []string{}
+	var eventName string
 	var mapper func(*logTransProductCatalog) []string
 
 	switch filter.ProductSlug {
 	case constant.SlugLoanRecordChecker:
 		headers = constant.CSVExportHeaderLoanRecord
+		eventName = constant.EventLoanRecordDownloadResult
 		mapper = func(d *logTransProductCatalog) []string {
 			return mapLoanRecordCheckerRow(filter.IsMasked, d)
 		}
@@ -204,6 +210,18 @@ func (svc *service) exportJobDetailsToCSV(
 	}
 
 	filename := formatCSVFileName("job_detail", filter.StartDate, filter.EndDate, filter.JobId)
+
+	addLogRequest := &operation.AddLogRequest{
+		MemberId:  filter.AuthCtx.UserId,
+		CompanyId: filter.AuthCtx.CompanyId,
+		Action:    eventName,
+	}
+
+	err = svc.operationRepo.AddLogOperation(addLogRequest)
+	if err != nil {
+		log.Println("Failed to log operation for calculate score")
+	}
+
 	return filename, nil
 }
 

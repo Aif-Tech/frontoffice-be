@@ -48,9 +48,7 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
 		ProductSlug: productSlug,
-		MemberId:    authCtx.UserIdStr(),
-		CompanyId:   authCtx.CompanyIdStr(),
-		TierLevel:   authCtx.RoleIdStr(),
+		AuthCtx:     authCtx,
 	}
 
 	result, err := ctrl.Svc.GetJobs(filter)
@@ -73,9 +71,7 @@ func (ctrl *controller) GetGenRetailJobs(c *fiber.Ctx) error {
 		StartDate:   c.Query(constant.StartDate, ""),
 		EndDate:     c.Query(constant.EndDate, ""),
 		ProductSlug: constant.SlugGenRetailV3,
-		MemberId:    authCtx.UserIdStr(),
-		CompanyId:   authCtx.CompanyIdStr(),
-		TierLevel:   authCtx.RoleIdStr(),
+		AuthCtx:     authCtx,
 	}
 
 	result, err := ctrl.Svc.GetGenRetailJobs(filter)
@@ -100,8 +96,7 @@ func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    authCtx.UserIdStr(),
-		CompanyId:   authCtx.CompanyIdStr(),
+		AuthCtx:     authCtx,
 		Page:        c.Query(constant.Page, ""),
 		Size:        c.Query(constant.Size, ""),
 		Keyword:     c.Query("keyword"),
@@ -137,8 +132,7 @@ func (ctrl *controller) GetJobDetailsByDateRange(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    authCtx.UserIdStr(),
-		CompanyId:   authCtx.CompanyIdStr(),
+		AuthCtx:     authCtx,
 		Page:        c.Query(constant.Page, "1"),
 		Size:        c.Query(constant.Size, "10"),
 		Keyword:     c.Query("keyword"),
@@ -170,8 +164,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    authCtx.UserIdStr(),
-		CompanyId:   authCtx.CompanyIdStr(),
+		AuthCtx:     authCtx,
 		ProductSlug: productSlug,
 		JobId:       c.Params("job_id"),
 		Size:        constant.SizeUnlimited,
@@ -211,8 +204,7 @@ func (ctrl *controller) ExportJobDetailsByDateRange(c *fiber.Ctx) error {
 	}
 
 	filter := &logFilter{
-		MemberId:    authCtx.UserIdStr(),
-		CompanyId:   authCtx.CompanyIdStr(),
+		AuthCtx:     authCtx,
 		ProductSlug: productSlug,
 		StartDate:   startDate,
 		EndDate:     endDate,

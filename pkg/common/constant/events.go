@@ -19,6 +19,7 @@ const (
 	EventTopupBalance               = "topup balance"
 	EventSubmitPaymentConfirmation  = "submit payment confirmation"
 
-	EventLoanRecordSingleHit = "loan record checker single hit request"
-	EventLoanRecordBulkHit   = "loan record checker bulk hit request"
+	EventLoanRecordSingleHit      = "loan record checker single hit request"
+	EventLoanRecordBulkHit        = "loan record checker bulk hit request"
+	EventLoanRecordDownloadResult = "loan record checker download result"
 )
