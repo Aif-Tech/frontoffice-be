@@ -2,6 +2,7 @@ package loanrecordchecker
 
 import (
 	"errors"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -9,6 +10,7 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -23,6 +25,7 @@ func NewService(
 	repo Repository,
 	memberRepo member.Repository,
 	jobRepo job.Repository,
+	operationRepo operation.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
 ) Service {
@@ -30,6 +33,7 @@ func NewService(
 		repo,
 		memberRepo,
 		jobRepo,
+		operationRepo,
 		transactionRepo,
 		jobService,
 	}
@@ -39,25 +43,26 @@ type service struct {
 	repo            Repository
 	memberRepo      member.Repository
 	jobRepo         job.Repository
+	operationRepo   operation.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
 }
 
 type Service interface {
-	LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error)
+	LoanRecordChecker(authCtx *model.AuthContext, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error)
 	BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
-func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugLoanRecordChecker)
+func (svc *service) LoanRecordChecker(authCtx *model.AuthContext, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugLoanRecordChecker)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -65,7 +70,7 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.LoanRecordCheckerAPI(apiKey, jobIdStr, memberId, companyId, reqBody)
+	result, err := svc.repo.LoanRecordCheckerAPI(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -81,6 +86,17 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return nil, err
+	}
+
+	addLogRequest := &operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventLoanRecordSingleHit,
+	}
+
+	err = svc.operationRepo.AddLogOperation(addLogRequest)
+	if err != nil {
+		log.Println("Failed to log operation for calculate score")
 	}
 
 	return result, nil

@@ -110,6 +110,9 @@ func mapEventKeyword(input string) (string, bool) {
 		"change_billing_information":  constant.EventChangeBillingInformation,
 		"topup_balance":               constant.EventTopupBalance,
 		"submit_payment_confirmation": constant.EventSubmitPaymentConfirmation,
+
+		// datahub
+		"loan_record_single_hit": constant.EventLoanRecordSingleHit,
 	}
 
 	normalized := strings.ToLower(strings.ReplaceAll(input, " ", "_"))
