@@ -113,6 +113,7 @@ func mapEventKeyword(input string) (string, bool) {
 
 		// datahub
 		"loan_record_single_hit": constant.EventLoanRecordSingleHit,
+		"loan_record_bulk_hit":   constant.EventLoanRecordSingleHit,
 	}
 
 	normalized := strings.ToLower(strings.ReplaceAll(input, " ", "_"))

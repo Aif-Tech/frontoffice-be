@@ -54,7 +54,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	if err := ctrl.svc.BulkLoanRecordChecker(authCtx.APIKey, authCtx.QuotaTypeStr(), authCtx.UserId, authCtx.CompanyId, file); err != nil {
+	if err := ctrl.svc.BulkLoanRecordChecker(authCtx, file); err != nil {
 		return err
 	}
 
