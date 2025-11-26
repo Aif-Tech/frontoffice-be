@@ -223,7 +223,10 @@ func (svc *service) PasswordReset(token string, req *passwordResetRequest) error
 		CompanyId: data.Member.CompanyId,
 		Action:    constant.EventPasswordReset,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log password reset event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventPasswordReset).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -269,13 +272,15 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		return apperror.Internal("failed to send activation email", err)
 	}
 
-	err = svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  currentUserId,
 		CompanyId: req.CompanyId,
 		Action:    constant.EventRegisterMember,
-	})
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to log register member event")
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventRegisterMember).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -373,7 +378,10 @@ func (svc *service) RequestPasswordReset(email string) error {
 		CompanyId: user.CompanyId,
 		Action:    constant.EventRequestPasswordReset,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log request password reset event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventRequestPasswordReset).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -412,7 +420,10 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		CompanyId: user.CompanyId,
 		Action:    constant.EventSignIn,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log sign-in event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventSignIn).
+			Msg("failed to add operation log")
 	}
 
 	loginResp = &loginResponse{
@@ -452,7 +463,10 @@ func (svc *service) Logout(userId, companyId uint) error {
 		CompanyId: companyId,
 		Action:    constant.EventSignOut,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log sign-out event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventSignOut).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -490,9 +504,12 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  user.MemberId,
 		CompanyId: user.CompanyId,
-		Action:    constant.EventRequestPasswordReset,
+		Action:    constant.EventChangePassword,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log change password event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventChangePassword).
+			Msg("failed to add operation log")
 	}
 
 	return nil

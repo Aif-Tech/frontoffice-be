@@ -1,11 +1,13 @@
 package npwpverification
 
 import (
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
+	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
 	"mime/multipart"
 	"net/http"
@@ -22,6 +24,7 @@ func NewService(
 	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
+	operationRepo operation.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
@@ -29,6 +32,7 @@ func NewService(
 		memberRepo,
 		jobRepo,
 		transactionRepo,
+		operationRepo,
 		jobService,
 	}
 }
@@ -38,24 +42,25 @@ type service struct {
 	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 	jobService      job.Service
 }
 
 type Service interface {
-	NPWPVerification(apiKey, memberId, companyId string, payload *npwpVerificationRequest) error
+	NPWPVerification(authCtx *model.AuthContext, payload *npwpVerificationRequest) error
 	BulkNPWPVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
-func (svc *service) NPWPVerification(apiKey, memberId, companyId string, payload *npwpVerificationRequest) error {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugNPWPVerification)
+func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVerificationRequest) error {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugNPWPVerification)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -63,7 +68,7 @@ func (svc *service) NPWPVerification(apiKey, memberId, companyId string, payload
 	}
 
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
-	_, err = svc.repo.NPWPVerificationAPI(apiKey, jobIdStr, payload)
+	_, err = svc.repo.NPWPVerificationAPI(authCtx.APIKey, jobIdStr, payload)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return err
@@ -71,8 +76,19 @@ func (svc *service) NPWPVerification(apiKey, memberId, companyId string, payload
 
 		return apperror.Internal("failed to process npwp verification", err)
 	}
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return err
+	}
 
-	return svc.jobService.FinalizeJob(jobIdStr)
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventLoanRecordSingleHit,
+	}); err != nil {
+		logger.Warn().Err(err).Msg("failed to log operation for npwp verification")
+	}
+
+	return nil
 }
 
 func (svc *service) BulkNPWPVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {

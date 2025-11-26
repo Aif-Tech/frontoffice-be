@@ -1,7 +1,6 @@
 package npwpverification
 
 import (
-	"fmt"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
@@ -37,16 +36,14 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 	}
 
 	if err := ctrl.svc.NPWPVerification(
-		authCtx.APIKey,
-		authCtx.UserIdStr(),
-		authCtx.CompanyIdStr(),
+		authCtx,
 		reqBody,
 	); err != nil {
 		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
-		"success",
+		constant.Success,
 		nil,
 	))
 }
@@ -54,7 +51,6 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
 	if !ok {
-		fmt.Println("masuk sini")
 		return apperror.BadRequest(constant.InvalidRequestFormat)
 	}
 
