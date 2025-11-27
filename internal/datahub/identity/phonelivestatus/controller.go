@@ -64,7 +64,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	if err := ctrl.svc.BulkPhoneLiveStatus(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), authCtx.QuotaTypeStr(), file); err != nil {
+	if err := ctrl.svc.BulkPhoneLiveStatus(authCtx, file); err != nil {
 		return err
 	}
 
