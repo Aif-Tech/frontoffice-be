@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	logger "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
 
@@ -76,6 +76,7 @@ func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVe
 
 		return apperror.Internal("failed to process npwp verification", err)
 	}
+
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return err
 	}
@@ -83,9 +84,12 @@ func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVe
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  authCtx.UserId,
 		CompanyId: authCtx.CompanyId,
-		Action:    constant.EventLoanRecordSingleHit,
+		Action:    constant.EventNPWPVerificationSingleReq,
 	}); err != nil {
-		logger.Warn().Err(err).Msg("failed to log operation for npwp verification")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventNPWPVerificationSingleReq).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -181,7 +185,7 @@ func (svc *service) BulkNPWPVerification(apiKey, quotaType string, memberId, com
 	close(errChan)
 
 	for err := range errChan {
-		logger.Error().Err(err).Msg("error during bulk npwp verification processing")
+		log.Error().Err(err).Msg("error during bulk npwp verification processing")
 	}
 
 	return svc.jobService.FinalizeJob(jobIdStr)
