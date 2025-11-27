@@ -329,6 +329,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Score
 	constant.SlugTaxScore: {
 		headers: constant.CSVExportHeaderTaxScore,
+		event:   constant.EventTaxScoreDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxScoreRow(isMasked, d)
 		},
