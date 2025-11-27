@@ -1,6 +1,7 @@
 package taxcompliancestatus
 
 import (
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -24,6 +25,7 @@ func NewService(
 	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
+	operationRepo operation.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
@@ -31,6 +33,7 @@ func NewService(
 		memberRepo,
 		jobRepo,
 		transactionRepo,
+		operationRepo,
 		jobService,
 	}
 }
@@ -40,24 +43,25 @@ type service struct {
 	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 	jobService      job.Service
 }
 
 type Service interface {
-	TaxComplianceStatus(apiKey, memberId, companyId string, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error)
+	TaxComplianceStatus(authCtx *model.AuthContext, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error)
 	BulkTaxComplianceStatus(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
-func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error) {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxComplianceStatus)
+func (svc *service) TaxComplianceStatus(authCtx *model.AuthContext, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error) {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugTaxComplianceStatus)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -65,7 +69,7 @@ func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqB
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.TaxComplianceStatusAPI(apiKey, jobIdStr, reqBody)
+	result, err := svc.repo.TaxComplianceStatusAPI(authCtx.APIKey, jobIdStr, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -76,6 +80,17 @@ func (svc *service) TaxComplianceStatus(apiKey, memberId, companyId string, reqB
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return nil, err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventTaxComplianceSingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventTaxComplianceSingleReq).
+			Msg("failed to add operation log")
 	}
 
 	return result, nil
