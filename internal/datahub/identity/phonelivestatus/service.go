@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
+	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
 	"mime/multipart"
 	"net/http"
@@ -26,6 +28,7 @@ func NewService(
 	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
+	operationRepo operation.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
@@ -33,6 +36,7 @@ func NewService(
 		memberRepo,
 		jobRepo,
 		transactionRepo,
+		operationRepo,
 		jobService,
 	}
 }
@@ -42,11 +46,12 @@ type service struct {
 	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 	jobService      job.Service
 }
 
 type Service interface {
-	PhoneLiveStatus(apiKey, memberId, companyId string, reqBody *phoneLiveStatusRequest) error
+	PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLiveStatusRequest) error
 	BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, fileHeader *multipart.FileHeader) error
 	GetJobs(filter *phoneLiveStatusFilter) (*jobListRespData, error)
 	GetJobDetails(filter *phoneLiveStatusFilter) (*jobDetailsDTO, error)
@@ -55,16 +60,16 @@ type Service interface {
 	ExportJobsSummary(filter *phoneLiveStatusFilter, buf *bytes.Buffer) (string, error)
 }
 
-func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody *phoneLiveStatusRequest) error {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugPhoneLiveStatus)
+func (svc *service) PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLiveStatusRequest) error {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugPhoneLiveStatus)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -72,7 +77,7 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	_, err = svc.repo.PhoneLiveStatusAPI(apiKey, jobIdStr, reqBody)
+	_, err = svc.repo.PhoneLiveStatusAPI(authCtx.APIKey, jobIdStr, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return err
@@ -81,7 +86,22 @@ func (svc *service) PhoneLiveStatus(apiKey, memberId, companyId string, reqBody 
 		return apperror.Internal("failed to process phone live status", err)
 	}
 
-	return svc.jobService.FinalizeJob(jobIdStr)
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventPhoneLiveSingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventPhoneLiveSingleReq).
+			Msg("failed to add operation log")
+	}
+
+	return nil
 }
 
 func (svc *service) BulkPhoneLiveStatus(apiKey, memberId, companyId, quotaType string, file *multipart.FileHeader) error {

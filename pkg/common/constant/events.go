@@ -2,8 +2,10 @@ package constant
 
 const (
 	// auth
-	EventSignIn               = "sign in"
-	EventSignOut              = "sign out"
+	EventSignIn  = "sign in"
+	EventSignOut = "sign out"
+
+	// user
 	EventChangePassword       = "change password"
 	EventRequestPasswordReset = "request password reset"
 	EventPasswordReset        = "password reset"
@@ -49,7 +51,11 @@ const (
 	EventNPWPVerificationBulkReq   = "npwp verification bulk request"
 	EventNPWPVerificationDownload  = "npwp verification download result"
 
-	EventPhoneLiveSingleReq       = "phone live status single request"
+	// phone live status
+	EventPhoneLiveSingleReq = "phone live status single request"
+	EventPhoneLiveBulkReq   = "phone live status bulk request"
+	EventPhoneLiveDownload  = "phone live status download result"
+
 	EventTaxComplianceSingleReq   = "tax compliance status single request"
 	EventTaxScoreSingleReq        = "tax score single request"
 	EventTaxVerificationSingleReq = "tax verification single request"
