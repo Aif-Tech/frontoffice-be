@@ -191,7 +191,11 @@ func (svc *service) BulkLoanRecordChecker(authCtx *model.AuthContext, file *mult
 	close(errChan)
 
 	for err := range errChan {
-		log.Error().Err(err).Msg("error during bulk loan record checker processing")
+		log.Error().Err(err).Str("job_id", jobIdStr).Msg("error during bulk loan record checker processing")
+	}
+
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return err
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
@@ -205,7 +209,7 @@ func (svc *service) BulkLoanRecordChecker(authCtx *model.AuthContext, file *mult
 			Msg("failed to add operation log")
 	}
 
-	return svc.jobService.FinalizeJob(jobIdStr)
+	return nil
 }
 
 func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {
