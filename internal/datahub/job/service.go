@@ -162,42 +162,15 @@ func (svc *service) exportJobDetailsToCSV(
 		return "", apperror.MapRepoError(err, "failed to fetch job details")
 	}
 
-	headers := []string{}
-	var eventName string
-	var mapper func(*logTransProductCatalog) []string
+	cfg, ok := exportProductMap[filter.ProductSlug]
+	if !ok {
+		return "", apperror.BadRequest(constant.ErrUnsupportedProduct)
+	}
 
-	switch filter.ProductSlug {
-	case constant.SlugLoanRecordChecker:
-		headers = constant.CSVExportHeaderLoanRecord
-		eventName = constant.EventLoanRecordDownloadResult
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapLoanRecordCheckerRow(filter.IsMasked, d)
-		}
-	case constant.SlugMultipleLoan7Days, constant.SlugMultipleLoan30Days, constant.SlugMultipleLoan90Days:
-		headers = constant.CSVExportHeaderMultipleLoan
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapMultipleLoanRow(filter.IsMasked, d)
-		}
-	case constant.SlugTaxComplianceStatus:
-		headers = constant.CSVExportHeaderTaxCompliance
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapTaxComplianceRow(filter.IsMasked, d)
-		}
-	case constant.SlugTaxScore:
-		headers = constant.CSVExportHeaderTaxScore
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapTaxScoreRow(filter.IsMasked, d)
-		}
-	case constant.SlugTaxVerificationDetail:
-		headers = constant.CSVExportHeaderTaxVerification
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapTaxVerificationRow(filter.IsMasked, d)
-		}
-	case constant.SlugNPWPVerification:
-		headers = constant.CSVExportHeaderNPWPVerification
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapNPWPVerificationRow(filter.IsMasked, d)
-		}
+	headers := cfg.headers
+	eventName := cfg.event
+	mapper := func(d *logTransProductCatalog) []string {
+		return cfg.mapper(filter.IsMasked, d)
 	}
 
 	if includeDate {
@@ -299,6 +272,82 @@ func withDateColumn(mapper rowMapper) rowMapper {
 
 		return append([]string{date}, row...)
 	}
+}
+
+type exportProductConfig struct {
+	headers []string
+	event   string
+	mapper  func(isMasked bool, d *logTransProductCatalog) []string
+}
+
+var exportProductMap = map[string]exportProductConfig{
+	// Loan Record
+	constant.SlugLoanRecordChecker: {
+		headers: constant.CSVExportHeaderLoanRecord,
+		event:   constant.EventLoanRecordDownloadResult,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapLoanRecordCheckerRow(isMasked, d)
+		},
+	},
+
+	// Multiple Loan 7D
+	constant.Slug7DaysMultipleLoan: {
+		headers: constant.CSVExportHeaderMultipleLoan,
+		event:   constant.Event7DMLDownloadResult,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapMultipleLoanRow(isMasked, d)
+		},
+	},
+
+	// Multiple Loan 30D
+	constant.Slug30DaysMultipleLoan: {
+		headers: constant.CSVExportHeaderMultipleLoan,
+		event:   constant.Event30DMLDownloadResult,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapMultipleLoanRow(isMasked, d)
+		},
+	},
+
+	// Multiple Loan 90D
+	constant.Slug90DaysMultipleLoan: {
+		headers: constant.CSVExportHeaderMultipleLoan,
+		event:   constant.Event90DMLDownloadResult,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapMultipleLoanRow(isMasked, d)
+		},
+	},
+
+	// Tax Compliance Status
+	constant.SlugTaxComplianceStatus: {
+		headers: constant.CSVExportHeaderTaxCompliance,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapTaxComplianceRow(isMasked, d)
+		},
+	},
+
+	// Tax Score
+	constant.SlugTaxScore: {
+		headers: constant.CSVExportHeaderTaxScore,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapTaxScoreRow(isMasked, d)
+		},
+	},
+
+	// Tax Verification Detail
+	constant.SlugTaxVerificationDetail: {
+		headers: constant.CSVExportHeaderTaxVerification,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapTaxVerificationRow(isMasked, d)
+		},
+	},
+
+	// NPWP Verification
+	constant.SlugNPWPVerification: {
+		headers: constant.CSVExportHeaderNPWPVerification,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapNPWPVerificationRow(isMasked, d)
+		},
+	},
 }
 
 func mapLoanRecordCheckerRow(isMasked bool, d *logTransProductCatalog) []string {
