@@ -293,7 +293,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 7D
 	constant.Slug7DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event7DMLDownloadResult,
+		event:   constant.Event7DMLDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -302,7 +302,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 30D
 	constant.Slug30DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event30DMLDownloadResult,
+		event:   constant.Event30DMLDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -311,7 +311,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 90D
 	constant.Slug90DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event90DMLDownloadResult,
+		event:   constant.Event90DMLDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -338,6 +338,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Verification Detail
 	constant.SlugTaxVerificationDetail: {
 		headers: constant.CSVExportHeaderTaxVerification,
+		event:   constant.EventTaxVerificationDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxVerificationRow(isMasked, d)
 		},
