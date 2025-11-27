@@ -3,7 +3,11 @@ package main
 import (
 	"front-office/configs/application"
 	"front-office/configs/server"
+	"os"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -11,8 +15,18 @@ func main() {
 	time.Local = loc
 
 	cfg := application.GetConfig()
-
-	// migrate.PostgreDB(db)
+	initLogger(cfg.App.Env)
 
 	server.NewServer(&cfg).Start()
+}
+
+func initLogger(env string) {
+	zerolog.TimeFieldFormat = time.RFC3339
+
+	if env == "local" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		})
+	}
 }
