@@ -11,9 +11,10 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
-	"log"
 	"strconv"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 func NewService(repo Repository, transactionRepo transaction.Repository, operationRepo operation.Repository) Service {
@@ -211,15 +212,15 @@ func (svc *service) exportJobDetailsToCSV(
 
 	filename := formatCSVFileName("job_detail", filter.StartDate, filter.EndDate, filter.JobId)
 
-	addLogRequest := &operation.AddLogRequest{
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  filter.AuthCtx.UserId,
 		CompanyId: filter.AuthCtx.CompanyId,
 		Action:    eventName,
-	}
-
-	err = svc.operationRepo.AddLogOperation(addLogRequest)
-	if err != nil {
-		log.Println("Failed to log operation for calculate score")
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", eventName).
+			Msg("failed to add operation log")
 	}
 
 	return filename, nil

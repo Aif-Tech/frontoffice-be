@@ -10,14 +10,13 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
-	logger "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
 
@@ -88,15 +87,15 @@ func (svc *service) LoanRecordChecker(authCtx *model.AuthContext, reqBody *loanR
 		return nil, err
 	}
 
-	addLogRequest := &operation.AddLogRequest{
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  authCtx.UserId,
 		CompanyId: authCtx.CompanyId,
-		Action:    constant.EventLoanRecordSingleHit,
-	}
-
-	err = svc.operationRepo.AddLogOperation(addLogRequest)
-	if err != nil {
-		log.Println("Failed to log operation for calculate score")
+		Action:    constant.EventLoanRecordSingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventLoanRecordSingleReq).
+			Msg("failed to add operation log")
 	}
 
 	return result, nil
@@ -192,18 +191,18 @@ func (svc *service) BulkLoanRecordChecker(authCtx *model.AuthContext, file *mult
 	close(errChan)
 
 	for err := range errChan {
-		logger.Error().Err(err).Msg("error during bulk loan record checker processing")
+		log.Error().Err(err).Msg("error during bulk loan record checker processing")
 	}
 
-	addLogRequest := &operation.AddLogRequest{
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  authCtx.UserId,
 		CompanyId: authCtx.CompanyId,
-		Action:    constant.EventLoanRecordBulkHit,
-	}
-
-	err = svc.operationRepo.AddLogOperation(addLogRequest)
-	if err != nil {
-		log.Println("Failed to log operation for calculate score")
+		Action:    constant.EventLoanRecordBulkReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventLoanRecordBulkReq).
+			Msg("failed to add operation log")
 	}
 
 	return svc.jobService.FinalizeJob(jobIdStr)
