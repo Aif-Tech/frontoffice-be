@@ -27,9 +27,9 @@ const (
 	EventScoreezyBulkDownload   = "scoreezy bulk download result"
 
 	// loan record
-	EventLoanRecordSingleReq      = "loan record single request"
-	EventLoanRecordBulkReq        = "loan record bulk request"
-	EventLoanRecordDownloadResult = "loan record download result"
+	EventLoanRecordSingleReq = "loan record single request"
+	EventLoanRecordBulkReq   = "loan record bulk request"
+	EventLoanRecordDownload  = "loan record download result"
 
 	// 7 days multiple loan
 	Event7DMLSingleReq = "7d multiple loan single request"

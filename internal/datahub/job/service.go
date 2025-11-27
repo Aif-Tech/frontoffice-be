@@ -284,7 +284,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// Loan Record
 	constant.SlugLoanRecordChecker: {
 		headers: constant.CSVExportHeaderLoanRecord,
-		event:   constant.EventLoanRecordDownloadResult,
+		event:   constant.EventLoanRecordDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapLoanRecordCheckerRow(isMasked, d)
 		},
