@@ -195,11 +195,11 @@ func (svc *service) BulkNPWPVerification(authCtx *model.AuthContext, file *multi
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  authCtx.UserId,
 		CompanyId: authCtx.CompanyId,
-		Action:    constant.EventLoanRecordBulkReq,
+		Action:    constant.EventNPWPVerificationBulkReq,
 	}); err != nil {
 		log.Warn().
 			Err(err).
-			Str("action", constant.EventLoanRecordBulkReq).
+			Str("action", constant.EventNPWPVerificationBulkReq).
 			Msg("failed to add operation log")
 	}
 

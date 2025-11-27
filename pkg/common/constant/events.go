@@ -29,21 +29,28 @@ const (
 	EventLoanRecordBulkReq        = "loan record bulk request"
 	EventLoanRecordDownloadResult = "loan record download result"
 
+	// 7 days multiple loan
 	Event7DMLSingleReq      = "7d multiple loan single request"
 	Event7DMLBulkReq        = "7d multiple loan bulk request"
 	Event7DMLDownloadResult = "7d multiple loan download result"
 
+	// 30 days multiple loan
 	Event30DMLSingleReq      = "30d multiple loan single request"
 	Event30DMLBulkReq        = "30d multiple loan bulk request"
 	Event30DMLDownloadResult = "30d multiple loan download result"
 
+	// 90 days multiple loan
 	Event90DMLSingleReq      = "90d multiple loan single request"
 	Event90DMLBulkReq        = "90d multiple loan bulk request"
 	Event90DMLDownloadResult = "90d multiple loan download result"
 
+	// npwp verification
 	EventNPWPVerificationSingleReq = "npwp verification single request"
-	EventPhoneLiveSingleReq        = "phone live status single request"
-	EventTaxComplianceSingleReq    = "tax compliance status single request"
-	EventTaxScoreSingleReq         = "tax score single request"
-	EventTaxVerificationSingleReq  = "tax verification single request"
+	EventNPWPVerificationBulkReq   = "npwp verification bulk request"
+	EventNPWPVerificationDownload  = "npwp verification download result"
+
+	EventPhoneLiveSingleReq       = "phone live status single request"
+	EventTaxComplianceSingleReq   = "tax compliance status single request"
+	EventTaxScoreSingleReq        = "tax score single request"
+	EventTaxVerificationSingleReq = "tax verification single request"
 )

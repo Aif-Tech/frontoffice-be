@@ -344,6 +344,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// NPWP Verification
 	constant.SlugNPWPVerification: {
 		headers: constant.CSVExportHeaderNPWPVerification,
+		event:   constant.EventNPWPVerificationDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapNPWPVerificationRow(isMasked, d)
 		},
