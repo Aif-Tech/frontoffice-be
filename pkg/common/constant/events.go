@@ -59,6 +59,7 @@ const (
 	// tax compliance status
 	EventTaxComplianceSingleReq = "tax compliance status single request"
 	EventTaxComplianceBulkReq   = "tax compliance status bulk request"
+	EventPTaxComplianceDownload = "tax compliance status download result"
 
 	EventTaxScoreSingleReq        = "tax score single request"
 	EventTaxVerificationSingleReq = "tax verification single request"

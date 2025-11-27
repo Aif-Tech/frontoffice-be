@@ -320,6 +320,7 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Compliance Status
 	constant.SlugTaxComplianceStatus: {
 		headers: constant.CSVExportHeaderTaxCompliance,
+		event:   constant.EventPTaxComplianceDownload,
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxComplianceRow(isMasked, d)
 		},
