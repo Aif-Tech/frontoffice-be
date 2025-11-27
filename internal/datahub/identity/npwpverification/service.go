@@ -48,7 +48,7 @@ type service struct {
 
 type Service interface {
 	NPWPVerification(authCtx *model.AuthContext, payload *npwpVerificationRequest) error
-	BulkNPWPVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkNPWPVerification(authCtx *model.AuthContext, file *multipart.FileHeader) error
 }
 
 func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVerificationRequest) error {
@@ -95,14 +95,14 @@ func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVe
 	return nil
 }
 
-func (svc *service) BulkNPWPVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
+func (svc *service) BulkNPWPVerification(authCtx *model.AuthContext, file *multipart.FileHeader) error {
 	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderNPWPVerification)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 
-	memberIdStr := strconv.Itoa(int(memberId))
-	companyIdStr := strconv.Itoa(int(companyId))
+	memberIdStr := authCtx.UserIdStr()
+	companyIdStr := authCtx.CompanyIdStr()
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugNPWPVerification)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
@@ -113,14 +113,14 @@ func (svc *service) BulkNPWPVerification(apiKey, quotaType string, memberId, com
 		MemberId:     memberIdStr,
 		CompanyId:    companyIdStr,
 		SubscribedId: subscribedIdStr,
-		QuotaType:    quotaType,
+		QuotaType:    authCtx.QuotaTypeStr(),
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedFetchQuota)
 	}
 
 	totalRequest := len(records) - 1
-	if quotaType != "0" && quotaResp.Data.Quota < totalRequest {
+	if authCtx.QuotaType != 0 && quotaResp.Data.Quota < totalRequest {
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
@@ -159,12 +159,12 @@ func (svc *service) BulkNPWPVerification(apiKey, quotaType string, memberId, com
 			defer wg.Done()
 
 			if err := svc.processNPWPVerification(&npwpVerificationContext{
-				APIKey:         apiKey,
+				APIKey:         authCtx.APIKey,
 				JobIdStr:       jobIdStr,
 				MemberIdStr:    memberIdStr,
 				CompanyIdStr:   companyIdStr,
-				MemberId:       memberId,
-				CompanyId:      companyId,
+				MemberId:       authCtx.UserId,
+				CompanyId:      authCtx.CompanyId,
 				ProductId:      subscribedResp.Data.ProductId,
 				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
@@ -185,10 +185,25 @@ func (svc *service) BulkNPWPVerification(apiKey, quotaType string, memberId, com
 	close(errChan)
 
 	for err := range errChan {
-		log.Error().Err(err).Msg("error during bulk npwp verification processing")
+		log.Error().Err(err).Str("job_id", jobIdStr).Msg("error during bulk npwp verification processing")
 	}
 
-	return svc.jobService.FinalizeJob(jobIdStr)
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventLoanRecordBulkReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventLoanRecordBulkReq).
+			Msg("failed to add operation log")
+	}
+
+	return nil
 }
 
 func (svc *service) processNPWPVerification(params *npwpVerificationContext) error {
