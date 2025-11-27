@@ -155,7 +155,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 
 	var buf bytes.Buffer
 
-	filename, err := ctrl.svc.ExportJobDetails(filter, &buf)
+	filename, err := ctrl.svc.ExportJobDetails(authCtx.UserId, authCtx.CompanyId, filter, &buf)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (ctrl *controller) ExportJobsSummary(c *fiber.Ctx) error {
 	}
 
 	var buf bytes.Buffer
-	filename, err := ctrl.svc.ExportJobsSummary(filter, &buf)
+	filename, err := ctrl.svc.ExportJobsSummary(authCtx.UserId, authCtx.CompanyId, filter, &buf)
 	if err != nil {
 		return err
 	}
