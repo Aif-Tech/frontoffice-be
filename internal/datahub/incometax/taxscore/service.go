@@ -1,6 +1,7 @@
 package taxscore
 
 import (
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -24,6 +25,7 @@ func NewService(
 	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
+	operationRepo operation.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
@@ -31,6 +33,7 @@ func NewService(
 		memberRepo,
 		jobRepo,
 		transactionRepo,
+		operationRepo,
 		jobService,
 	}
 }
@@ -40,24 +43,25 @@ type service struct {
 	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 	jobService      job.Service
 }
 
 type Service interface {
-	TaxScore(apiKey, memberId, companyId string, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error)
+	TaxScore(authCtx *model.AuthContext, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error)
 	BulkTaxScore(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
-func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error) {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxScore)
+func (svc *service) TaxScore(authCtx *model.AuthContext, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error) {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugTaxScore)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -65,7 +69,7 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.TaxScoreAPI(apiKey, jobIdStr, request)
+	result, err := svc.repo.TaxScoreAPI(authCtx.APIKey, jobIdStr, request)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -76,6 +80,17 @@ func (svc *service) TaxScore(apiKey, memberId, companyId string, request *taxSco
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return nil, err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventTaxScoreSingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventTaxScoreSingleReq).
+			Msg("failed to add operation log")
 	}
 
 	return result, nil
