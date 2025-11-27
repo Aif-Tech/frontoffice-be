@@ -67,4 +67,5 @@ const (
 	EventTaxScoreDownload  = "tax score download result"
 
 	EventTaxVerificationSingleReq = "tax verification single request"
+	EventTaxVerificationBulkReq   = "tax verification bulk request"
 )

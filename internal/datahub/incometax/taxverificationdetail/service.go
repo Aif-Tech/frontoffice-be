@@ -53,7 +53,7 @@ type service struct {
 
 type Service interface {
 	CallTaxVerification(authCtx *model.AuthContext, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
-	BulkTaxVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkTaxVerification(authCtx *model.AuthContext, file *multipart.FileHeader) error
 }
 
 func (svc *service) CallTaxVerification(authCtx *model.AuthContext, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
@@ -100,14 +100,14 @@ func (svc *service) CallTaxVerification(authCtx *model.AuthContext, request *tax
 	return result, nil
 }
 
-func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
+func (svc *service) BulkTaxVerification(authCtx *model.AuthContext, file *multipart.FileHeader) error {
 	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxVerification)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 
-	memberIdStr := strconv.Itoa(int(memberId))
-	companyIdStr := strconv.Itoa(int(companyId))
+	memberIdStr := authCtx.UserIdStr()
+	companyIdStr := authCtx.CompanyIdStr()
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugTaxVerificationDetail)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
@@ -118,14 +118,14 @@ func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, comp
 		MemberId:     memberIdStr,
 		CompanyId:    companyIdStr,
 		SubscribedId: subscribedIdStr,
-		QuotaType:    quotaType,
+		QuotaType:    authCtx.QuotaTypeStr(),
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedFetchQuota)
 	}
 
 	totalRequests := len(records) - 1
-	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
+	if authCtx.QuotaType != 0 && quotaResp.Data.Quota < totalRequests {
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
@@ -165,12 +165,12 @@ func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, comp
 			defer wg.Done()
 
 			if err := svc.processTaxVerification(&taxVerificationContext{
-				APIKey:         apiKey,
+				APIKey:         authCtx.APIKey,
 				JobIdStr:       jobIdStr,
 				MemberIdStr:    memberIdStr,
 				CompanyIdStr:   companyIdStr,
-				MemberId:       memberId,
-				CompanyId:      companyId,
+				MemberId:       authCtx.UserId,
+				CompanyId:      authCtx.CompanyId,
 				ProductId:      subscribedResp.Data.ProductId,
 				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
@@ -191,10 +191,25 @@ func (svc *service) BulkTaxVerification(apiKey, quotaType string, memberId, comp
 	close(errChan)
 
 	for err := range errChan {
-		log.Error().Err(err).Msg("error during bulk tax verification prrocessing")
+		log.Error().Err(err).Str("job_id", jobIdStr).Msg("error during bulk tax verification processing")
 	}
 
-	return svc.jobService.FinalizeJob(jobIdStr)
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventTaxVerificationBulkReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventTaxVerificationBulkReq).
+			Msg("failed to add operation log")
+	}
+
+	return nil
 }
 
 func (svc *service) processTaxVerification(params *taxVerificationContext) error {
