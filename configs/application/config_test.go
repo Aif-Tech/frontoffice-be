@@ -26,5 +26,5 @@ func TestGetConfig(t *testing.T) {
 	assert.Equal(t, "disable", env.Db.SSLMode)
 	assert.Equal(t, "Asia/Jakarta", env.Db.TimeZone)
 
-	assert.Equal(t, "test", env.Env.Env)
+	assert.Equal(t, "test", env.App.Env)
 }

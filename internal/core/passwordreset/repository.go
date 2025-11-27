@@ -38,7 +38,7 @@ type Repository interface {
 }
 
 func (repo *repository) GetPasswordResetTokenAPI(token string) (*MstPasswordResetToken, error) {
-	url := fmt.Sprintf(`%v/api/core/member/password-reset-tokens/%v`, repo.cfg.Env.AifcoreHost, token)
+	url := fmt.Sprintf(`%v/api/core/member/password-reset-tokens/%v`, repo.cfg.App.AifcoreHost, token)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -62,7 +62,7 @@ func (repo *repository) GetPasswordResetTokenAPI(token string) (*MstPasswordRese
 }
 
 func (repo *repository) CreatePasswordResetTokenAPI(userId string, payload *CreatePasswordResetTokenRequest) error {
-	url := fmt.Sprintf(`%v/api/core/member/%v/password-reset-tokens`, repo.cfg.Env.AifcoreHost, userId)
+	url := fmt.Sprintf(`%v/api/core/member/%v/password-reset-tokens`, repo.cfg.App.AifcoreHost, userId)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -91,7 +91,7 @@ func (repo *repository) CreatePasswordResetTokenAPI(userId string, payload *Crea
 }
 
 func (repo *repository) DeletePasswordResetTokenAPI(id string) error {
-	url := fmt.Sprintf(`%v/api/core/member/password-reset-tokens/%v`, repo.cfg.Env.AifcoreHost, id)
+	url := fmt.Sprintf(`%v/api/core/member/password-reset-tokens/%v`, repo.cfg.App.AifcoreHost, id)
 
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {

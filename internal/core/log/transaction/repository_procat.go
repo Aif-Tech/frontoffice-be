@@ -12,7 +12,7 @@ import (
 )
 
 func (repo *repository) CreateLogTransAPI(payload *LogTransProCatRequest) error {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog", repo.cfg.App.AifcoreHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -41,7 +41,7 @@ func (repo *repository) CreateLogTransAPI(payload *LogTransProCatRequest) error 
 }
 
 func (repo *repository) ProcessedLogCountAPI(jobId string) (*getProcessedCountResp, error) {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog/%s/processed_count", repo.cfg.Env.AifcoreHost, jobId)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog/%s/processed_count", repo.cfg.App.AifcoreHost, jobId)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -68,7 +68,7 @@ func (repo *repository) ProcessedLogCountAPI(jobId string) (*getProcessedCountRe
 }
 
 func (repo *repository) GetLogTransByJobIdAPI(jobId, companyId string) ([]*LogTransProductCatalog, error) {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog/%s", repo.cfg.Env.AifcoreHost, jobId)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog/%s", repo.cfg.App.AifcoreHost, jobId)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -96,7 +96,7 @@ func (repo *repository) GetLogTransByJobIdAPI(jobId, companyId string) ([]*LogTr
 }
 
 func (repo *repository) UpdateLogTransAPI(transId string, payload map[string]interface{}) error {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog/%s", repo.cfg.Env.AifcoreHost, transId)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog/%s", repo.cfg.App.AifcoreHost, transId)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {

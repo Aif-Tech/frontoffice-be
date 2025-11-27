@@ -43,7 +43,7 @@ type Repository interface {
 }
 
 func (repo *repository) PhoneLiveStatusAPI(apiKey, jobId string, payload *phoneLiveStatusRequest) (*model.ProCatAPIResponse[phoneLiveStatusRespData], error) {
-	url := fmt.Sprintf("%s/product/identity/phone-live-status", repo.cfg.Env.ProductCatalogHost)
+	url := fmt.Sprintf("%s/product/identity/phone-live-status", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -72,7 +72,7 @@ func (repo *repository) PhoneLiveStatusAPI(apiKey, jobId string, payload *phoneL
 }
 
 func (repo *repository) GetPhoneLiveStatusJobAPI(filter *phoneLiveStatusFilter) (*jobListRespData, error) {
-	url := fmt.Sprintf("%s/api/core/product/%s/jobs", repo.cfg.Env.AifcoreHost, filter.ProductSlug)
+	url := fmt.Sprintf("%s/api/core/product/%s/jobs", repo.cfg.App.AifcoreHost, filter.ProductSlug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -109,7 +109,7 @@ func (repo *repository) GetPhoneLiveStatusJobAPI(filter *phoneLiveStatusFilter) 
 }
 
 func (repo *repository) GetJobDetailsAPI(filter *phoneLiveStatusFilter) (*jobDetailRaw, error) {
-	url := fmt.Sprintf("%s/api/core/product/%s/jobs/%s", repo.cfg.Env.AifcoreHost, filter.ProductSlug, filter.JobId)
+	url := fmt.Sprintf("%s/api/core/product/%s/jobs/%s", repo.cfg.App.AifcoreHost, filter.ProductSlug, filter.JobId)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -145,7 +145,7 @@ func (repo *repository) GetJobDetailsAPI(filter *phoneLiveStatusFilter) (*jobDet
 }
 
 func (repo *repository) GetJobsSummaryAPI(filter *phoneLiveStatusFilter) (*jobDetailRaw, error) {
-	url := fmt.Sprintf("%s/api/core/product/%s/jobs-summary", repo.cfg.Env.AifcoreHost, filter.ProductSlug)
+	url := fmt.Sprintf("%s/api/core/product/%s/jobs-summary", repo.cfg.App.AifcoreHost, filter.ProductSlug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -181,7 +181,7 @@ func (repo *repository) GetJobsSummaryAPI(filter *phoneLiveStatusFilter) (*jobDe
 }
 
 func (repo *repository) GetJobMetricsAPI(filter *phoneLiveStatusFilter) (*jobMetrics, error) {
-	url := fmt.Sprintf("%s/api/core/phone-live-status/job-metrics", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/phone-live-status/job-metrics", repo.cfg.App.AifcoreHost)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

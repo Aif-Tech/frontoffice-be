@@ -89,7 +89,7 @@ type Repository interface {
 // }
 
 func (repo *repository) VerifyMemberAPI(userId string, payload *passwordResetRequest) error {
-	url := fmt.Sprintf(`%v/api/core/member/%v/activation-tokens`, repo.cfg.Env.AifcoreHost, userId)
+	url := fmt.Sprintf(`%v/api/core/member/%v/activation-tokens`, repo.cfg.App.AifcoreHost, userId)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -118,7 +118,7 @@ func (repo *repository) VerifyMemberAPI(userId string, payload *passwordResetReq
 }
 
 func (repo *repository) PasswordResetAPI(userId, token string, payload *passwordResetRequest) error {
-	url := fmt.Sprintf(`%v/api/core/member/%v/password-reset-tokens/%v`, repo.cfg.Env.AifcoreHost, userId, token)
+	url := fmt.Sprintf(`%v/api/core/member/%v/password-reset-tokens/%v`, repo.cfg.App.AifcoreHost, userId, token)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -147,7 +147,7 @@ func (repo *repository) PasswordResetAPI(userId, token string, payload *password
 }
 
 func (repo *repository) ChangePasswordAPI(userId string, payload *changePasswordRequest) error {
-	url := fmt.Sprintf(`%v/api/core/member/%v/change-password`, repo.cfg.Env.AifcoreHost, userId)
+	url := fmt.Sprintf(`%v/api/core/member/%v/change-password`, repo.cfg.App.AifcoreHost, userId)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -176,7 +176,7 @@ func (repo *repository) ChangePasswordAPI(userId string, payload *changePassword
 }
 
 func (repo *repository) AuthMemberAPI(payload *userLoginRequest) (*loginResponseData, error) {
-	url := fmt.Sprintf("%s/api/middleware/auth-member-login", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/middleware/auth-member-login", repo.cfg.App.AifcoreHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {

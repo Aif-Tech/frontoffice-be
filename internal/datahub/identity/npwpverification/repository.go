@@ -37,7 +37,7 @@ type Repository interface {
 }
 
 func (repo *repository) NPWPVerificationAPI(apiKey, jobId string, payload *npwpVerificationRequest) (*model.ProCatAPIResponse[npwpVerificationRespData], error) {
-	url := fmt.Sprintf("%s/product/identity/npwp-verification", repo.cfg.Env.ProductCatalogHost)
+	url := fmt.Sprintf("%s/product/identity/npwp-verification", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {

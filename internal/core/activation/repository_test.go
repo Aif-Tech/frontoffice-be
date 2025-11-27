@@ -33,7 +33,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{AifcoreHost: constant.MockHost},
+		App: &application.Environment{AifcoreHost: constant.MockHost},
 	}, mockClient, nil)
 
 	return repo, mockClient
@@ -68,7 +68,7 @@ func TestCallGetActivationTokenAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.GetActivationTokenAPI(constant.DummyToken)
@@ -135,7 +135,7 @@ func TestCreateActivationTokenAPI(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockHost},
+			App: &application.Environment{AifcoreHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		err := repo.CreateActivationTokenAPI(constant.DummyMemberId, createTokenReq)
@@ -146,7 +146,7 @@ func TestCreateActivationTokenAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		err := repo.CreateActivationTokenAPI(constant.DummyMemberId, createTokenReq)

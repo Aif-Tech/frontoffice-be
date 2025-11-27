@@ -64,8 +64,8 @@ type Service interface {
 }
 
 // func (svc *service) RegisterAdminSvc(req *RegisterAdminRequest) (*user.User, string, error) {
-// 	secret := svc.Cfg.Env.JwtSecretKey
-// 	minutesToExpired, _ := strconv.Atoi(svc.Cfg.Env.JwtVerificationExpiresMinutes)
+// 	secret := svc.Cfg.App.JwtSecretKey
+// 	minutesToExpired, _ := strconv.Atoi(svc.Cfg.App.JwtVerificationExpiresMinutes)
 
 // 	isPasswordStrength := helper.ValidatePasswordStrength(req.Password)
 // 	if !isPasswordStrength {
@@ -148,7 +148,7 @@ func (svc *service) VerifyMember(token string, req *passwordResetRequest) error 
 		return apperror.BadRequest(constant.AlreadyVerified)
 	}
 
-	minutesToExpired, err := strconv.Atoi(svc.cfg.Env.JwtActivationExpiresMinutes)
+	minutesToExpired, err := strconv.Atoi(svc.cfg.App.JwtActivationExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("invalid activation expiry config", err)
 	}
@@ -191,7 +191,7 @@ func (svc *service) PasswordReset(token string, req *passwordResetRequest) error
 
 	idStr := strconv.Itoa(int(data.Id))
 
-	minutesToExpired, err := strconv.Atoi(svc.cfg.Env.JwtResetPasswordExpiresMinutes)
+	minutesToExpired, err := strconv.Atoi(svc.cfg.App.JwtResetPasswordExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("invalid password reset expiry config", err)
 	}
@@ -243,7 +243,7 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		CompanyId: req.CompanyId,
 		RoleId:    req.RoleId,
 	}
-	activationToken, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtActivationExpiresMinutes)
+	activationToken, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtActivationExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("generate activation token failed", err)
 	}
@@ -307,7 +307,7 @@ func (svc *service) RequestActivation(email string) error {
 		CompanyId: user.CompanyId,
 		RoleId:    user.RoleId,
 	}
-	token, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtActivationExpiresMinutes)
+	token, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtActivationExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("generate activation token failed", err)
 	}
@@ -356,7 +356,7 @@ func (svc *service) RequestPasswordReset(email string) error {
 		CompanyId: user.CompanyId,
 		RoleId:    user.RoleId,
 	}
-	token, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtActivationExpiresMinutes)
+	token, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtActivationExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("generate password reset token failed", err)
 	}
@@ -405,12 +405,12 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		QuotaType: user.QuotaType,
 		ApiKey:    user.ApiKey,
 	}
-	accessToken, err = svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtExpiresMinutes)
+	accessToken, err = svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtExpiresMinutes)
 	if err != nil {
 		return "", "", nil, apperror.Internal("generate access token failed", err)
 	}
 
-	refreshToken, err = svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtRefreshTokenExpiresMinutes)
+	refreshToken, err = svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtRefreshTokenExpiresMinutes)
 	if err != nil {
 		return "", "", nil, apperror.Internal("generate refresh token failed", err)
 	}
@@ -449,7 +449,7 @@ func (svc *service) RefreshAccessToken(userId, companyId, roleId uint, apiKey st
 		ApiKey:    apiKey,
 	}
 
-	accessToken, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtExpiresMinutes)
+	accessToken, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtExpiresMinutes)
 	if err != nil {
 		return "", apperror.Internal("generate access token failed", err)
 	}

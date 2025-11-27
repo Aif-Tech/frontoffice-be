@@ -161,7 +161,7 @@ func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
 		return apperror.BadRequest(constant.MissingUserId)
 	}
 
-	if err := ctrl.svc.UpdateMemberById(authCtx.UserId, authCtx.RoleId, authCtx.CompanyIdStr(), memberId, reqBody); err != nil {
+	if err := ctrl.svc.UpdateMemberById(authCtx, memberId, reqBody); err != nil {
 		return err
 	}
 

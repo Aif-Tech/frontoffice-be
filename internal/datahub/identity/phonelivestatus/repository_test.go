@@ -33,7 +33,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{ProductCatalogHost: constant.MockHost},
+		App: &application.Environment{ProductCatalogHost: constant.MockHost},
 	}, mockClient, nil)
 
 	return repo, mockClient
@@ -70,7 +70,7 @@ func TestCallPhoneLiveStatusAPI(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
@@ -82,7 +82,7 @@ func TestCallPhoneLiveStatusAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})

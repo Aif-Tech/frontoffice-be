@@ -39,7 +39,7 @@ type Repository interface {
 }
 
 func (repo *repository) SaveGradingAPI(payload *createGradePayload) error {
-	url := fmt.Sprintf("%s/api/core/product/%s/grades", repo.cfg.Env.AifcoreHost, payload.ProductSlug)
+	url := fmt.Sprintf("%s/api/core/product/%s/grades", repo.cfg.App.AifcoreHost, payload.ProductSlug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -72,7 +72,7 @@ func (repo *repository) SaveGradingAPI(payload *createGradePayload) error {
 }
 
 func (repo *repository) GetGradesAPI(productSlug, companyId string) (*gradesResponseData, error) {
-	url := fmt.Sprintf("%s/api/core/product/%s/grades", repo.cfg.Env.AifcoreHost, productSlug)
+	url := fmt.Sprintf("%s/api/core/product/%s/grades", repo.cfg.App.AifcoreHost, productSlug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

@@ -39,7 +39,7 @@ type Repository interface {
 }
 
 func (repo *repository) GetLogsOperationAPI(filter *logOperationFilter) (*model.AifcoreAPIResponse[any], error) {
-	url := fmt.Sprintf("%s/api/core/logging/operation/list/%s", repo.cfg.Env.AifcoreHost, filter.CompanyId)
+	url := fmt.Sprintf("%s/api/core/logging/operation/list/%s", repo.cfg.App.AifcoreHost, filter.CompanyId)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -73,7 +73,7 @@ func (repo *repository) GetLogsOperationAPI(filter *logOperationFilter) (*model.
 }
 
 func (repo *repository) GetLogsByRangeAPI(filter *logRangeFilter) (*model.AifcoreAPIResponse[any], error) {
-	url := fmt.Sprintf("%s/api/core/logging/operation/range", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/operation/range", repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -100,7 +100,7 @@ func (repo *repository) GetLogsByRangeAPI(filter *logRangeFilter) (*model.Aifcor
 }
 
 func (repo *repository) AddLogOperation(payload *AddLogRequest) error {
-	url := fmt.Sprintf("%s/api/core/logging/operation", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/operation", repo.cfg.App.AifcoreHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {

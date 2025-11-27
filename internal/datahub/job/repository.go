@@ -43,7 +43,7 @@ type Repository interface {
 }
 
 func (repo *repository) CreateJobAPI(payload *CreateJobRequest) (*createJobRespData, error) {
-	url := fmt.Sprintf("%s/api/core/product/jobs", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/product/jobs", repo.cfg.App.AifcoreHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -77,7 +77,7 @@ func (repo *repository) CreateJobAPI(payload *CreateJobRequest) (*createJobRespD
 }
 
 func (repo *repository) UpdateJobAPI(jobId string, payload map[string]interface{}) error {
-	url := fmt.Sprintf("%s/api/core/product/jobs/%s", repo.cfg.Env.AifcoreHost, jobId)
+	url := fmt.Sprintf("%s/api/core/product/jobs/%s", repo.cfg.App.AifcoreHost, jobId)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -109,7 +109,7 @@ func (repo *repository) UpdateJobAPI(jobId string, payload map[string]interface{
 }
 
 func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error) {
-	url := fmt.Sprintf("%s/api/core/product/%s/jobs", repo.cfg.Env.AifcoreHost, filter.ProductSlug)
+	url := fmt.Sprintf("%s/api/core/product/%s/jobs", repo.cfg.App.AifcoreHost, filter.ProductSlug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -141,7 +141,7 @@ func (repo *repository) GetJobsAPI(filter *logFilter) (*model.AifcoreAPIResponse
 }
 
 func (repo *repository) GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
-	url := fmt.Sprintf("%s/api/core/product/%s/jobs/%s", repo.cfg.Env.AifcoreHost, filter.ProductSlug, filter.JobId)
+	url := fmt.Sprintf("%s/api/core/product/%s/jobs/%s", repo.cfg.App.AifcoreHost, filter.ProductSlug, filter.JobId)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -171,7 +171,7 @@ func (repo *repository) GetJobDetailAPI(filter *logFilter) (*model.AifcoreAPIRes
 }
 
 func (repo *repository) GetJobsSummaryAPI(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
-	url := fmt.Sprintf("%s/api/core/product/%s/jobs-summary", repo.cfg.Env.AifcoreHost, filter.ProductSlug)
+	url := fmt.Sprintf("%s/api/core/product/%s/jobs-summary", repo.cfg.App.AifcoreHost, filter.ProductSlug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

@@ -25,7 +25,7 @@ type Repository interface {
 }
 
 func (repo *repository) GetRoleByIdAPI(id string) (*MstRole, error) {
-	url := fmt.Sprintf(`%v/api/core/role/%v`, repo.cfg.Env.AifcoreHost, id)
+	url := fmt.Sprintf(`%v/api/core/role/%v`, repo.cfg.App.AifcoreHost, id)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -49,7 +49,7 @@ func (repo *repository) GetRoleByIdAPI(id string) (*MstRole, error) {
 }
 
 func (repo *repository) GetRolesAPI(filter RoleFilter) ([]*MstRole, error) {
-	url := fmt.Sprintf(`%v/api/core/role`, repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf(`%v/api/core/role`, repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

@@ -37,7 +37,7 @@ type Repository interface {
 }
 
 func (repo *repository) LoanRecordCheckerAPI(apiKey, jobId, memberId, companyId string, payload *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
-	url := fmt.Sprintf("%s/product/compliance/loan-record-checker", repo.cfg.Env.ProductCatalogHost)
+	url := fmt.Sprintf("%s/product/compliance/loan-record-checker", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
