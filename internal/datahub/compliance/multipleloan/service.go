@@ -2,6 +2,7 @@ package multipleloan
 
 import (
 	"errors"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -15,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	logger "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
 
@@ -24,6 +25,7 @@ func NewService(
 	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
+	operationRepo operation.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
@@ -31,6 +33,7 @@ func NewService(
 		memberRepo,
 		jobRepo,
 		transactionRepo,
+		operationRepo,
 		jobService,
 	}
 }
@@ -40,6 +43,7 @@ type service struct {
 	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 	jobService      job.Service
 }
 
@@ -48,15 +52,44 @@ type Service interface {
 	BulkMultipleLoan(apiKey, quotaType, slug string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
-type multipleLoanFunc func(string, string, string, string, *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
+type multipleLoanFunc func(
+	apiKey string,
+	jobID string,
+	userID string,
+	companyID string,
+	req *multipleLoanRequest,
+) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
 
 func (svc *service) MultipleLoan(authCtx *model.AuthContext, slug string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
-	productSlug, err := mapProductSlug(slug)
-	if err != nil {
-		return nil, apperror.BadRequest("unsupported product slug")
+	type multipleLoanHandler struct {
+		handler            multipleLoanFunc
+		event, productSlug string
 	}
 
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), productSlug)
+	var multipleLoanMap = map[string]multipleLoanHandler{
+		"7d-multiple-loan": {
+			handler:     svc.repo.CallMultipleLoan7Days,
+			productSlug: constant.Slug7DaysMultipleLoan,
+			event:       constant.Event7DMLSingleReq,
+		},
+		"30d-multiple-loan": {
+			handler:     svc.repo.CallMultipleLoan30Days,
+			productSlug: constant.Slug30DaysMultipleLoan,
+			event:       constant.Event30DMLSingleReq,
+		},
+		"90d-multiple-loan": {
+			handler:     svc.repo.CallMultipleLoan90Days,
+			productSlug: constant.Slug90DaysMultipleLoan,
+			event:       constant.Event90DMLSingleReq,
+		},
+	}
+
+	mlCfg, ok := multipleLoanMap[slug]
+	if !ok {
+		return nil, apperror.BadRequest(constant.ErrUnsupportedProduct)
+	}
+
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), mlCfg.productSlug)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
@@ -72,18 +105,7 @@ func (svc *service) MultipleLoan(authCtx *model.AuthContext, slug string, reqBod
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	handlers := map[string]multipleLoanFunc{
-		constant.SlugMultipleLoan7Days:  svc.repo.CallMultipleLoan7Days,
-		constant.SlugMultipleLoan30Days: svc.repo.CallMultipleLoan30Days,
-		constant.SlugMultipleLoan90Days: svc.repo.CallMultipleLoan90Days,
-	}
-
-	handler, ok := handlers[productSlug]
-	if !ok {
-		return nil, apperror.BadRequest(constant.ErrUnsupportedProduct)
-	}
-
-	result, err := handler(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
+	result, err := mlCfg.handler(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -99,6 +121,17 @@ func (svc *service) MultipleLoan(authCtx *model.AuthContext, slug string, reqBod
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return nil, err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    mlCfg.event,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", mlCfg.event).
+			Msg("failed to add operation log")
 	}
 
 	return result, nil
@@ -201,7 +234,7 @@ func (svc *service) BulkMultipleLoan(apiKey, quotaType, slug string, memberId, c
 	close(errChan)
 
 	for err := range errChan {
-		logger.Error().Err(err).Msg("error during bulk multiple loan processing")
+		log.Error().Err(err).Msg("error during bulk multiple loan processing")
 	}
 
 	return svc.jobService.FinalizeJob(jobIdStr)
@@ -214,9 +247,9 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 	}
 
 	handlers := map[string]loanHandler{
-		constant.SlugMultipleLoan7Days:  {constant.TrxIdMultipleLoan7Days, svc.repo.CallMultipleLoan7Days},
-		constant.SlugMultipleLoan30Days: {constant.TrxIdMultipleLoan30Days, svc.repo.CallMultipleLoan30Days},
-		constant.SlugMultipleLoan90Days: {constant.TrxIdMultipleLoan30Days, svc.repo.CallMultipleLoan90Days},
+		constant.Slug7DaysMultipleLoan:  {constant.TrxIdMultipleLoan7Days, svc.repo.CallMultipleLoan7Days},
+		constant.Slug30DaysMultipleLoan: {constant.TrxIdMultipleLoan30Days, svc.repo.CallMultipleLoan30Days},
+		constant.Slug90DaysMultipleLoan: {constant.TrxIdMultipleLoan30Days, svc.repo.CallMultipleLoan90Days},
 	}
 
 	h, ok := handlers[params.ProductSlug]

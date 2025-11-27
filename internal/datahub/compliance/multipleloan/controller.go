@@ -70,9 +70,9 @@ func (ctrl *controller) BulkMultipleLoan(c *fiber.Ctx) error {
 }
 
 var productSlugMap = map[string]string{
-	"7d-multiple-loan":  constant.SlugMultipleLoan7Days,
-	"30d-multiple-loan": constant.SlugMultipleLoan30Days,
-	"90d-multiple-loan": constant.SlugMultipleLoan90Days,
+	"7d-multiple-loan":  constant.Slug7DaysMultipleLoan,
+	"30d-multiple-loan": constant.Slug30DaysMultipleLoan,
+	"90d-multiple-loan": constant.Slug90DaysMultipleLoan,
 }
 
 func mapProductSlug(slug string) (string, error) {

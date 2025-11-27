@@ -39,7 +39,7 @@ type Repository interface {
 }
 
 func (repo *repository) CallMultipleLoan7Days(apiKey, jobId, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
-	url := fmt.Sprintf("%s/product/compliance/multiple-loan/7-days", repo.cfg.Env.ProductCatalogHost)
+	url := fmt.Sprintf("%s/product/compliance/multiple-loan/7-days", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(reqBody)
 	if err != nil {
@@ -70,7 +70,7 @@ func (repo *repository) CallMultipleLoan7Days(apiKey, jobId, memberId, companyId
 }
 
 func (repo *repository) CallMultipleLoan30Days(apiKey, jobId, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
-	url := fmt.Sprintf("%s/product/compliance/multiple-loan/30-days", repo.cfg.Env.ProductCatalogHost)
+	url := fmt.Sprintf("%s/product/compliance/multiple-loan/30-days", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(reqBody)
 	if err != nil {
@@ -101,7 +101,7 @@ func (repo *repository) CallMultipleLoan30Days(apiKey, jobId, memberId, companyI
 }
 
 func (repo *repository) CallMultipleLoan90Days(apiKey, jobId, memberId, companyId string, reqBody *multipleLoanRequest) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error) {
-	url := fmt.Sprintf("%s/product/compliance/multiple-loan/90-days", repo.cfg.Env.ProductCatalogHost)
+	url := fmt.Sprintf("%s/product/compliance/multiple-loan/90-days", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(reqBody)
 	if err != nil {
