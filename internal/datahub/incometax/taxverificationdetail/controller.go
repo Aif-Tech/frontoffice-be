@@ -36,7 +36,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	result, err := ctrl.svc.CallTaxVerification(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
+	result, err := ctrl.svc.CallTaxVerification(authCtx, reqBody)
 	if err != nil {
 		return err
 	}

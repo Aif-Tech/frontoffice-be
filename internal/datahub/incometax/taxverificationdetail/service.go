@@ -1,6 +1,7 @@
 package taxverificationdetail
 
 import (
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/core/product"
@@ -26,6 +27,7 @@ func NewService(
 	memberRepo member.Repository,
 	jobRepo job.Repository,
 	transactionRepo transaction.Repository,
+	operationRepo operation.Repository,
 	jobService job.Service,
 ) Service {
 	return &service{
@@ -34,6 +36,7 @@ func NewService(
 		memberRepo,
 		jobRepo,
 		transactionRepo,
+		operationRepo,
 		jobService,
 	}
 }
@@ -44,24 +47,25 @@ type service struct {
 	memberRepo      member.Repository
 	jobRepo         job.Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 	jobService      job.Service
 }
 
 type Service interface {
-	CallTaxVerification(apiKey, memberId, companyId string, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
+	CallTaxVerification(authCtx *model.AuthContext, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
 	BulkTaxVerification(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
 }
 
-func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugTaxVerificationDetail)
+func (svc *service) CallTaxVerification(authCtx *model.AuthContext, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugTaxVerificationDetail)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -69,7 +73,7 @@ func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, requ
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.TaxVerificationAPI(apiKey, jobIdStr, request)
+	result, err := svc.repo.TaxVerificationAPI(authCtx.APIKey, jobIdStr, request)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -80,6 +84,17 @@ func (svc *service) CallTaxVerification(apiKey, memberId, companyId string, requ
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return nil, err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventTaxVerificationSingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventTaxScoreSingleReq).
+			Msg("failed to add operation log")
 	}
 
 	return result, nil
