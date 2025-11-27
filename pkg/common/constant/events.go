@@ -56,7 +56,10 @@ const (
 	EventPhoneLiveBulkReq   = "phone live status bulk request"
 	EventPhoneLiveDownload  = "phone live status download result"
 
-	EventTaxComplianceSingleReq   = "tax compliance status single request"
+	// tax compliance status
+	EventTaxComplianceSingleReq = "tax compliance status single request"
+	EventTaxComplianceBulkReq   = "tax compliance status bulk request"
+
 	EventTaxScoreSingleReq        = "tax score single request"
 	EventTaxVerificationSingleReq = "tax verification single request"
 )

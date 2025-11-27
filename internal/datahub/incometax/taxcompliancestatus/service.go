@@ -49,7 +49,7 @@ type service struct {
 
 type Service interface {
 	TaxComplianceStatus(authCtx *model.AuthContext, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error)
-	BulkTaxComplianceStatus(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
+	BulkTaxComplianceStatus(authCtx *model.AuthContext, file *multipart.FileHeader) error
 }
 
 func (svc *service) TaxComplianceStatus(authCtx *model.AuthContext, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error) {
@@ -96,14 +96,14 @@ func (svc *service) TaxComplianceStatus(authCtx *model.AuthContext, reqBody *tax
 	return result, nil
 }
 
-func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
+func (svc *service) BulkTaxComplianceStatus(authCtx *model.AuthContext, file *multipart.FileHeader) error {
 	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderTaxCompliance)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 
-	memberIdStr := strconv.Itoa(int(memberId))
-	companyIdStr := strconv.Itoa(int(companyId))
+	memberIdStr := authCtx.UserIdStr()
+	companyIdStr := authCtx.CompanyIdStr()
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugTaxComplianceStatus)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
@@ -114,14 +114,14 @@ func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, 
 		MemberId:     memberIdStr,
 		CompanyId:    companyIdStr,
 		SubscribedId: subsribedIdStr,
-		QuotaType:    quotaType,
+		QuotaType:    authCtx.QuotaTypeStr(),
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedFetchQuota)
 	}
 
 	totalRequest := len(records) - 1
-	if quotaType != "0" && quotaResp.Data.Quota < totalRequest {
+	if authCtx.QuotaType != 0 && quotaResp.Data.Quota < totalRequest {
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
@@ -161,12 +161,12 @@ func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, 
 			defer wg.Done()
 
 			if err := svc.processTaxComplianceStatus(&taxComplianceContext{
-				APIKey:         apiKey,
+				APIKey:         authCtx.APIKey,
 				JobIdStr:       jobIdStr,
 				MemberIdStr:    memberIdStr,
 				CompanyIdStr:   companyIdStr,
-				MemberId:       memberId,
-				CompanyId:      companyId,
+				MemberId:       authCtx.UserId,
+				CompanyId:      authCtx.CompanyId,
 				ProductId:      subscribedResp.Data.ProductId,
 				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
@@ -187,10 +187,25 @@ func (svc *service) BulkTaxComplianceStatus(apiKey, quotaType string, memberId, 
 	close(errChan)
 
 	for err := range errChan {
-		log.Error().Err(err).Msg("error during bulk tax compliance status prrocessing")
+		log.Error().Err(err).Str("job_id", jobIdStr).Msg("error during bulk tax compliance processing")
 	}
 
-	return svc.jobService.FinalizeJob(jobIdStr)
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventTaxComplianceBulkReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventTaxComplianceBulkReq).
+			Msg("failed to add operation log")
+	}
+
+	return nil
 }
 
 func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) error {
