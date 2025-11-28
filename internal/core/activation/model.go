@@ -11,8 +11,10 @@ type MstActivationToken struct {
 	MemberId  uint             `json:"member_id"`
 	Member    member.MstMember `gorm:"foreignKey:MemberId" json:"-"`
 	CreatedAt time.Time        `json:"created_at"`
+	ExpiresAt time.Time        `json:"expires_at"`
 }
 
 type CreateActivationTokenRequest struct {
-	Token string `json:"token"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
 }

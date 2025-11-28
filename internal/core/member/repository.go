@@ -40,6 +40,7 @@ type Repository interface {
 	GetSubscribedProducts(companyId, productSlug string) (*model.AifcoreAPIResponse[*subscribedProductRespData], error)
 	GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIResponse[*quotaRespData], error)
 	UpdateMemberAPI(id string, req map[string]interface{}) error
+	UpdateExpiredTokensAPI() error
 	DeleteMemberAPI(id string) error
 }
 
@@ -229,6 +230,30 @@ func (repo *repository) DeleteMemberAPI(id string) error {
 	url := fmt.Sprintf(`%v/api/core/member/deletemember/%v`, repo.cfg.App.AifcoreHost, id)
 
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return errors.New(constant.ErrMsgHTTPReqFailed)
+	}
+
+	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return errors.New(constant.ErrUpstreamUnavailable)
+	}
+	defer resp.Body.Close()
+
+	_, err = helper.ParseAifcoreAPIResponse[any](resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo *repository) UpdateExpiredTokensAPI() error {
+	url := fmt.Sprintf(`%v/api/core/member/updateexpiredmail`, repo.cfg.App.AifcoreHost)
+
+	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}

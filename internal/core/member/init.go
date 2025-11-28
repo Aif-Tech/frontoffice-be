@@ -6,8 +6,11 @@ import (
 	"front-office/internal/core/role"
 	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
+	"time"
 
+	"github.com/go-co-op/gocron"
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
 
 func SetupInit(userAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {
@@ -28,4 +31,14 @@ func SetupInit(userAPI fiber.Router, cfg *application.Config, client httpclient.
 	userAPI.Get("/:id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetById)
 	userAPI.Put("/:id", middleware.AdminAuth(), middleware.ValidateRequest(updateUserRequest{}), middleware.GetJWTPayloadFromCookie(), controller.UpdateMemberById)
 	userAPI.Delete("/:id", middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.DeleteById)
+
+	// Cron Update Expired Mail Status
+	jakartaTime, _ := time.LoadLocation("Asia/Jakarta")
+	scd := gocron.NewScheduler(jakartaTime)
+	_, err := scd.Every(30).Minute().Do(controller.UpdateExpiredMailStatus)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to register UpdateExpiredMailStatus cron")
+	}
+
+	scd.StartAsync()
 }

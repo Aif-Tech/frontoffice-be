@@ -13,7 +13,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewService(repo Repository, roleRepo role.Repository, operationRepo operation.Repository) Service {
+func NewService(
+	repo Repository,
+	roleRepo role.Repository,
+	operationRepo operation.Repository,
+) Service {
 	return &service{
 		repo,
 		roleRepo,
@@ -33,6 +37,7 @@ type Service interface {
 	UpdateProfile(userId string, currentUserRoleId uint, req *updateProfileRequest) (*userUpdateResponse, error)
 	UploadProfileImage(id string, filename *string) (*userUpdateResponse, error)
 	UpdateMemberById(authCtx *model.AuthContext, memberId string, req *updateUserRequest) error
+	UpdateExpiredTokens() error
 	DeleteMemberById(memberId, companyId string) error
 }
 
@@ -227,8 +232,10 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 		updateFields["active"] = *req.Active
 
 		if *req.Active {
+			updateFields["mail_status"] = "active"
 			logEvents = append(logEvents, constant.EventActivateUser)
 		} else {
+			updateFields["mail_status"] = "inactive"
 			logEvents = append(logEvents, constant.EventInactivateUser)
 		}
 	}
@@ -256,6 +263,14 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 				Str("action", event).
 				Msg("failed to add operation log")
 		}
+	}
+
+	return nil
+}
+
+func (svc *service) UpdateExpiredTokens() error {
+	if err := svc.repo.UpdateExpiredTokensAPI(); err != nil {
+		return apperror.MapRepoError(err, "failed to update expired mail")
 	}
 
 	return nil
