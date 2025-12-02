@@ -34,7 +34,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{
+		App: &application.Environment{
 			ProductCatalogHost: constant.MockHost,
 			ScoreezyHost:       constant.MockHost,
 		},
@@ -83,7 +83,7 @@ func TestGenRetailV3API(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{
+			App: &application.Environment{
 				ScoreezyHost: constant.MockHost,
 			},
 		}, &MockClient{}, fakeMarshal)
@@ -108,7 +108,7 @@ func TestGenRetailV3API(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(
 			&application.Config{
-				Env: &application.Environment{
+				App: &application.Environment{
 					ScoreezyHost: constant.MockInvalidHost,
 				},
 			}, mockClient, nil)
@@ -189,7 +189,7 @@ func TestGetLogsScoreezyAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.GetLogsScoreezyAPI(&filterLogs{})
@@ -251,7 +251,7 @@ func TestGetLogsByRangeDateAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.GetLogsByRangeDateAPI(&filterLogs{})
@@ -318,7 +318,7 @@ func TestGetLogByTrxIdAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.GetLogByTrxIdAPI(&filterLogs{})

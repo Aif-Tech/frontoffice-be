@@ -1,6 +1,7 @@
 package job
 
 import (
+	"front-office/pkg/common/model"
 	"time"
 )
 
@@ -122,9 +123,7 @@ type logFilter struct {
 	EndDate     string
 	JobId       string
 	ProductSlug string
-	MemberId    string
-	CompanyId   string
-	TierLevel   string
+	AuthCtx     *model.AuthContext
 	IsMasked    bool
 	Keyword     string
 }

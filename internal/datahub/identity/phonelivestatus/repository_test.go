@@ -1,4 +1,4 @@
-package taxverificationdetail
+package phonelivestatus
 
 import (
 	"bytes"
@@ -39,15 +39,12 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	return repo, mockClient
 }
 
-func TestCallTaxVerificationAPI(t *testing.T) {
+func TestCallPhoneLiveStatusAPI(t *testing.T) {
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
-		mockData := model.ProCatAPIResponse[taxVerificationRespData]{
+		mockData := model.ProCatAPIResponse[phoneLiveStatusRespData]{
 			Success: true,
-			Message: "Succeed to Request Data.",
-			Data: taxVerificationRespData{
-				Status: "Unreported",
-			},
-			PricingStrategy: "PAY",
+			Message: "success",
+			Data:    phoneLiveStatusRespData{},
 		}
 		body, err := json.Marshal(mockData)
 		require.NoError(t, err)
@@ -59,14 +56,11 @@ func TestCallTaxVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.TaxVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &taxVerificationRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.True(t, result.Success)
-		assert.Equal(t, "Succeed to Request Data.", result.Message)
-		assert.Equal(t, "Unreported", result.Data.Status)
-		assert.Equal(t, "PAY", result.PricingStrategy)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -79,7 +73,7 @@ func TestCallTaxVerificationAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.TaxVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &taxVerificationRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -91,7 +85,7 @@ func TestCallTaxVerificationAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.TaxVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &taxVerificationRequest{})
+		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 		assert.Error(t, err)
 	})
 
@@ -100,8 +94,7 @@ func TestCallTaxVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		req := &taxVerificationRequest{}
-		_, err := repo.TaxVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, req)
+		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -116,7 +109,7 @@ func TestCallTaxVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.TaxVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &taxVerificationRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)

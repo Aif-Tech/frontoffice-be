@@ -13,7 +13,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewService(repo Repository, roleRepo role.Repository, operationRepo operation.Repository) Service {
+func NewService(
+	repo Repository,
+	roleRepo role.Repository,
+	operationRepo operation.Repository,
+) Service {
 	return &service{
 		repo,
 		roleRepo,
@@ -32,7 +36,8 @@ type Service interface {
 	GetMemberList(filter *MemberParams) ([]*MstMember, *model.Meta, error)
 	UpdateProfile(userId string, currentUserRoleId uint, req *updateProfileRequest) (*userUpdateResponse, error)
 	UploadProfileImage(id string, filename *string) (*userUpdateResponse, error)
-	UpdateMemberById(currentUserId, currentUserRoleId uint, companyId, memberId string, req *updateUserRequest) error
+	UpdateMemberById(authCtx *model.AuthContext, memberId string, req *updateUserRequest) error
+	UpdateExpiredTokens() error
 	DeleteMemberById(memberId, companyId string) error
 }
 
@@ -111,7 +116,10 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *up
 		CompanyId: user.CompanyId,
 		Action:    constant.EventUpdateProfile,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log profile update event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventUpdateProfile).
+			Msg("failed to add operation log")
 	}
 
 	return &userUpdateResponse{
@@ -150,7 +158,10 @@ func (svc *service) UploadProfileImage(userId string, filename *string) (*userUp
 		CompanyId: user.CompanyId,
 		Action:    constant.EventUpdateProfile,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log upload profile photo event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventUpdateProfile).
+			Msg("failed to add operation log")
 	}
 
 	return &userUpdateResponse{
@@ -163,8 +174,8 @@ func (svc *service) UploadProfileImage(userId string, filename *string) (*userUp
 	}, nil
 }
 
-func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, companyId, memberId string, req *updateUserRequest) error {
-	member, err := svc.repo.GetMemberAPI(&MemberParams{Id: memberId, CompanyId: companyId})
+func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string, req *updateUserRequest) error {
+	member, err := svc.repo.GetMemberAPI(&MemberParams{Id: memberId, CompanyId: authCtx.CompanyIdStr()})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedFetchMember)
 	}
@@ -179,13 +190,16 @@ func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, comp
 		logEvents             []string
 	)
 
-	if req.Name != nil {
-		updateFields["name"] = *req.Name
+	if req.Name != nil || req.Email != nil || req.RoleId != nil {
 		logEvents = append(logEvents, constant.EventUpdateUserData)
 	}
 
+	if req.Name != nil {
+		updateFields["name"] = *req.Name
+	}
+
 	if req.Email != nil {
-		if currentUserRoleId == uint(memberRoleID) {
+		if authCtx.RoleId == uint(memberRoleID) {
 			return apperror.Unauthorized("you are not allowed to update email")
 		}
 
@@ -200,7 +214,6 @@ func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, comp
 		updateFields["email"] = *req.Email
 		newEmail = *req.Email
 		sendEmailConfirmation = true
-		logEvents = append(logEvents, constant.EventUpdateUserData)
 	}
 
 	if req.RoleId != nil {
@@ -213,15 +226,16 @@ func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, comp
 		}
 
 		updateFields["role_id"] = *req.RoleId
-		logEvents = append(logEvents, constant.EventUpdateUserData)
 	}
 
 	if req.Active != nil {
 		updateFields["active"] = *req.Active
 
 		if *req.Active {
+			updateFields["mail_status"] = "active"
 			logEvents = append(logEvents, constant.EventActivateUser)
 		} else {
+			updateFields["mail_status"] = "inactive"
 			logEvents = append(logEvents, constant.EventInactivateUser)
 		}
 	}
@@ -240,12 +254,23 @@ func (svc *service) UpdateMemberById(currentUserId, currentUserRoleId uint, comp
 
 	for _, event := range logEvents {
 		if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
-			MemberId:  currentUserId,
+			MemberId:  authCtx.UserId,
 			CompanyId: member.CompanyId,
 			Action:    event,
 		}); err != nil {
-			log.Warn().Err(err).Msg("failed to log update member event")
+			log.Warn().
+				Err(err).
+				Str("action", event).
+				Msg("failed to add operation log")
 		}
+	}
+
+	return nil
+}
+
+func (svc *service) UpdateExpiredTokens() error {
+	if err := svc.repo.UpdateExpiredTokensAPI(); err != nil {
+		return apperror.MapRepoError(err, "failed to update expired mail")
 	}
 
 	return nil

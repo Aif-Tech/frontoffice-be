@@ -2,9 +2,8 @@ package application
 
 type (
 	Config struct {
-		App App
+		App *Environment
 		Db  Db
-		Env *Environment
 	}
 
 	App struct {
@@ -26,9 +25,7 @@ func GetConfig() Config {
 	env := LoadEnvironment()
 
 	return Config{
-		App: App{
-			Port: env.Port,
-		},
+		App: env,
 		Db: Db{
 			Host:     env.DbHost,
 			Port:     env.DbPort,
@@ -38,6 +35,5 @@ func GetConfig() Config {
 			SSLMode:  "disable",
 			TimeZone: "Asia/Jakarta",
 		},
-		Env: env,
 	}
 }

@@ -33,7 +33,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{AifcoreHost: constant.MockHost},
+		App: &application.Environment{AifcoreHost: constant.MockHost},
 	}, mockClient, nil)
 
 	return repo, mockClient
@@ -65,7 +65,7 @@ func TestGetGradesAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		result, err := repo.GetGradesAPI(constant.DummyProduct, constant.DummyCompanyId)
@@ -131,7 +131,7 @@ func TestSaveGradingAPI(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockHost},
+			App: &application.Environment{AifcoreHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		err := repo.SaveGradingAPI(&createGradePayload{})
@@ -143,7 +143,7 @@ func TestSaveGradingAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		err := repo.SaveGradingAPI(&createGradePayload{})

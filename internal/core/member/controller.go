@@ -6,8 +6,10 @@ import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
 
 func NewController(
@@ -34,6 +36,7 @@ type Controller interface {
 	UpdateProfile(c *fiber.Ctx) error
 	UploadProfileImage(c *fiber.Ctx) error
 	UpdateMemberById(c *fiber.Ctx) error
+	UpdateExpiredMailStatus()
 	DeleteById(c *fiber.Ctx) error
 }
 
@@ -161,7 +164,7 @@ func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
 		return apperror.BadRequest(constant.MissingUserId)
 	}
 
-	if err := ctrl.svc.UpdateMemberById(authCtx.UserId, authCtx.RoleId, authCtx.CompanyIdStr(), memberId, reqBody); err != nil {
+	if err := ctrl.svc.UpdateMemberById(authCtx, memberId, reqBody); err != nil {
 		return err
 	}
 
@@ -169,6 +172,18 @@ func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
 		"success to update user",
 		nil,
 	))
+}
+
+func (ctrl *controller) UpdateExpiredMailStatus() {
+	log.Info().
+		Time("started_at", time.Now()).
+		Msg("cron UpdateExpiredMailStatus started")
+
+	if err := ctrl.svc.UpdateExpiredTokens(); err != nil {
+		log.Error().
+			Err(err).
+			Msg("failed to update expired tokens")
+	}
 }
 
 func (ctrl *controller) DeleteById(c *fiber.Ctx) error {

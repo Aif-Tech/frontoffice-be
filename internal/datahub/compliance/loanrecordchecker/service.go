@@ -2,6 +2,7 @@ package loanrecordchecker
 
 import (
 	"errors"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
 	"front-office/internal/datahub/job"
@@ -15,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	logger "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
 
@@ -23,6 +24,7 @@ func NewService(
 	repo Repository,
 	memberRepo member.Repository,
 	jobRepo job.Repository,
+	operationRepo operation.Repository,
 	transactionRepo transaction.Repository,
 	jobService job.Service,
 ) Service {
@@ -30,6 +32,7 @@ func NewService(
 		repo,
 		memberRepo,
 		jobRepo,
+		operationRepo,
 		transactionRepo,
 		jobService,
 	}
@@ -39,25 +42,26 @@ type service struct {
 	repo            Repository
 	memberRepo      member.Repository
 	jobRepo         job.Repository
+	operationRepo   operation.Repository
 	transactionRepo transaction.Repository
 	jobService      job.Service
 }
 
 type Service interface {
-	LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error)
-	BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error
+	LoanRecordChecker(authCtx *model.AuthContext, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error)
+	BulkLoanRecordChecker(authCtx *model.AuthContext, file *multipart.FileHeader) error
 }
 
-func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyId, constant.SlugLoanRecordChecker)
+func (svc *service) LoanRecordChecker(authCtx *model.AuthContext, reqBody *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugLoanRecordChecker)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberId,
-		CompanyId: companyId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     1,
 	})
 	if err != nil {
@@ -65,7 +69,7 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.LoanRecordCheckerAPI(apiKey, jobIdStr, memberId, companyId, reqBody)
+	result, err := svc.repo.LoanRecordCheckerAPI(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -83,42 +87,51 @@ func (svc *service) LoanRecordChecker(apiKey, memberId, companyId string, reqBod
 		return nil, err
 	}
 
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventLoanRecordSingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventLoanRecordSingleReq).
+			Msg("failed to add operation log")
+	}
+
 	return result, nil
 }
 
-func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, companyId uint, file *multipart.FileHeader) error {
+func (svc *service) BulkLoanRecordChecker(authCtx *model.AuthContext, file *multipart.FileHeader) error {
 	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderLoanRecord)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 
-	memberIdStr := strconv.Itoa(int(memberId))
-	companyIdStr := strconv.Itoa(int(companyId))
-	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(companyIdStr, constant.SlugLoanRecordChecker)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugLoanRecordChecker)
 	if err != nil {
 		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	subscribedIdStr := strconv.Itoa(int(subscribedResp.Data.SubsribedProductID))
 	quotaResp, err := svc.memberRepo.GetQuotaAPI(&member.QuotaParams{
-		MemberId:     memberIdStr,
-		CompanyId:    companyIdStr,
+		MemberId:     authCtx.UserIdStr(),
+		CompanyId:    authCtx.CompanyIdStr(),
 		SubscribedId: subscribedIdStr,
-		QuotaType:    quotaType,
+		QuotaType:    authCtx.QuotaTypeStr(),
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, constant.FailedFetchQuota)
 	}
 
 	totalRequests := len(records) - 1
-	if quotaType != "0" && quotaResp.Data.Quota < totalRequests {
+	if authCtx.QuotaTypeStr() != "0" && quotaResp.Data.Quota < totalRequests {
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
 		ProductId: subscribedResp.Data.ProductId,
-		MemberId:  memberIdStr,
-		CompanyId: companyIdStr,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
 		Total:     totalRequests,
 	})
 	if err != nil {
@@ -152,12 +165,12 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 			defer wg.Done()
 
 			if err := svc.processSingleLoanRecord(&loanCheckerContext{
-				APIKey:         apiKey,
+				APIKey:         authCtx.APIKey,
 				JobIdStr:       jobIdStr,
-				MemberIdStr:    memberIdStr,
-				CompanyIdStr:   companyIdStr,
-				MemberId:       memberId,
-				CompanyId:      companyId,
+				MemberIdStr:    authCtx.UserIdStr(),
+				CompanyIdStr:   authCtx.CompanyIdStr(),
+				MemberId:       authCtx.UserId,
+				CompanyId:      authCtx.CompanyId,
 				ProductId:      subscribedResp.Data.ProductId,
 				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				JobId:          jobRes.JobId,
@@ -178,10 +191,25 @@ func (svc *service) BulkLoanRecordChecker(apiKey, quotaType string, memberId, co
 	close(errChan)
 
 	for err := range errChan {
-		logger.Error().Err(err).Msg("error during bulk loan record checker processing")
+		log.Error().Err(err).Str("job_id", jobIdStr).Msg("error during bulk loan record checker processing")
 	}
 
-	return svc.jobService.FinalizeJob(jobIdStr)
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return err
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventLoanRecordBulkReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventLoanRecordBulkReq).
+			Msg("failed to add operation log")
+	}
+
+	return nil
 }
 
 func (svc *service) processSingleLoanRecord(params *loanCheckerContext) error {

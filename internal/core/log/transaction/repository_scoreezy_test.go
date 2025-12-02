@@ -42,7 +42,7 @@ func TestGetLogsScoreezyByDateAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		result, err := repo.GetLogsScoreezyByDateAPI(constant.DummyJobId, constant.DummyCompanyId)
@@ -106,7 +106,7 @@ func TestGetLogsScoreezyByMonthAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		result, err := repo.GetLogsScoreezyByMonthAPI(constant.DummyCompanyId, constant.DummyMonth)
@@ -170,7 +170,7 @@ func TestGetLogsScoreezyByDateRangeAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		result, err := repo.GetLogsScoreezyByDateRangeAPI(constant.DummyCompanyId, constant.DummyDate, constant.DummyDate)
@@ -234,7 +234,7 @@ func TestGetLogsScoreezyAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		result, err := repo.GetLogsScoreezyAPI()

@@ -64,8 +64,8 @@ type Service interface {
 }
 
 // func (svc *service) RegisterAdminSvc(req *RegisterAdminRequest) (*user.User, string, error) {
-// 	secret := svc.Cfg.Env.JwtSecretKey
-// 	minutesToExpired, _ := strconv.Atoi(svc.Cfg.Env.JwtVerificationExpiresMinutes)
+// 	secret := svc.Cfg.App.JwtSecretKey
+// 	minutesToExpired, _ := strconv.Atoi(svc.Cfg.App.JwtVerificationExpiresMinutes)
 
 // 	isPasswordStrength := helper.ValidatePasswordStrength(req.Password)
 // 	if !isPasswordStrength {
@@ -148,7 +148,7 @@ func (svc *service) VerifyMember(token string, req *passwordResetRequest) error 
 		return apperror.BadRequest(constant.AlreadyVerified)
 	}
 
-	minutesToExpired, err := strconv.Atoi(svc.cfg.Env.JwtActivationExpiresMinutes)
+	minutesToExpired, err := strconv.Atoi(svc.cfg.App.JwtActivationExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("invalid activation expiry config", err)
 	}
@@ -191,7 +191,7 @@ func (svc *service) PasswordReset(token string, req *passwordResetRequest) error
 
 	idStr := strconv.Itoa(int(data.Id))
 
-	minutesToExpired, err := strconv.Atoi(svc.cfg.Env.JwtResetPasswordExpiresMinutes)
+	minutesToExpired, err := strconv.Atoi(svc.cfg.App.JwtResetPasswordExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("invalid password reset expiry config", err)
 	}
@@ -223,7 +223,10 @@ func (svc *service) PasswordReset(token string, req *passwordResetRequest) error
 		CompanyId: data.Member.CompanyId,
 		Action:    constant.EventPasswordReset,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log password reset event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventPasswordReset).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -240,15 +243,22 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		CompanyId: req.CompanyId,
 		RoleId:    req.RoleId,
 	}
-	activationToken, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtActivationExpiresMinutes)
+
+	activationToken, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtActivationExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("generate activation token failed", err)
 	}
 
-	userIdStr := helper.ConvertUintToString(user.MemberId)
+	expiresMinutes, err := strconv.Atoi(svc.cfg.App.JwtActivationExpiresMinutes)
+	if err != nil {
+		return apperror.Internal("invalid jwt activation expires minutes config", err)
+	}
 
+	userIdStr := helper.ConvertUintToString(user.MemberId)
+	expiresAt := time.Now().Add(time.Duration(expiresMinutes) * time.Minute)
 	err = svc.activationRepo.CreateActivationTokenAPI(userIdStr, &activation.CreateActivationTokenRequest{
-		Token: activationToken,
+		Token:     activationToken,
+		ExpiresAt: expiresAt,
 	})
 	if err != nil {
 		return apperror.MapRepoError(err, "failed to create activation")
@@ -269,13 +279,15 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		return apperror.Internal("failed to send activation email", err)
 	}
 
-	err = svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  currentUserId,
 		CompanyId: req.CompanyId,
 		Action:    constant.EventRegisterMember,
-	})
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to log register member event")
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventRegisterMember).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -302,15 +314,22 @@ func (svc *service) RequestActivation(email string) error {
 		CompanyId: user.CompanyId,
 		RoleId:    user.RoleId,
 	}
-	token, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtActivationExpiresMinutes)
+
+	token, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtActivationExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("generate activation token failed", err)
 	}
 
-	userIdStr := helper.ConvertUintToString(user.MemberId)
+	expiresMinutes, err := strconv.Atoi(svc.cfg.App.JwtActivationExpiresMinutes)
+	if err != nil {
+		return apperror.Internal("invalid jwt activation expires minutes config", err)
+	}
 
+	userIdStr := helper.ConvertUintToString(user.MemberId)
+	expiresAt := time.Now().Add(time.Duration(expiresMinutes) * time.Minute)
 	if err := svc.activationRepo.CreateActivationTokenAPI(userIdStr, &activation.CreateActivationTokenRequest{
-		Token: token,
+		Token:     token,
+		ExpiresAt: expiresAt,
 	}); err != nil {
 		return apperror.MapRepoError(err, "failed to create activation")
 	}
@@ -351,7 +370,8 @@ func (svc *service) RequestPasswordReset(email string) error {
 		CompanyId: user.CompanyId,
 		RoleId:    user.RoleId,
 	}
-	token, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtActivationExpiresMinutes)
+
+	token, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtResetPasswordExpiresMinutes)
 	if err != nil {
 		return apperror.Internal("generate password reset token failed", err)
 	}
@@ -373,7 +393,10 @@ func (svc *service) RequestPasswordReset(email string) error {
 		CompanyId: user.CompanyId,
 		Action:    constant.EventRequestPasswordReset,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log request password reset event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventRequestPasswordReset).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -397,12 +420,13 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		QuotaType: user.QuotaType,
 		ApiKey:    user.ApiKey,
 	}
-	accessToken, err = svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtExpiresMinutes)
+
+	accessToken, err = svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtExpiresMinutes)
 	if err != nil {
 		return "", "", nil, apperror.Internal("generate access token failed", err)
 	}
 
-	refreshToken, err = svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtRefreshTokenExpiresMinutes)
+	refreshToken, err = svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtRefreshTokenExpiresMinutes)
 	if err != nil {
 		return "", "", nil, apperror.Internal("generate refresh token failed", err)
 	}
@@ -412,7 +436,10 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		CompanyId: user.CompanyId,
 		Action:    constant.EventSignIn,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log sign-in event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventSignIn).
+			Msg("failed to add operation log")
 	}
 
 	loginResp = &loginResponse{
@@ -438,7 +465,7 @@ func (svc *service) RefreshAccessToken(userId, companyId, roleId uint, apiKey st
 		ApiKey:    apiKey,
 	}
 
-	accessToken, err := svc.generateToken(tokenPayload, svc.cfg.Env.JwtSecretKey, svc.cfg.Env.JwtExpiresMinutes)
+	accessToken, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtExpiresMinutes)
 	if err != nil {
 		return "", apperror.Internal("generate access token failed", err)
 	}
@@ -452,7 +479,10 @@ func (svc *service) Logout(userId, companyId uint) error {
 		CompanyId: companyId,
 		Action:    constant.EventSignOut,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log sign-out event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventSignOut).
+			Msg("failed to add operation log")
 	}
 
 	return nil
@@ -490,9 +520,12 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  user.MemberId,
 		CompanyId: user.CompanyId,
-		Action:    constant.EventRequestPasswordReset,
+		Action:    constant.EventChangePassword,
 	}); err != nil {
-		log.Warn().Err(err).Msg("failed to log change password event")
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventChangePassword).
+			Msg("failed to add operation log")
 	}
 
 	return nil

@@ -40,11 +40,12 @@ type Repository interface {
 	GetSubscribedProducts(companyId, productSlug string) (*model.AifcoreAPIResponse[*subscribedProductRespData], error)
 	GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIResponse[*quotaRespData], error)
 	UpdateMemberAPI(id string, req map[string]interface{}) error
+	UpdateExpiredTokensAPI() error
 	DeleteMemberAPI(id string) error
 }
 
 func (repo *repository) AddMemberAPI(payload *RegisterMemberRequest) (*registerResponseData, error) {
-	url := fmt.Sprintf("%s/api/core/member/addmember", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/member/addmember", repo.cfg.App.AifcoreHost)
 
 	var bodyBytes bytes.Buffer
 	writer := multipart.NewWriter(&bodyBytes)
@@ -60,7 +61,7 @@ func (repo *repository) AddMemberAPI(payload *RegisterMemberRequest) (*registerR
 		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
 	}
 	req.Header.Set(constant.HeaderContentType, writer.FormDataContentType())
-	req.Header.Set(constant.XAPIKey, repo.cfg.Env.CoreModuleKey)
+	req.Header.Set(constant.XAPIKey, repo.cfg.App.CoreModuleKey)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
@@ -77,7 +78,7 @@ func (repo *repository) AddMemberAPI(payload *RegisterMemberRequest) (*registerR
 }
 
 func (repo *repository) GetMemberAPI(query *MemberParams) (*MstMember, error) {
-	url := fmt.Sprintf(`%v/api/core/member/by`, repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf(`%v/api/core/member/by`, repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -109,7 +110,7 @@ func (repo *repository) GetMemberAPI(query *MemberParams) (*MstMember, error) {
 }
 
 func (repo *repository) GetMemberListAPI(filter *MemberParams) ([]*MstMember, *model.Meta, error) {
-	url := fmt.Sprintf(`%v/api/core/member/listbycompany/%v`, repo.cfg.Env.AifcoreHost, filter.CompanyId)
+	url := fmt.Sprintf(`%v/api/core/member/listbycompany/%v`, repo.cfg.App.AifcoreHost, filter.CompanyId)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -141,7 +142,7 @@ func (repo *repository) GetMemberListAPI(filter *MemberParams) ([]*MstMember, *m
 }
 
 func (repo *repository) GetSubscribedProducts(companyId, productSlug string) (*model.AifcoreAPIResponse[*subscribedProductRespData], error) {
-	url := fmt.Sprintf(`%v/api/core/member/subscribed-product/%v`, repo.cfg.Env.AifcoreHost, productSlug)
+	url := fmt.Sprintf(`%v/api/core/member/subscribed-product/%v`, repo.cfg.App.AifcoreHost, productSlug)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -166,7 +167,7 @@ func (repo *repository) GetSubscribedProducts(companyId, productSlug string) (*m
 }
 
 func (repo *repository) GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIResponse[*quotaRespData], error) {
-	url := fmt.Sprintf(`%v/api/core/member/quota`, repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf(`%v/api/core/member/quota`, repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -197,7 +198,7 @@ func (repo *repository) GetQuotaAPI(query *QuotaParams) (*model.AifcoreAPIRespon
 }
 
 func (repo *repository) UpdateMemberAPI(id string, payload map[string]interface{}) error {
-	url := fmt.Sprintf(`%v/api/core/member/updateprofile/%v`, repo.cfg.Env.AifcoreHost, id)
+	url := fmt.Sprintf(`%v/api/core/member/updateprofile/%v`, repo.cfg.App.AifcoreHost, id)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -226,9 +227,33 @@ func (repo *repository) UpdateMemberAPI(id string, payload map[string]interface{
 }
 
 func (repo *repository) DeleteMemberAPI(id string) error {
-	url := fmt.Sprintf(`%v/api/core/member/deletemember/%v`, repo.cfg.Env.AifcoreHost, id)
+	url := fmt.Sprintf(`%v/api/core/member/deletemember/%v`, repo.cfg.App.AifcoreHost, id)
 
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return errors.New(constant.ErrMsgHTTPReqFailed)
+	}
+
+	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return errors.New(constant.ErrUpstreamUnavailable)
+	}
+	defer resp.Body.Close()
+
+	_, err = helper.ParseAifcoreAPIResponse[any](resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo *repository) UpdateExpiredTokensAPI() error {
+	url := fmt.Sprintf(`%v/api/core/member/updateexpiredmail`, repo.cfg.App.AifcoreHost)
+
+	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return errors.New(constant.ErrMsgHTTPReqFailed)
 	}

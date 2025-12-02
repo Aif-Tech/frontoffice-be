@@ -2,6 +2,7 @@ package job
 
 import (
 	"front-office/configs/application"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
@@ -12,7 +13,9 @@ import (
 func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {
 	repository := NewRepository(cfg, client, nil)
 	transactionRepo := transaction.NewRepository(cfg, client, nil)
-	service := NewService(repository, transactionRepo)
+	operationRepo := operation.NewRepository(cfg, client, nil)
+
+	service := NewService(repository, transactionRepo, operationRepo)
 	controller := NewController(service)
 
 	apiGroup.Get("/gen-retail/jobs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetGenRetailJobs)

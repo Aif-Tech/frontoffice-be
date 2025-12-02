@@ -33,7 +33,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{AifcoreHost: constant.MockHost},
+		App: &application.Environment{AifcoreHost: constant.MockHost},
 	}, mockClient, nil)
 
 	return repo, mockClient
@@ -72,7 +72,7 @@ func TestCallCreateProCatJob(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockHost},
+			App: &application.Environment{AifcoreHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		result, err := repo.CreateJobAPI(&CreateJobRequest{})
@@ -85,7 +85,7 @@ func TestCallCreateProCatJob(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.CreateJobAPI(&CreateJobRequest{})
@@ -147,7 +147,7 @@ func TestCallUpdateJob(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockHost},
+			App: &application.Environment{AifcoreHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		err := repo.UpdateJobAPI(constant.DummyJobId, map[string]interface{}{})
@@ -159,7 +159,7 @@ func TestCallUpdateJob(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		err := repo.UpdateJobAPI(constant.DummyJobId, map[string]interface{}{})
@@ -195,6 +195,15 @@ func TestCallUpdateJob(t *testing.T) {
 }
 
 func TestCallGetProCatJobAPI(t *testing.T) {
+	filter := &logFilter{
+		ProductSlug: constant.DummyProduct,
+		AuthCtx: &model.AuthContext{
+			UserId:    constant.DummyIdInt,
+			CompanyId: constant.DummyIdInt,
+			RoleId:    constant.DummyIdInt,
+		},
+	}
+
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
 		mockData := model.AifcoreAPIResponse[any]{
 			Success: true,
@@ -209,7 +218,7 @@ func TestCallGetProCatJobAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetJobsAPI(&logFilter{})
+		result, err := repo.GetJobsAPI(filter)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -219,10 +228,10 @@ func TestCallGetProCatJobAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.GetJobsAPI(&logFilter{})
+		_, err := repo.GetJobsAPI(filter)
 
 		assert.Error(t, err)
 	})
@@ -232,7 +241,7 @@ func TestCallGetProCatJobAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		_, err := repo.GetJobsAPI(&logFilter{})
+		_, err := repo.GetJobsAPI(filter)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -247,7 +256,7 @@ func TestCallGetProCatJobAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetJobsAPI(&logFilter{})
+		result, err := repo.GetJobsAPI(filter)
 
 		assert.Nil(t, result)
 		assert.Error(t, err)
@@ -256,6 +265,15 @@ func TestCallGetProCatJobAPI(t *testing.T) {
 }
 
 func TestCallGetProCatJobDetailAPI(t *testing.T) {
+	filter := &logFilter{
+		ProductSlug: constant.DummyProduct,
+		AuthCtx: &model.AuthContext{
+			UserId:    constant.DummyIdInt,
+			CompanyId: constant.DummyIdInt,
+			RoleId:    constant.DummyIdInt,
+		},
+	}
+
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
 		mockData := model.AifcoreAPIResponse[any]{
 			Success: true,
@@ -273,7 +291,7 @@ func TestCallGetProCatJobDetailAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetJobDetailAPI(&logFilter{})
+		result, err := repo.GetJobDetailAPI(filter)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -284,10 +302,10 @@ func TestCallGetProCatJobDetailAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.GetJobDetailAPI(&logFilter{})
+		_, err := repo.GetJobDetailAPI(filter)
 
 		assert.Error(t, err)
 	})
@@ -297,7 +315,7 @@ func TestCallGetProCatJobDetailAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		_, err := repo.GetJobDetailAPI(&logFilter{})
+		_, err := repo.GetJobDetailAPI(filter)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -312,7 +330,7 @@ func TestCallGetProCatJobDetailAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetJobDetailAPI(&logFilter{})
+		result, err := repo.GetJobDetailAPI(filter)
 
 		assert.Nil(t, result)
 		assert.Error(t, err)
@@ -321,6 +339,15 @@ func TestCallGetProCatJobDetailAPI(t *testing.T) {
 }
 
 func TestCallGetProCatJobDetailsAPI(t *testing.T) {
+	filter := &logFilter{
+		ProductSlug: constant.DummyProduct,
+		AuthCtx: &model.AuthContext{
+			UserId:    constant.DummyIdInt,
+			CompanyId: constant.DummyIdInt,
+			RoleId:    constant.DummyIdInt,
+		},
+	}
+
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
 		mockData := model.AifcoreAPIResponse[any]{
 			Success: true,
@@ -338,7 +365,7 @@ func TestCallGetProCatJobDetailsAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetJobsSummaryAPI(&logFilter{})
+		result, err := repo.GetJobsSummaryAPI(filter)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -349,10 +376,10 @@ func TestCallGetProCatJobDetailsAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.GetJobsSummaryAPI(&logFilter{})
+		_, err := repo.GetJobsSummaryAPI(filter)
 
 		assert.Error(t, err)
 	})
@@ -362,7 +389,7 @@ func TestCallGetProCatJobDetailsAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		_, err := repo.GetJobsSummaryAPI(&logFilter{})
+		_, err := repo.GetJobsSummaryAPI(filter)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -377,7 +404,7 @@ func TestCallGetProCatJobDetailsAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetJobsSummaryAPI(&logFilter{})
+		result, err := repo.GetJobsSummaryAPI(filter)
 
 		assert.Nil(t, result)
 		assert.Error(t, err)

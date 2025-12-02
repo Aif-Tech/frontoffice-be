@@ -170,7 +170,7 @@ func (ctrl *controller) RefreshAccessToken(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := setTokenCookie(c, "aif_token", accessToken, ctrl.cfg.Env.JwtExpiresMinutes); err != nil {
+	if err := setTokenCookie(c, "aif_token", accessToken, ctrl.cfg.App.JwtExpiresMinutes); err != nil {
 		return apperror.Internal("failed to set access token cookie", err)
 	}
 
@@ -195,12 +195,12 @@ func (ctrl *controller) Login(c *fiber.Ctx) error {
 	const refreshCookieName = "aif_refresh_token"
 
 	// Set access token cookie
-	if err := setTokenCookie(c, accessCookieName, accessToken, ctrl.cfg.Env.JwtExpiresMinutes); err != nil {
+	if err := setTokenCookie(c, accessCookieName, accessToken, ctrl.cfg.App.JwtExpiresMinutes); err != nil {
 		return apperror.Internal("failed to set access token cookie", err)
 	}
 
 	// Set refresh token cookie
-	if err := setTokenCookie(c, refreshCookieName, refreshToken, ctrl.cfg.Env.JwtRefreshTokenExpiresMinutes); err != nil {
+	if err := setTokenCookie(c, refreshCookieName, refreshToken, ctrl.cfg.App.JwtRefreshTokenExpiresMinutes); err != nil {
 		return apperror.Internal("failed to set refresh token cookie", err)
 	}
 

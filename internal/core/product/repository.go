@@ -29,7 +29,7 @@ type Repository interface {
 }
 
 func (repo *repository) GetProductAPI(slug string) (*productResponseData, error) {
-	url := fmt.Sprintf("%s/api/core/product/slug/%s", repo.cfg.Env.AifcoreHost, slug)
+	url := fmt.Sprintf("%s/api/core/product/slug/%s", repo.cfg.App.AifcoreHost, slug)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

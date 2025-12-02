@@ -10,7 +10,7 @@ import (
 )
 
 func (repo *repository) CreateLogScoreezyAPI(payload *LogTransScoreezy) error {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy", repo.cfg.App.AifcoreHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -39,7 +39,7 @@ func (repo *repository) CreateLogScoreezyAPI(payload *LogTransScoreezy) error {
 }
 
 func (repo *repository) GetLogsScoreezyAPI() ([]*LogTransScoreezy, error) {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/list", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/list", repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -63,7 +63,7 @@ func (repo *repository) GetLogsScoreezyAPI() ([]*LogTransScoreezy, error) {
 }
 
 func (repo *repository) GetLogsScoreezyByDateAPI(companyId, date string) ([]*LogTransScoreezy, error) {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/by", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/by", repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -92,7 +92,7 @@ func (repo *repository) GetLogsScoreezyByDateAPI(companyId, date string) ([]*Log
 }
 
 func (repo *repository) GetLogsScoreezyByDateRangeAPI(companyId, startDate, endDate string) ([]*LogTransScoreezy, error) {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/range", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/range", repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -122,7 +122,7 @@ func (repo *repository) GetLogsScoreezyByDateRangeAPI(companyId, startDate, endD
 }
 
 func (repo *repository) GetLogsScoreezyByMonthAPI(companyId, month string) ([]*LogTransScoreezy, error) {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/month", repo.cfg.Env.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/month", repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

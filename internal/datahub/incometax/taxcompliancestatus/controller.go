@@ -36,7 +36,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	result, err := ctrl.svc.TaxComplianceStatus(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
+	result, err := ctrl.svc.TaxComplianceStatus(authCtx, reqBody)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	if err := ctrl.svc.BulkTaxComplianceStatus(authCtx.APIKey, authCtx.QuotaTypeStr(), authCtx.UserId, authCtx.CompanyId, file); err != nil {
+	if err := ctrl.svc.BulkTaxComplianceStatus(authCtx, file); err != nil {
 		return err
 	}
 

@@ -4,9 +4,10 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"log"
 	"mime/multipart"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 func ParseCSVFile(file *multipart.FileHeader, expectedHeaders []string) ([][]string, error) {
@@ -16,7 +17,9 @@ func ParseCSVFile(file *multipart.FileHeader, expectedHeaders []string) ([][]str
 	}
 	defer func() {
 		if cerr := f.Close(); cerr != nil {
-			log.Printf("failed to close file: %v", cerr)
+			log.Error().
+				Err(cerr).
+				Msg("failed to close file")
 		}
 	}()
 

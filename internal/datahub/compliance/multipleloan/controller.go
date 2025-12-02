@@ -1,7 +1,6 @@
 package multipleloan
 
 import (
-	"errors"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
@@ -38,7 +37,7 @@ func (ctrl *controller) MultipleLoan(c *fiber.Ctx) error {
 
 	slug := c.Params("product_slug")
 
-	multipleLoanRes, err := ctrl.svc.MultipleLoan(authCtx.APIKey, slug, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
+	multipleLoanRes, err := ctrl.svc.MultipleLoan(authCtx, slug, reqBody)
 	if err != nil {
 		return err
 	}
@@ -59,7 +58,7 @@ func (ctrl *controller) BulkMultipleLoan(c *fiber.Ctx) error {
 
 	slug := c.Params("product_slug")
 
-	if err := ctrl.svc.BulkMultipleLoan(authCtx.APIKey, authCtx.QuotaTypeStr(), slug, authCtx.UserId, authCtx.CompanyId, file); err != nil {
+	if err := ctrl.svc.BulkMultipleLoan(authCtx, slug, file); err != nil {
 		return err
 	}
 
@@ -67,18 +66,4 @@ func (ctrl *controller) BulkMultipleLoan(c *fiber.Ctx) error {
 		constant.Success,
 		nil,
 	))
-}
-
-var productSlugMap = map[string]string{
-	"7d-multiple-loan":  constant.SlugMultipleLoan7Days,
-	"30d-multiple-loan": constant.SlugMultipleLoan30Days,
-	"90d-multiple-loan": constant.SlugMultipleLoan90Days,
-}
-
-func mapProductSlug(slug string) (string, error) {
-	if val, ok := productSlugMap[slug]; ok {
-		return val, nil
-	}
-
-	return "", errors.New("unsupported product slug")
 }

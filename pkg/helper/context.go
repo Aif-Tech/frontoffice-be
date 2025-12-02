@@ -3,34 +3,11 @@ package helper
 import (
 	"fmt"
 	"front-office/pkg/common/constant"
+	"front-office/pkg/common/model"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
-
-type AuthContext struct {
-	UserId    uint
-	CompanyId uint
-	RoleId    uint
-	QuotaType uint
-	APIKey    string
-}
-
-func (a *AuthContext) UserIdStr() string {
-	return strconv.FormatUint(uint64(a.UserId), 10)
-}
-
-func (a *AuthContext) CompanyIdStr() string {
-	return strconv.FormatUint(uint64(a.CompanyId), 10)
-}
-
-func (a *AuthContext) RoleIdStr() string {
-	return strconv.FormatUint(uint64(a.RoleId), 10)
-}
-
-func (a *AuthContext) QuotaTypeStr() string {
-	return strconv.FormatUint(uint64(a.QuotaType), 10)
-}
 
 func GetUintLocal(c *fiber.Ctx, key string) (uint, error) {
 	val, ok := c.Locals(key).(uint)
@@ -59,7 +36,7 @@ func GetUintLocalStr(c *fiber.Ctx, key string) (string, error) {
 	return strconv.FormatUint(uint64(val), 10), nil
 }
 
-func GetAuthContext(c *fiber.Ctx) (*AuthContext, error) {
+func GetAuthContext(c *fiber.Ctx) (*model.AuthContext, error) {
 	userId, ok := c.Locals(constant.UserId).(uint)
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing user id")
@@ -85,7 +62,7 @@ func GetAuthContext(c *fiber.Ctx) (*AuthContext, error) {
 		return nil, fmt.Errorf("invalid or missing quota type")
 	}
 
-	return &AuthContext{
+	return &model.AuthContext{
 		UserId:    userId,
 		CompanyId: companyId,
 		RoleId:    roleID,

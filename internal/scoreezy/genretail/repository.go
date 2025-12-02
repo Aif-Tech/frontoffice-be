@@ -43,7 +43,7 @@ type Repository interface {
 }
 
 func (repo *repository) GenRetailV3API(memberId, jobId string, payload *genRetailRequest) (*model.ScoreezyAPIResponse[dataGenRetailV3], error) {
-	url := fmt.Sprintf("%s/api/score/genretail/v3", repo.cfg.Env.ScoreezyHost)
+	url := fmt.Sprintf("%s/api/score/genretail/v3", repo.cfg.App.ScoreezyHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
@@ -72,7 +72,7 @@ func (repo *repository) GenRetailV3API(memberId, jobId string, payload *genRetai
 }
 
 func (repo *repository) fetchLogsAPI(path string, query map[string]string) (*model.AifcoreAPIResponse[[]*logTransScoreezy], error) {
-	url := fmt.Sprintf("%s%s", repo.cfg.Env.AifcoreHost, path)
+	url := fmt.Sprintf("%s%s", repo.cfg.App.AifcoreHost, path)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -129,7 +129,7 @@ func (repo *repository) GetLogsByRangeDateAPI(filter *filterLogs) (*model.Aifcor
 }
 
 func (repo *repository) GetLogByTrxIdAPI(filter *filterLogs) (*logTransScoreezy, error) {
-	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/%s", repo.cfg.Env.AifcoreHost, filter.TrxId)
+	url := fmt.Sprintf("%s/api/core/logging/transaction/scoreezy/%s", repo.cfg.App.AifcoreHost, filter.TrxId)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

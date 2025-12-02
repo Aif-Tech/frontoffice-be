@@ -38,7 +38,7 @@ type Repository interface {
 }
 
 func (repo *repository) GetActivationTokenAPI(token string) (*MstActivationToken, error) {
-	url := fmt.Sprintf(`%v/api/core/member/activation-tokens/%v`, repo.cfg.Env.AifcoreHost, token)
+	url := fmt.Sprintf(`%v/api/core/member/activation-tokens/%v`, repo.cfg.App.AifcoreHost, token)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -62,7 +62,7 @@ func (repo *repository) GetActivationTokenAPI(token string) (*MstActivationToken
 }
 
 func (repo *repository) CreateActivationTokenAPI(memberId string, payload *CreateActivationTokenRequest) error {
-	url := fmt.Sprintf(`%v/api/core/member/%v/activation-tokens`, repo.cfg.Env.AifcoreHost, memberId)
+	url := fmt.Sprintf(`%v/api/core/member/%v/activation-tokens`, repo.cfg.App.AifcoreHost, memberId)
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {

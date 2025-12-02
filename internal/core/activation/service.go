@@ -25,7 +25,7 @@ type Service interface {
 }
 
 func (svc *service) ValidateActivationToken(authHeader string) (string, uint, error) {
-	secret := svc.cfg.Env.JwtSecretKey
+	secret := svc.cfg.App.JwtSecretKey
 
 	bearerToken := strings.Split(authHeader, " ")
 	if len(bearerToken) != 2 {

@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
@@ -12,18 +13,22 @@ import (
 	"front-office/pkg/helper"
 	"strconv"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
-func NewService(repo Repository, transactionRepo transaction.Repository) Service {
+func NewService(repo Repository, transactionRepo transaction.Repository, operationRepo operation.Repository) Service {
 	return &service{
 		repo,
 		transactionRepo,
+		operationRepo,
 	}
 }
 
 type service struct {
 	repo            Repository
 	transactionRepo transaction.Repository
+	operationRepo   operation.Repository
 }
 
 type Service interface {
@@ -157,40 +162,15 @@ func (svc *service) exportJobDetailsToCSV(
 		return "", apperror.MapRepoError(err, "failed to fetch job details")
 	}
 
-	headers := []string{}
-	var mapper func(*logTransProductCatalog) []string
+	cfg, ok := exportProductMap[filter.ProductSlug]
+	if !ok {
+		return "", apperror.BadRequest(constant.ErrUnsupportedProduct)
+	}
 
-	switch filter.ProductSlug {
-	case constant.SlugLoanRecordChecker:
-		headers = constant.CSVExportHeaderLoanRecord
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapLoanRecordCheckerRow(filter.IsMasked, d)
-		}
-	case constant.SlugMultipleLoan7Days, constant.SlugMultipleLoan30Days, constant.SlugMultipleLoan90Days:
-		headers = constant.CSVExportHeaderMultipleLoan
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapMultipleLoanRow(filter.IsMasked, d)
-		}
-	case constant.SlugTaxComplianceStatus:
-		headers = constant.CSVExportHeaderTaxCompliance
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapTaxComplianceRow(filter.IsMasked, d)
-		}
-	case constant.SlugTaxScore:
-		headers = constant.CSVExportHeaderTaxScore
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapTaxScoreRow(filter.IsMasked, d)
-		}
-	case constant.SlugTaxVerificationDetail:
-		headers = constant.CSVExportHeaderTaxVerification
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapTaxVerificationRow(filter.IsMasked, d)
-		}
-	case constant.SlugNPWPVerification:
-		headers = constant.CSVExportHeaderNPWPVerification
-		mapper = func(d *logTransProductCatalog) []string {
-			return mapNPWPVerificationRow(filter.IsMasked, d)
-		}
+	headers := cfg.headers
+	eventName := cfg.event
+	mapper := func(d *logTransProductCatalog) []string {
+		return cfg.mapper(filter.IsMasked, d)
 	}
 
 	if includeDate {
@@ -204,6 +184,18 @@ func (svc *service) exportJobDetailsToCSV(
 	}
 
 	filename := formatCSVFileName("job_detail", filter.StartDate, filter.EndDate, filter.JobId)
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  filter.AuthCtx.UserId,
+		CompanyId: filter.AuthCtx.CompanyId,
+		Action:    eventName,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", eventName).
+			Msg("failed to add operation log")
+	}
+
 	return filename, nil
 }
 
@@ -280,6 +272,86 @@ func withDateColumn(mapper rowMapper) rowMapper {
 
 		return append([]string{date}, row...)
 	}
+}
+
+type exportProductConfig struct {
+	headers []string
+	event   string
+	mapper  func(isMasked bool, d *logTransProductCatalog) []string
+}
+
+var exportProductMap = map[string]exportProductConfig{
+	// Loan Record
+	constant.SlugLoanRecordChecker: {
+		headers: constant.CSVExportHeaderLoanRecord,
+		event:   constant.EventLoanRecordDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapLoanRecordCheckerRow(isMasked, d)
+		},
+	},
+
+	// Multiple Loan 7D
+	constant.Slug7DaysMultipleLoan: {
+		headers: constant.CSVExportHeaderMultipleLoan,
+		event:   constant.Event7DMLDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapMultipleLoanRow(isMasked, d)
+		},
+	},
+
+	// Multiple Loan 30D
+	constant.Slug30DaysMultipleLoan: {
+		headers: constant.CSVExportHeaderMultipleLoan,
+		event:   constant.Event30DMLDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapMultipleLoanRow(isMasked, d)
+		},
+	},
+
+	// Multiple Loan 90D
+	constant.Slug90DaysMultipleLoan: {
+		headers: constant.CSVExportHeaderMultipleLoan,
+		event:   constant.Event90DMLDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapMultipleLoanRow(isMasked, d)
+		},
+	},
+
+	// Tax Compliance Status
+	constant.SlugTaxComplianceStatus: {
+		headers: constant.CSVExportHeaderTaxCompliance,
+		event:   constant.EventPTaxComplianceDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapTaxComplianceRow(isMasked, d)
+		},
+	},
+
+	// Tax Score
+	constant.SlugTaxScore: {
+		headers: constant.CSVExportHeaderTaxScore,
+		event:   constant.EventTaxScoreDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapTaxScoreRow(isMasked, d)
+		},
+	},
+
+	// Tax Verification Detail
+	constant.SlugTaxVerificationDetail: {
+		headers: constant.CSVExportHeaderTaxVerification,
+		event:   constant.EventTaxVerificationDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapTaxVerificationRow(isMasked, d)
+		},
+	},
+
+	// NPWP Verification
+	constant.SlugNPWPVerification: {
+		headers: constant.CSVExportHeaderNPWPVerification,
+		event:   constant.EventNPWPVerificationDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapNPWPVerificationRow(isMasked, d)
+		},
+	},
 }
 
 func mapLoanRecordCheckerRow(isMasked bool, d *logTransProductCatalog) []string {

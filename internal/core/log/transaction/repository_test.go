@@ -25,7 +25,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{AifcoreHost: constant.MockHost},
+		App: &application.Environment{AifcoreHost: constant.MockHost},
 	}, mockClient, nil)
 
 	return repo, mockClient

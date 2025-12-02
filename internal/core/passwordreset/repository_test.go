@@ -33,7 +33,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{AifcoreHost: constant.MockHost},
+		App: &application.Environment{AifcoreHost: constant.MockHost},
 	}, mockClient, nil)
 
 	return repo, mockClient
@@ -68,7 +68,7 @@ func TestCreatePasswordResetTokenAPI(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockHost},
+			App: &application.Environment{AifcoreHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		err := repo.CreatePasswordResetTokenAPI(constant.DummyMemberId, payload)
@@ -79,7 +79,7 @@ func TestCreatePasswordResetTokenAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		err := repo.CreatePasswordResetTokenAPI(constant.DummyMemberId, payload)
@@ -140,7 +140,7 @@ func TestGetPasswordResetTokenAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		result, err := repo.GetPasswordResetTokenAPI(constant.DummyToken)
@@ -202,7 +202,7 @@ func TestDeletePasswordResetTokenAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{AifcoreHost: constant.MockInvalidHost},
+			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		err := repo.DeletePasswordResetTokenAPI(constant.DummyId)

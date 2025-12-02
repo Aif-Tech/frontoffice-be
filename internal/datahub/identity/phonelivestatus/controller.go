@@ -43,7 +43,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	if err := ctrl.svc.PhoneLiveStatus(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody); err != nil {
+	if err := ctrl.svc.PhoneLiveStatus(authCtx, reqBody); err != nil {
 		return err
 	}
 
@@ -64,7 +64,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	if err := ctrl.svc.BulkPhoneLiveStatus(authCtx.APIKey, authCtx.UserIdStr(), authCtx.CompanyIdStr(), authCtx.QuotaTypeStr(), file); err != nil {
+	if err := ctrl.svc.BulkPhoneLiveStatus(authCtx, file); err != nil {
 		return err
 	}
 
@@ -155,7 +155,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 
 	var buf bytes.Buffer
 
-	filename, err := ctrl.svc.ExportJobDetails(filter, &buf)
+	filename, err := ctrl.svc.ExportJobDetails(authCtx.UserId, authCtx.CompanyId, filter, &buf)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (ctrl *controller) ExportJobsSummary(c *fiber.Ctx) error {
 	}
 
 	var buf bytes.Buffer
-	filename, err := ctrl.svc.ExportJobsSummary(filter, &buf)
+	filename, err := ctrl.svc.ExportJobsSummary(authCtx.UserId, authCtx.CompanyId, filter, &buf)
 	if err != nil {
 		return err
 	}

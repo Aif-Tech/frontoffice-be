@@ -37,7 +37,7 @@ type Repository interface {
 }
 
 func (repo *repository) TaxComplianceStatusAPI(apiKey, jobId string, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error) {
-	url := fmt.Sprintf("%s/product/incometax/tax-compliance-status", repo.cfg.Env.ProductCatalogHost)
+	url := fmt.Sprintf("%s/product/incometax/tax-compliance-status", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(reqBody)
 	if err != nil {

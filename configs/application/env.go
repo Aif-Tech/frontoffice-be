@@ -1,11 +1,10 @@
 package application
 
 import (
-	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog/log"
 )
 
 type Environment struct {
@@ -44,14 +43,18 @@ func GetEnvironment(key string) string {
 func LoadEnvironment() *Environment {
 	env := os.Getenv("FO_APP_ENV")
 	if env == "" {
-		fmt.Println("No App env")
+		log.Warn().
+			Str("env_var", "FO_APP_ENV").
+			Msg("environment variable not set, fallback to local")
 		env = "local"
 	}
 
 	if env == "local" {
 		err := godotenv.Load(".env")
 		if err != nil {
-			log.Fatalln("Error loading .env file")
+			log.Fatal().
+				Err(err).
+				Msg("error loading .env file")
 		}
 	}
 

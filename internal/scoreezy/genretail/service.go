@@ -14,14 +14,13 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
-	"log"
 	"mime/multipart"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	logger "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/usepzaka/validator"
 )
 
@@ -30,7 +29,7 @@ func NewService(
 	gradeRepo grade.Repository,
 	transRepo transaction.Repository,
 	productRepo product.Repository,
-	logRepo operation.Repository,
+	operationRepo operation.Repository,
 	jobRepo job.Repository,
 	memberRepo member.Repository,
 ) Service {
@@ -39,20 +38,20 @@ func NewService(
 		gradeRepo,
 		transRepo,
 		productRepo,
-		logRepo,
+		operationRepo,
 		jobRepo,
 		memberRepo,
 	}
 }
 
 type service struct {
-	repo        Repository
-	gradeRepo   grade.Repository
-	transRepo   transaction.Repository
-	productRepo product.Repository
-	logRepo     operation.Repository
-	jobRepo     job.Repository
-	memberRepo  member.Repository
+	repo          Repository
+	gradeRepo     grade.Repository
+	transRepo     transaction.Repository
+	productRepo   product.Repository
+	operationRepo operation.Repository
+	jobRepo       job.Repository
+	memberRepo    member.Repository
 }
 
 const (
@@ -105,15 +104,15 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 		return nil, apperror.MapRepoError(err, "failed to process gen retail v3")
 	}
 
-	addLogRequest := &operation.AddLogRequest{
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  memberId,
 		CompanyId: companyId,
-		Action:    constant.EventCalculateScore,
-	}
-
-	err = svc.logRepo.AddLogOperation(addLogRequest)
-	if err != nil {
-		log.Println("Failed to log operation for calculate score")
+		Action:    constant.EventScoreezySingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventScoreezySingleReq).
+			Msg("failed to add operation log")
 	}
 
 	return result, err
@@ -216,7 +215,18 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 	close(errChan)
 
 	for err := range errChan {
-		logger.Error().Err(err).Msg("error during bulk gen retail processing")
+		log.Error().Err(err).Msg("error during bulk gen retail processing")
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  memberId,
+		CompanyId: companyId,
+		Action:    constant.EventScoreezyBulkReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventScoreezyBulkReq).
+			Msg("failed to add operation log")
 	}
 
 	return jobRes.JobId, nil
@@ -342,6 +352,29 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	}
 
 	filename := formatCSVFileName("job_summary", filter.StartDate, filter.EndDate)
+
+	companyIdUint, err := strconv.ParseUint(filter.CompanyId, 10, 32)
+	if err != nil {
+		return "", apperror.Internal("failed to parse company id", err)
+	}
+
+	var action string
+	if len(result.Data) > 1 {
+		action = constant.EventScoreezyBulkDownload
+	} else {
+		action = constant.EventScoreezySingleDownload
+	}
+
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  filter.MemberId,
+		CompanyId: uint(companyIdUint),
+		Action:    action,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", action).
+			Msg("failed to add operation log")
+	}
 
 	return filename, nil
 }

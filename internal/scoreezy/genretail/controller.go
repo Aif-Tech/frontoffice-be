@@ -161,6 +161,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 	filter := &filterLogs{
 		Masked:    masked,
 		CompanyId: authCtx.CompanyIdStr(),
+		MemberId:  authCtx.UserId,
 		JobId:     c.Query(constant.JobId),
 		StartDate: c.Query(constant.StartDate),
 		EndDate:   c.Query(constant.EndDate),

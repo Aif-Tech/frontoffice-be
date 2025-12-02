@@ -33,7 +33,7 @@ func setupMockRepo(t *testing.T, response *http.Response, err error) (Repository
 	mockClient.On("Do", mock.Anything).Return(response, err)
 
 	repo := NewRepository(&application.Config{
-		Env: &application.Environment{ProductCatalogHost: constant.MockHost},
+		App: &application.Environment{ProductCatalogHost: constant.MockHost},
 	}, mockClient, nil)
 
 	return repo, mockClient
@@ -70,7 +70,7 @@ func TestCallMultipleLoan7DaysAPI(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		result, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
@@ -82,7 +82,7 @@ func TestCallMultipleLoan7DaysAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
@@ -148,7 +148,7 @@ func TestCallMultipleLoan30DaysAPI(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		result, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
@@ -160,7 +160,7 @@ func TestCallMultipleLoan30DaysAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
@@ -226,7 +226,7 @@ func TestCallMultipleLoan90DaysAPI(t *testing.T) {
 		}
 
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
 		result, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
@@ -238,7 +238,7 @@ func TestCallMultipleLoan90DaysAPI(t *testing.T) {
 	t.Run(constant.TestCaseNewRequestError, func(t *testing.T) {
 		mockClient := new(MockClient)
 		repo := NewRepository(&application.Config{
-			Env: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
+			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
 		_, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})

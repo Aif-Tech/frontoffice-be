@@ -93,24 +93,78 @@ func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
 
 func mapEventKeyword(input string) (string, bool) {
 	eventMap := map[string]string{
-		"sign_in":                     constant.EventSignIn,
-		"sign_out":                    constant.EventSignOut,
-		"change_password":             constant.EventChangePassword,
-		"add_new_user":                constant.EventRegisterMember,
-		"request_password_reset":      constant.EventRequestPasswordReset,
-		"password_reset":              constant.EventPasswordReset,
-		"update_profile_account":      constant.EventUpdateProfile,
-		"updates_user_data":           constant.EventUpdateUserData,
-		"activate_user":               constant.EventActivateUser,
-		"inactivate_user":             constant.EventInactivateUser,
-		"calculate_score":             constant.EventCalculateScore,
-		"download_history_hit":        constant.EventDownloadScoreHistory,
-		"change_billing_information":  constant.EventChangeBillingInformation,
-		"topup_balance":               constant.EventTopupBalance,
-		"submit_payment_confirmation": constant.EventSubmitPaymentConfirmation,
+		// auth
+		"sign-in":  constant.EventSignIn,
+		"sign-out": constant.EventSignOut,
+
+		// user
+		"change-password":        constant.EventChangePassword,
+		"register-member":        constant.EventRegisterMember,
+		"request-password-reset": constant.EventRequestPasswordReset,
+		"password-reset":         constant.EventPasswordReset,
+		"update-profile":         constant.EventUpdateProfile,
+		"update-user-data":       constant.EventUpdateUserData,
+		"activate-user":          constant.EventActivateUser,
+		"inactivate-user":        constant.EventInactivateUser,
+
+		// balance
+		"update-billing-information":  constant.EventChangeBillingInformation,
+		"topup-balance":               constant.EventTopupBalance,
+		"submit-payment-confirmation": constant.EventSubmitPaymentConfirmation,
+
+		// scoreezy
+		"scoreezy-single-request":         constant.EventScoreezySingleReq,
+		"scoreezy-bulk-request":           constant.EventScoreezyBulkReq,
+		"scoreezy-single-download-result": constant.EventScoreezySingleDownload,
+		"scoreezy-bulk-download-result'":  constant.EventScoreezyBulkDownload,
+
+		// loan record checker
+		"loan-record-single-request":  constant.EventLoanRecordSingleReq,
+		"loan-record-bulk-request":    constant.EventLoanRecordBulkReq,
+		"loan-record-download-result": constant.EventLoanRecordDownload,
+
+		// 7 days multiple loan
+		"7dml-single-request":  constant.Event7DMLSingleReq,
+		"7dml-bulk-request":    constant.Event7DMLBulkReq,
+		"7dml-download-result": constant.Event7DMLDownload,
+
+		// 30 days multiple loan
+		"30dml-single-request":  constant.Event30DMLSingleReq,
+		"30dml-bulk-request":    constant.Event30DMLBulkReq,
+		"30dml-download-result": constant.Event30DMLDownload,
+
+		// 90 days multiple loan
+		"90dml-single-request":  constant.Event90DMLSingleReq,
+		"90dml-bulk-request":    constant.Event90DMLBulkReq,
+		"90dml-download-result": constant.Event90DMLDownload,
+
+		// npwp verification
+		"npwp-verification-single-request":  constant.EventNPWPVerificationSingleReq,
+		"npwp-verification-bulk-request":    constant.EventNPWPVerificationBulkReq,
+		"npwp-verification-download-result": constant.EventNPWPVerificationDownload,
+
+		// phone live status
+		"phone-live-single-request":  constant.EventPhoneLiveSingleReq,
+		"phone-live-bulk-request":    constant.EventPhoneLiveBulkReq,
+		"phone-live-download-result": constant.EventPhoneLiveDownload,
+
+		// tax compliance status
+		"tax-compliance-single-request":  constant.EventTaxComplianceSingleReq,
+		"tax-compliance-bulk-request":    constant.EventTaxComplianceBulkReq,
+		"tax-compliance-download-result": constant.EventPTaxComplianceDownload,
+
+		// tax score
+		"tax-score-single-request":  constant.EventTaxScoreSingleReq,
+		"tax-score-bulk-request":    constant.EventTaxScoreBulkReq,
+		"tax-score-download-result": constant.EventTaxScoreDownload,
+
+		// tax verification detail
+		"tax-verification-single-request":  constant.EventTaxVerificationSingleReq,
+		"tax-verification-bulk-request":    constant.EventTaxVerificationBulkReq,
+		"tax-verification-download-result": constant.EventTaxVerificationDownload,
 	}
 
-	normalized := strings.ToLower(strings.ReplaceAll(input, " ", "_"))
+	normalized := strings.ToLower(input)
 	event, ok := eventMap[normalized]
 	return event, ok
 }
