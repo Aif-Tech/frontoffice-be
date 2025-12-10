@@ -6,6 +6,7 @@ import (
 	"front-office/internal/datahub/compliance/multipleloan"
 	"front-office/internal/datahub/identity/npwpverification"
 	"front-office/internal/datahub/identity/phonelivestatus"
+	"front-office/internal/datahub/identity/recyclenumber"
 	"front-office/internal/datahub/incometax/taxcompliancestatus"
 	"front-office/internal/datahub/incometax/taxscore"
 	"front-office/internal/datahub/incometax/taxverificationdetail"
@@ -34,5 +35,6 @@ func SetupInit(routeAPI fiber.Router, cfg *application.Config) {
 	identityGroupAPI := routeAPI.Group("identity")
 	phonelivestatus.SetupInit(identityGroupAPI, cfg, client)
 	npwpverification.SetupInit(identityGroupAPI, cfg, client)
+	recyclenumber.SetupInit(identityGroupAPI, cfg, client)
 	job.SetupInit(identityGroupAPI, cfg, client)
 }

@@ -70,4 +70,7 @@ const (
 	EventTaxVerificationSingleReq = "tax verification single request"
 	EventTaxVerificationBulkReq   = "tax verification bulk request"
 	EventTaxVerificationDownload  = "tax verification download result"
+
+	// recycle number
+	EventRecycleNumberSingleReq = "recycle number single request"
 )
