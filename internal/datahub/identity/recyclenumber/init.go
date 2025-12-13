@@ -26,4 +26,5 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 
 	recycleNumberGroup := apiGroup.Group("recycle-number")
 	recycleNumberGroup.Post("/single-request", middleware.Auth(), middleware.ValidateRequest(recycleNumberRequest{}), middleware.GetJWTPayloadFromCookie(), controller.SingleRequest)
+	recycleNumberGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(), controller.BulkSearch)
 }

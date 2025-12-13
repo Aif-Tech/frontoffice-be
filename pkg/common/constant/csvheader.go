@@ -75,6 +75,11 @@ var CSVExportHeaderPhoneLive = []string{
 	CSVHeaderDescription,
 }
 
+var CSVTemplateHeaderRecycleNumber = []string{
+	CSVHeaderPhone,
+	CSVHeaderLoanNumber,
+}
+
 var CSVExportHeaderLoanRecord = []string{
 	CSVHeaderLoanNumber,
 	CSVHeaderName,

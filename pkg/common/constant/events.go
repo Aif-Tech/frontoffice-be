@@ -56,6 +56,10 @@ const (
 	EventPhoneLiveBulkReq   = "phone live status bulk request"
 	EventPhoneLiveDownload  = "phone live status download result"
 
+	// recycle number
+	EventRecycleNumberSingleReq = "recycle number single request"
+	EventRecycleNumberBulkReq   = "recycle number bulk request"
+
 	// tax compliance status
 	EventTaxComplianceSingleReq = "tax compliance single request"
 	EventTaxComplianceBulkReq   = "tax compliance bulk request"
@@ -70,7 +74,4 @@ const (
 	EventTaxVerificationSingleReq = "tax verification single request"
 	EventTaxVerificationBulkReq   = "tax verification bulk request"
 	EventTaxVerificationDownload  = "tax verification download result"
-
-	// recycle number
-	EventRecycleNumberSingleReq = "recycle number single request"
 )
