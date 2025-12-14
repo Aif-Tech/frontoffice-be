@@ -234,6 +234,7 @@ var productSlugMap = map[string]string{
 	"tax-verification-detail": constant.SlugTaxVerificationDetail,
 	"npwp-verification":       constant.SlugNPWPVerification,
 	"gen-retail":              constant.SlugGenRetailV3,
+	"recycle-number":          constant.SlugRecycleNumber,
 }
 
 func mapProductSlug(slug string) (string, error) {

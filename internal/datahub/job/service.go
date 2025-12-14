@@ -84,6 +84,54 @@ func (svc *service) UpdateJobAPI(jobId string, req *UpdateJobRequest) error {
 }
 
 func (svc *service) GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error) {
+	// todo: remove
+	dummyJobs := []job{
+		{
+			Id:           1,
+			ProductId:    1,
+			MemberId:     1,
+			CompanyId:    1,
+			Total:        2,
+			SuccessCount: 2,
+			Status:       "done",
+			StartTime:    "2025-12-12 17:32:39",
+			EndTime:      "2025-12-12 17:32:39",
+		},
+		{
+			Id:           2,
+			ProductId:    1,
+			MemberId:     1,
+			CompanyId:    1,
+			Total:        5,
+			SuccessCount: 5,
+			Status:       "done",
+			StartTime:    "2025-12-12 07:32:12",
+			EndTime:      "2025-12-12 07:32:13",
+		},
+		{
+			Id:           3,
+			ProductId:    1,
+			MemberId:     1,
+			CompanyId:    1,
+			Total:        4,
+			SuccessCount: 4,
+			Status:       "done",
+			StartTime:    "2025-12-12 14:23:15",
+			EndTime:      "2025-12-12 14:23:15",
+		},
+	}
+
+	if filter.ProductSlug == constant.SlugRecycleNumber {
+		return &model.AifcoreAPIResponse[*jobListResponse]{
+			Success: true,
+			Message: "success",
+			Data: &jobListResponse{
+				Jobs:      dummyJobs,
+				TotalData: int64(len(dummyJobs)),
+			},
+		}, nil
+	}
+
 	result, err := svc.repo.GetJobsAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch jobs")
