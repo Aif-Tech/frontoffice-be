@@ -238,6 +238,61 @@ func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[
 }
 
 func (svc *service) GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
+	// todo: remove
+	dummyJobDetails := []*logTransProductCatalog{
+		{
+			MemberID:  1,
+			CompanyID: 1,
+			JobID:     1,
+			ProductID: 1,
+			LoanNo:    "dummy",
+			Status:    "success",
+			Input: &logTransInput{
+				PhoneNumber: helper.StringPtr("085755700000"),
+				LoanNo:      "dummy",
+			},
+			Data: &logTransData{
+				Status: helper.StringPtr("phone number has never been recycled"),
+			},
+			PricingStrategy: "FREE",
+			TransactionId:   constant.DummyTransactionId,
+			RefTransProductCatalog: map[string]any{
+				"data": map[string]any{
+					"status": "phone number has never been recycled",
+				},
+				"datetime": "2025-12-12 09:13:09",
+				"input": map[string]any{
+					"loan_no":      "dummy",
+					"phone_number": "08575***000",
+				},
+				"transaction_id": constant.DummyTransactionId,
+			},
+		},
+	}
+
+	if filter.ProductSlug == constant.SlugRecycleNumber {
+		return &model.AifcoreAPIResponse[*jobDetailResponse]{
+			Success: true,
+			Message: "success",
+			Data: &jobDetailResponse{
+				JobDetails:                 dummyJobDetails,
+				TotalData:                  int64(len(dummyJobDetails)),
+				TotalDataPercentageSuccess: 1,
+				TotalDataPercentageFail:    0,
+				TotalDataPercentageError:   0,
+			},
+			Meta: &model.Meta{
+				Message:   "Success",
+				Total:     1,
+				Page:      1,
+				Visible:   1,
+				StartData: 1,
+				EndData:   1,
+				Size:      10,
+			},
+		}, nil
+	}
+
 	result, err := svc.repo.GetJobsSummaryAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch job detail")
