@@ -143,6 +143,14 @@ var CSVExportHeaderNPWPVerification = []string{
 	CSVHeaderDescription,
 }
 
+var CSVExportHeaderRecycleNumber = []string{
+	CSVHeaderLoanNumber,
+	CSVHeaderPhone,
+	CSVHeaderDataStatus,
+	CSVHeaderStatus,
+	CSVHeaderDescription,
+}
+
 var CSVExportHeaderGenRetail = []string{
 	// CSVHeaderDateCreated,
 	CSVHeaderLoanNumber,

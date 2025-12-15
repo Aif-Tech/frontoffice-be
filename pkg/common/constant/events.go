@@ -59,6 +59,7 @@ const (
 	// recycle number
 	EventRecycleNumberSingleReq = "recycle number single request"
 	EventRecycleNumberBulkReq   = "recycle number bulk request"
+	EventRecycleNumberDownload  = "recycle number download result"
 
 	// tax compliance status
 	EventTaxComplianceSingleReq = "tax compliance single request"

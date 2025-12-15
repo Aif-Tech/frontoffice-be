@@ -536,6 +536,15 @@ var exportProductMap = map[string]exportProductConfig{
 			return mapNPWPVerificationRow(isMasked, d)
 		},
 	},
+
+	// Recycle Number
+	constant.SlugRecycleNumber: {
+		headers: constant.CSVExportHeaderRecycleNumber,
+		event:   constant.EventRecycleNumberDownload,
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapRecycleNumberRow(isMasked, d)
+		},
+	},
 }
 
 func mapLoanRecordCheckerRow(isMasked bool, d *logTransProductCatalog) []string {
@@ -774,6 +783,41 @@ func mapNPWPVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 		npwp,
 		name,
 		address,
+		status,
+		d.Status,
+		description,
+	}
+}
+
+func mapRecycleNumberRow(isMasked bool, d *logTransProductCatalog) []string {
+	var (
+		description string
+		status      string
+		phoneNumber string
+	)
+
+	if d.Message != nil {
+		description = *d.Message
+	}
+
+	if d.Data != nil {
+		status = *d.Data.Status
+	}
+
+	var ref refTransProductCatalog
+	if raw, err := json.Marshal(d.RefTransProductCatalog); err == nil {
+		_ = json.Unmarshal(raw, &ref)
+	}
+
+	if isMasked {
+		phoneNumber = ref.Input.PhoneNumber
+	} else {
+		phoneNumber = *d.Input.PhoneNumber
+	}
+
+	return []string{
+		d.Input.LoanNo,
+		phoneNumber,
 		status,
 		d.Status,
 		description,
