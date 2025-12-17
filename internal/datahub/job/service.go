@@ -328,11 +328,11 @@ func (svc *service) GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreA
 }
 
 func (svc *service) ExportJobDetails(filter *logFilter, buf *bytes.Buffer) (string, error) {
-	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobDetailAPI, false)
+	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobDetailAPI, false, false)
 }
 
 func (svc *service) ExportJobDetailsByDateRange(filter *logFilter, buf *bytes.Buffer) (string, error) {
-	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobsSummaryAPI, true)
+	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobsSummaryAPI, true, true)
 }
 
 func (svc *service) exportJobDetailsToCSV(
@@ -340,6 +340,7 @@ func (svc *service) exportJobDetailsToCSV(
 	buf *bytes.Buffer,
 	fetchFunc func(*logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error),
 	includeDate bool,
+	summary bool,
 ) (string, error) {
 	resp, err := fetchFunc(filter)
 	if err != nil {
@@ -352,7 +353,7 @@ func (svc *service) exportJobDetailsToCSV(
 	}
 
 	headers := cfg.headers
-	eventName := cfg.event
+	eventName := cfg.event(summary)
 	mapper := func(d *logTransProductCatalog) []string {
 		return cfg.mapper(filter.IsMasked, d)
 	}
@@ -460,7 +461,7 @@ func withDateColumn(mapper rowMapper) rowMapper {
 
 type exportProductConfig struct {
 	headers []string
-	event   string
+	event   func(summary bool) string
 	mapper  func(isMasked bool, d *logTransProductCatalog) []string
 }
 
@@ -468,7 +469,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Loan Record
 	constant.SlugLoanRecordChecker: {
 		headers: constant.CSVExportHeaderLoanRecord,
-		event:   constant.EventLoanRecordDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventLoanRecordDownloadSummary
+			}
+			return constant.EventLoanRecordDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapLoanRecordCheckerRow(isMasked, d)
 		},
@@ -477,7 +483,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 7D
 	constant.Slug7DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event7DMLDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.Event7DMLDownloadSummary
+			}
+			return constant.Event7DMLDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -486,7 +497,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 30D
 	constant.Slug30DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event30DMLDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.Event30DMLDownloadSummary
+			}
+			return constant.Event30DMLDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -495,7 +511,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 90D
 	constant.Slug90DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event90DMLDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.Event90DMLDownloadSummary
+			}
+			return constant.Event90DMLDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -504,7 +525,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Compliance Status
 	constant.SlugTaxComplianceStatus: {
 		headers: constant.CSVExportHeaderTaxCompliance,
-		event:   constant.EventPTaxComplianceDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventTaxComplianceDownloadSummary
+			}
+			return constant.EventTaxComplianceDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxComplianceRow(isMasked, d)
 		},
@@ -513,7 +539,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Score
 	constant.SlugTaxScore: {
 		headers: constant.CSVExportHeaderTaxScore,
-		event:   constant.EventTaxScoreDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventTaxScoreDownloadSummary
+			}
+			return constant.EventTaxScoreDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxScoreRow(isMasked, d)
 		},
@@ -522,7 +553,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Verification Detail
 	constant.SlugTaxVerificationDetail: {
 		headers: constant.CSVExportHeaderTaxVerification,
-		event:   constant.EventTaxVerificationDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventTaxVerificationDownloadSummary
+			}
+			return constant.EventTaxVerificationDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxVerificationRow(isMasked, d)
 		},
@@ -531,7 +567,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// NPWP Verification
 	constant.SlugNPWPVerification: {
 		headers: constant.CSVExportHeaderNPWPVerification,
-		event:   constant.EventNPWPVerificationDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventNPWPVerificationDownloadSummary
+			}
+			return constant.EventNPWPVerificationDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapNPWPVerificationRow(isMasked, d)
 		},
@@ -540,7 +581,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Recycle Number
 	constant.SlugRecycleNumber: {
 		headers: constant.CSVExportHeaderRecycleNumber,
-		event:   constant.EventRecycleNumberDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventRecycleNumberDownloadSummary
+			}
+			return constant.EventRecycleNumberDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapRecycleNumberRow(isMasked, d)
 		},
