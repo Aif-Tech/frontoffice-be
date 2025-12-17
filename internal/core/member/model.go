@@ -85,19 +85,20 @@ func SetPassword(password string) string {
 }
 
 type MemberParams struct {
-	Id        string
-	CompanyId string
-	Email     string
-	Username  string
-	Key       string
-	Page      string
-	Limit     string
-	Keyword   string
-	RoleName  string
-	RoleId    string
-	Status    string
-	StartDate string
-	EndDate   string
+	Id         string
+	CompanyId  string
+	Email      string
+	Username   string
+	Key        string
+	Page       string
+	Limit      string
+	Keyword    string
+	RoleName   string
+	RoleId     string
+	MailStatus string
+	Status     string
+	StartDate  string
+	EndDate    string
 }
 
 type QuotaParams struct {

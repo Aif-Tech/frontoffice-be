@@ -82,12 +82,14 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 	}
 
 	filter := &MemberParams{
-		CompanyId: authCtx.CompanyIdStr(),
-		Page:      c.Query(constant.Page, "1"),
-		Limit:     c.Query("limit", "10"),
-		Keyword:   c.Query("keyword", ""),
-		StartDate: c.Query("startDate", ""),
-		EndDate:   c.Query("endDate", ""),
+		CompanyId:  authCtx.CompanyIdStr(),
+		Page:       c.Query(constant.Page, "1"),
+		Limit:      c.Query("limit", "10"),
+		Keyword:    c.Query(constant.Keyword, ""),
+		MailStatus: c.Query(constant.MailStatus, ""),
+		RoleName:   c.Query(constant.Role, ""),
+		StartDate:  c.Query("startDate", ""),
+		EndDate:    c.Query("endDate", ""),
 	}
 
 	users, meta, err := ctrl.svc.GetMemberList(filter)
