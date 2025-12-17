@@ -514,7 +514,10 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 	}
 
 	if err := mailjet.SendConfirmationEmailPasswordChangeSuccess(user.Name, user.Email); err != nil {
-		return apperror.Internal("failed to send confirmation password change", err)
+		log.Warn().
+			Err(err).
+			Str("member_id", userId).
+			Msg("failed to send password change confirmation email")
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
