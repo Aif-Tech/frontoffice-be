@@ -33,6 +33,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 	role := strings.ToLower(c.Query("role"))
 	eventQuery := c.Query("event")
 	name := strings.ToLower(c.Query("name", ""))
+	sortBy := strings.ToLower(c.Query("sort_by", "desc"))
 	startDate := c.Query(constant.StartDate)
 	endDate := c.Query(constant.EndDate)
 
@@ -48,6 +49,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 		Role:      role,
 		Event:     mappedEvent,
 		Name:      name,
+		SortBy:    sortBy,
 		StartDate: startDate,
 		EndDate:   endDate,
 	}

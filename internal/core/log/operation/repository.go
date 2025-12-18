@@ -54,6 +54,7 @@ func (repo *repository) GetLogsOperationAPI(filter *logOperationFilter) (*model.
 	q.Add("name", filter.Name)
 	q.Add("role", filter.Role)
 	q.Add("event", filter.Event)
+	q.Add("sort_by", filter.SortBy)
 	q.Add(constant.StartDate, filter.StartDate)
 	q.Add(constant.EndDate, filter.EndDate)
 	req.URL.RawQuery = q.Encode()

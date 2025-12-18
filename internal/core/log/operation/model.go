@@ -35,6 +35,7 @@ type logOperationFilter struct {
 	Role      string
 	Event     string
 	Name      string
+	SortBy    string
 	StartDate string
 	EndDate   string
 }
