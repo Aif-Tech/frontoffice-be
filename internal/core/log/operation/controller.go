@@ -28,12 +28,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	page := c.Query(constant.Page, "1")
-	size := c.Query(constant.Size, "10")
-	role := strings.ToLower(c.Query("role"))
 	eventQuery := c.Query("event")
-	name := strings.ToLower(c.Query("name", ""))
-	sortBy := strings.ToLower(c.Query("sort_by", "desc"))
 	startDate := c.Query(constant.StartDate)
 	endDate := c.Query(constant.EndDate)
 
@@ -44,12 +39,13 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 
 	filter := &logOperationFilter{
 		CompanyId: authCtx.CompanyIdStr(),
-		Page:      page,
-		Size:      size,
-		Role:      role,
+		Page:      c.Query(constant.Page, "1"),
+		Size:      c.Query(constant.Size, "10"),
+		Role:      c.Query("role"),
 		Event:     mappedEvent,
-		Name:      name,
-		SortBy:    sortBy,
+		Name:      c.Query("name", ""),
+		SortBy:    strings.ToLower(c.Query("sort_by", "created_at")),
+		Order:     strings.ToLower(c.Query("order", "desc")),
 		StartDate: startDate,
 		EndDate:   endDate,
 	}
@@ -68,8 +64,6 @@ func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	page := c.Query(constant.Page, "1")
-	size := c.Query(constant.Size, "10")
 	startDate := c.Query(constant.StartDate)
 	endDate := c.Query((constant.EndDate))
 
@@ -78,9 +72,11 @@ func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
 	}
 
 	filter := &logRangeFilter{
-		Page:      page,
-		Size:      size,
+		Page:      c.Query(constant.Page, "1"),
+		Size:      c.Query(constant.Size, "10"),
 		CompanyId: authCtx.CompanyIdStr(),
+		SortBy:    strings.ToLower(c.Query("sort_by", "created_at")),
+		Order:     strings.ToLower(c.Query("order", "desc")),
 		StartDate: startDate,
 		EndDate:   endDate,
 	}

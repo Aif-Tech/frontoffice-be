@@ -31,6 +31,8 @@ const (
 	MailStatus = "mail_status"
 	Role       = "role"
 	Status     = "status"
+	SortBy     = "sort_by"
+	Order      = "order"
 
 	MockHost        = "http://mock-host"
 	MockInvalidHost = "http://[::1]:namedport"
