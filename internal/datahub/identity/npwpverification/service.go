@@ -74,7 +74,7 @@ func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVe
 			return err
 		}
 
-		return apperror.Internal("failed to process npwp verification", err)
+		return apperror.MapRepoError(err, "failed to process npwp verification")
 	}
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
@@ -216,10 +216,10 @@ func (svc *service) processNPWPVerification(params *npwpVerificationContext) err
 
 	_, err := svc.repo.NPWPVerificationAPI(params.APIKey, params.JobIdStr, params.Request)
 	if err != nil {
-		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+		// _ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
-		return apperror.Internal("failed to process npwp verification", err)
+		return apperror.MapRepoError(err, "failed to process npwp verification")
 	}
 
 	return nil
