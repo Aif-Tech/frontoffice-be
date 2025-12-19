@@ -819,7 +819,7 @@ func mapNPWPVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if isMasked {
-		npwp = ref.Input.NPWP
+		npwp = helper.MaskingHead(*d.Input.NPWP, 10)
 	} else {
 		npwp = *d.Input.NPWP
 	}

@@ -276,7 +276,10 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 			return apperror.MapRepoError(err, "failed to update member after email failure")
 		}
 
-		return apperror.Internal("failed to send activation email", err)
+		log.Warn().
+			Err(err).
+			Str("member_id", userIdStr).
+			Msg("failed to send activation email")
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
@@ -335,7 +338,10 @@ func (svc *service) RequestActivation(email string) error {
 	}
 
 	if err := mailjet.SendEmailActivation(email, token); err != nil {
-		return apperror.Internal("failed to send activation email", err)
+		log.Warn().
+			Err(err).
+			Str("member_id", userIdStr).
+			Msg("failed to send activation email")
 	}
 
 	updateFields := map[string]interface{}{
@@ -385,7 +391,10 @@ func (svc *service) RequestPasswordReset(email string) error {
 	}
 
 	if err := mailjet.SendEmailPasswordReset(email, user.Name, token); err != nil {
-		return apperror.Internal("failed to send password reset email email", err)
+		log.Warn().
+			Err(err).
+			Str("member_id", userIdStr).
+			Msg("failed to send password reset email")
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{

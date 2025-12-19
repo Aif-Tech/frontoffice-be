@@ -106,7 +106,10 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *up
 
 	if shouldSendEmailConfirmation {
 		if err := mailjet.SendConfirmationEmailUserEmailChangeSuccess(user.Name, user.Email, newEmail, helper.FormatWIB(time.Now())); err != nil {
-			return nil, apperror.Internal("failed to send email confirmation", err)
+			log.Warn().
+				Err(err).
+				Str("member_id", userId).
+				Msg("failed to send email confirmation")
 		}
 		user.Email = newEmail
 	}
@@ -248,7 +251,10 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 
 	if sendEmailConfirmation {
 		if err := mailjet.SendConfirmationEmailUserEmailChangeSuccess(member.Name, member.Email, newEmail, helper.FormatWIB(time.Now())); err != nil {
-			return apperror.Internal("failed to send email confirmation", err)
+			log.Warn().
+				Err(err).
+				Str("member_id", memberId).
+				Msg("failed to send email confirmation")
 		}
 	}
 
