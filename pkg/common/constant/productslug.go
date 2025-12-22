@@ -4,6 +4,7 @@ const (
 	SlugGenRetailV3 = "SCOREEZY_genretail_v3"
 
 	SlugPhoneLiveStatus  = "IDENTITY_phone_live_status"
+	SlugRecycleNumber    = "IDENTITY_recycle_number"
 	SlugNPWPVerification = "IDENTITY_npwp_verification"
 
 	SlugLoanRecordChecker  = "COMPLIANCE_loan_record_checker"

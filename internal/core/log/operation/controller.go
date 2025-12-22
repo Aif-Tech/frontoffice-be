@@ -28,11 +28,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	page := c.Query(constant.Page, "1")
-	size := c.Query(constant.Size, "10")
-	role := strings.ToLower(c.Query("role"))
 	eventQuery := c.Query("event")
-	name := strings.ToLower(c.Query("name", ""))
 	startDate := c.Query(constant.StartDate)
 	endDate := c.Query(constant.EndDate)
 
@@ -43,11 +39,13 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 
 	filter := &logOperationFilter{
 		CompanyId: authCtx.CompanyIdStr(),
-		Page:      page,
-		Size:      size,
-		Role:      role,
+		Page:      c.Query(constant.Page, "1"),
+		Size:      c.Query(constant.Size, "10"),
+		Role:      c.Query("role"),
 		Event:     mappedEvent,
-		Name:      name,
+		Name:      c.Query("name", ""),
+		SortBy:    strings.ToLower(c.Query("sort_by", "created_at")),
+		Order:     strings.ToLower(c.Query("order", "desc")),
 		StartDate: startDate,
 		EndDate:   endDate,
 	}
@@ -66,8 +64,6 @@ func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	page := c.Query(constant.Page, "1")
-	size := c.Query(constant.Size, "10")
 	startDate := c.Query(constant.StartDate)
 	endDate := c.Query((constant.EndDate))
 
@@ -76,9 +72,11 @@ func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
 	}
 
 	filter := &logRangeFilter{
-		Page:      page,
-		Size:      size,
+		Page:      c.Query(constant.Page, "1"),
+		Size:      c.Query(constant.Size, "10"),
 		CompanyId: authCtx.CompanyIdStr(),
+		SortBy:    strings.ToLower(c.Query("sort_by", "created_at")),
+		Order:     strings.ToLower(c.Query("order", "desc")),
 		StartDate: startDate,
 		EndDate:   endDate,
 	}
@@ -113,55 +111,65 @@ func mapEventKeyword(input string) (string, bool) {
 		"submit-payment-confirmation": constant.EventSubmitPaymentConfirmation,
 
 		// scoreezy
-		"scoreezy-single-request":         constant.EventScoreezySingleReq,
-		"scoreezy-bulk-request":           constant.EventScoreezyBulkReq,
-		"scoreezy-single-download-result": constant.EventScoreezySingleDownload,
-		"scoreezy-bulk-download-result'":  constant.EventScoreezyBulkDownload,
+		"scoreezy-single-request":          constant.EventScoreezySingleReq,
+		"scoreezy-bulk-request":            constant.EventScoreezyBulkReq,
+		"scoreezy-single-download-result":  constant.EventScoreezySingleDownload,
+		"scoreezy-bulk-download-result'":   constant.EventScoreezyBulkDownload,
+		"scoreezy-download-result-summary": constant.EventScoreezyDownloadSummary,
 
 		// loan record checker
-		"loan-record-single-request":  constant.EventLoanRecordSingleReq,
-		"loan-record-bulk-request":    constant.EventLoanRecordBulkReq,
-		"loan-record-download-result": constant.EventLoanRecordDownload,
+		"loan-record-single-request":          constant.EventLoanRecordSingleReq,
+		"loan-record-bulk-request":            constant.EventLoanRecordBulkReq,
+		"loan-record-download-result":         constant.EventLoanRecordDownload,
+		"loan-record-download-result-summary": constant.EventLoanRecordDownloadSummary,
 
 		// 7 days multiple loan
-		"7dml-single-request":  constant.Event7DMLSingleReq,
-		"7dml-bulk-request":    constant.Event7DMLBulkReq,
-		"7dml-download-result": constant.Event7DMLDownload,
+		"7dml-single-request":          constant.Event7DMLSingleReq,
+		"7dml-bulk-request":            constant.Event7DMLBulkReq,
+		"7dml-download-result":         constant.Event7DMLDownload,
+		"7dml-download-result-summary": constant.Event7DMLDownloadSummary,
 
 		// 30 days multiple loan
-		"30dml-single-request":  constant.Event30DMLSingleReq,
-		"30dml-bulk-request":    constant.Event30DMLBulkReq,
-		"30dml-download-result": constant.Event30DMLDownload,
+		"30dml-single-request":          constant.Event30DMLSingleReq,
+		"30dml-bulk-request":            constant.Event30DMLBulkReq,
+		"30dml-download-result":         constant.Event30DMLDownload,
+		"30dml-download-result-summary": constant.Event30DMLDownloadSummary,
 
 		// 90 days multiple loan
-		"90dml-single-request":  constant.Event90DMLSingleReq,
-		"90dml-bulk-request":    constant.Event90DMLBulkReq,
-		"90dml-download-result": constant.Event90DMLDownload,
+		"90dml-single-request":          constant.Event90DMLSingleReq,
+		"90dml-bulk-request":            constant.Event90DMLBulkReq,
+		"90dml-download-result":         constant.Event90DMLDownload,
+		"90dml-download-result-summary": constant.Event90DMLDownloadSummary,
 
 		// npwp verification
-		"npwp-verification-single-request":  constant.EventNPWPVerificationSingleReq,
-		"npwp-verification-bulk-request":    constant.EventNPWPVerificationBulkReq,
-		"npwp-verification-download-result": constant.EventNPWPVerificationDownload,
+		"npwp-verification-single-request":          constant.EventNPWPVerificationSingleReq,
+		"npwp-verification-bulk-request":            constant.EventNPWPVerificationBulkReq,
+		"npwp-verification-download-result":         constant.EventNPWPVerificationDownload,
+		"npwp-verification-download-result-summary": constant.EventNPWPVerificationDownloadSummary,
 
 		// phone live status
-		"phone-live-single-request":  constant.EventPhoneLiveSingleReq,
-		"phone-live-bulk-request":    constant.EventPhoneLiveBulkReq,
-		"phone-live-download-result": constant.EventPhoneLiveDownload,
+		"phone-live-single-request":          constant.EventPhoneLiveSingleReq,
+		"phone-live-bulk-request":            constant.EventPhoneLiveBulkReq,
+		"phone-live-download-result":         constant.EventPhoneLiveDownload,
+		"phone-live-download-result-summary": constant.EventPhoneLiveDownloadSummary,
 
 		// tax compliance status
-		"tax-compliance-single-request":  constant.EventTaxComplianceSingleReq,
-		"tax-compliance-bulk-request":    constant.EventTaxComplianceBulkReq,
-		"tax-compliance-download-result": constant.EventPTaxComplianceDownload,
+		"tax-compliance-single-request":          constant.EventTaxComplianceSingleReq,
+		"tax-compliance-bulk-request":            constant.EventTaxComplianceBulkReq,
+		"tax-compliance-download-result":         constant.EventTaxComplianceDownload,
+		"tax-compliance-download-result-summary": constant.EventTaxComplianceDownloadSummary,
 
 		// tax score
-		"tax-score-single-request":  constant.EventTaxScoreSingleReq,
-		"tax-score-bulk-request":    constant.EventTaxScoreBulkReq,
-		"tax-score-download-result": constant.EventTaxScoreDownload,
+		"tax-score-single-request":          constant.EventTaxScoreSingleReq,
+		"tax-score-bulk-request":            constant.EventTaxScoreBulkReq,
+		"tax-score-download-result":         constant.EventTaxScoreDownload,
+		"tax-score-download-result-summary": constant.EventTaxScoreDownloadSummary,
 
 		// tax verification detail
-		"tax-verification-single-request":  constant.EventTaxVerificationSingleReq,
-		"tax-verification-bulk-request":    constant.EventTaxVerificationBulkReq,
-		"tax-verification-download-result": constant.EventTaxVerificationDownload,
+		"tax-verification-single-request":          constant.EventTaxVerificationSingleReq,
+		"tax-verification-bulk-request":            constant.EventTaxVerificationBulkReq,
+		"tax-verification-download-result":         constant.EventTaxVerificationDownload,
+		"tax-verification-download-result-summary": constant.EventTaxVerificationDownloadSummary,
 	}
 
 	normalized := strings.ToLower(input)

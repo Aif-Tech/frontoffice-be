@@ -31,7 +31,7 @@ type MstMember struct {
 	Image             string             `json:"image" gorm:"default:default-profile-image.jpg"`
 	QuotaType         int8               `json:"quota_type"` //0: none, 1: Quota Total 2: Quota per product
 	Quota             int                `json:"quota"`
-	CreatedAt         time.Time          `json:"-"`
+	CreatedAt         time.Time          `json:"created_at"`
 	UpdatedAt         time.Time          `json:"-"`
 	DeletedAt         gorm.DeletedAt     `json:"-" gorm:"index"`
 }
@@ -85,19 +85,20 @@ func SetPassword(password string) string {
 }
 
 type MemberParams struct {
-	Id        string
-	CompanyId string
-	Email     string
-	Username  string
-	Key       string
-	Page      string
-	Limit     string
-	Keyword   string
-	RoleName  string
-	RoleId    string
-	Status    string
-	StartDate string
-	EndDate   string
+	Id         string
+	CompanyId  string
+	Email      string
+	Username   string
+	Key        string
+	Page       string
+	Limit      string
+	Keyword    string
+	RoleName   string
+	RoleId     string
+	MailStatus string
+	Status     string
+	StartDate  string
+	EndDate    string
 }
 
 type QuotaParams struct {

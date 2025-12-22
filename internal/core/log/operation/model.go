@@ -35,6 +35,8 @@ type logOperationFilter struct {
 	Role      string
 	Event     string
 	Name      string
+	SortBy    string
+	Order     string
 	StartDate string
 	EndDate   string
 }
@@ -43,6 +45,8 @@ type logRangeFilter struct {
 	CompanyId string
 	Page      string
 	Size      string
+	SortBy    string
+	Order     string
 	StartDate string
 	EndDate   string
 }

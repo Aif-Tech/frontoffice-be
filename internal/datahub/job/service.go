@@ -51,6 +51,94 @@ const (
 	hitTypeBulk   = "bulk"
 )
 
+// todo: remove
+var dummyJobDetailRecycleNumber = []*logTransProductCatalog{
+	{
+		MemberID:  1,
+		CompanyID: 1,
+		JobID:     1,
+		ProductID: 1,
+		LoanNo:    "dummy",
+		Status:    "success",
+		Input: &logTransInput{
+			PhoneNumber: helper.StringPtr("085755700000"),
+			LoanNo:      "dummy",
+		},
+		Data: &logTransData{
+			Status: helper.StringPtr("phone number has never been recycled"),
+		},
+		PricingStrategy: "FREE",
+		TransactionId:   constant.DummyTransactionId,
+		RefTransProductCatalog: map[string]any{
+			"data": map[string]any{
+				"status": "phone number has never been recycled",
+			},
+			"datetime": "2025-12-12 09:13:09",
+			"input": map[string]any{
+				"loan_no":      "dummy",
+				"phone_number": "08575***000",
+			},
+			"transaction_id": constant.DummyTransactionId,
+		},
+	},
+	{
+		MemberID:  1,
+		CompanyID: 1,
+		JobID:     1,
+		ProductID: 1,
+		LoanNo:    "dummy",
+		Status:    "success",
+		Input: &logTransInput{
+			PhoneNumber: helper.StringPtr("085755700001"),
+			LoanNo:      "dummy",
+		},
+		Data: &logTransData{
+			Status: helper.StringPtr("phone number has never been recycled"),
+		},
+		PricingStrategy: "FREE",
+		TransactionId:   constant.DummyTransactionId,
+		RefTransProductCatalog: map[string]any{
+			"data": map[string]any{
+				"status": "phone number has never been recycled",
+			},
+			"datetime": "2025-12-12 09:13:09",
+			"input": map[string]any{
+				"loan_no":      "dummy",
+				"phone_number": "08575***001",
+			},
+			"transaction_id": constant.DummyTransactionId,
+		},
+	},
+	{
+		MemberID:  1,
+		CompanyID: 1,
+		JobID:     1,
+		ProductID: 1,
+		LoanNo:    "dummy",
+		Status:    "success",
+		Input: &logTransInput{
+			PhoneNumber: helper.StringPtr("085755700002"),
+			LoanNo:      "dummy",
+		},
+		Data: &logTransData{
+			Status: helper.StringPtr("phone number has never been recycled"),
+		},
+		PricingStrategy: "FREE",
+		TransactionId:   constant.DummyTransactionId,
+		RefTransProductCatalog: map[string]any{
+			"data": map[string]any{
+				"status": "phone number has never been recycled",
+			},
+			"datetime": "2025-12-12 09:13:09",
+			"input": map[string]any{
+				"loan_no":      "dummy",
+				"phone_number": "08575***002",
+			},
+			"transaction_id": constant.DummyTransactionId,
+		},
+	},
+}
+
 func (svc *service) CreateJob(req *CreateJobRequest) (*createJobRespData, error) {
 	result, err := svc.repo.CreateJobAPI(req)
 	if err != nil {
@@ -84,6 +172,54 @@ func (svc *service) UpdateJobAPI(jobId string, req *UpdateJobRequest) error {
 }
 
 func (svc *service) GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error) {
+	// todo: remove
+	dummyJobs := []job{
+		{
+			Id:           1,
+			ProductId:    1,
+			MemberId:     1,
+			CompanyId:    1,
+			Total:        3,
+			SuccessCount: 3,
+			Status:       "done",
+			StartTime:    "2025-12-12 17:32:39",
+			EndTime:      "2025-12-12 17:32:39",
+		},
+		{
+			Id:           2,
+			ProductId:    1,
+			MemberId:     1,
+			CompanyId:    1,
+			Total:        5,
+			SuccessCount: 5,
+			Status:       "done",
+			StartTime:    "2025-12-12 07:32:12",
+			EndTime:      "2025-12-12 07:32:13",
+		},
+		{
+			Id:           3,
+			ProductId:    1,
+			MemberId:     1,
+			CompanyId:    1,
+			Total:        4,
+			SuccessCount: 4,
+			Status:       "done",
+			StartTime:    "2025-12-12 14:23:15",
+			EndTime:      "2025-12-12 14:23:15",
+		},
+	}
+
+	if filter.ProductSlug == constant.SlugRecycleNumber {
+		return &model.AifcoreAPIResponse[*jobListResponse]{
+			Success: true,
+			Message: "success",
+			Data: &jobListResponse{
+				Jobs:      dummyJobs,
+				TotalData: int64(len(dummyJobs)),
+			},
+		}, nil
+	}
+
 	result, err := svc.repo.GetJobsAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch jobs")
@@ -126,6 +262,30 @@ func (svc *service) GetGenRetailJobs(filter *logFilter) (*model.APIResponse[*job
 }
 
 func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
+	// todo: remove
+	if filter.ProductSlug == constant.SlugRecycleNumber {
+		return &model.AifcoreAPIResponse[*jobDetailResponse]{
+			Success: true,
+			Message: "success",
+			Data: &jobDetailResponse{
+				JobDetails:                 dummyJobDetailRecycleNumber,
+				TotalData:                  int64(len(dummyJobDetailRecycleNumber)),
+				TotalDataPercentageSuccess: 3,
+				TotalDataPercentageFail:    0,
+				TotalDataPercentageError:   0,
+			},
+			Meta: &model.Meta{
+				Message:   "Success",
+				Total:     3,
+				Page:      1,
+				Visible:   3,
+				StartData: 1,
+				EndData:   1,
+				Size:      10,
+			},
+		}, nil
+	}
+
 	result, err := svc.repo.GetJobDetailAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch job detail")
@@ -135,6 +295,30 @@ func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[
 }
 
 func (svc *service) GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
+	// todo: remove
+	if filter.ProductSlug == constant.SlugRecycleNumber {
+		return &model.AifcoreAPIResponse[*jobDetailResponse]{
+			Success: true,
+			Message: "success",
+			Data: &jobDetailResponse{
+				JobDetails:                 dummyJobDetailRecycleNumber,
+				TotalData:                  int64(len(dummyJobDetailRecycleNumber)),
+				TotalDataPercentageSuccess: 1,
+				TotalDataPercentageFail:    0,
+				TotalDataPercentageError:   0,
+			},
+			Meta: &model.Meta{
+				Message:   "Success",
+				Total:     1,
+				Page:      1,
+				Visible:   1,
+				StartData: 1,
+				EndData:   1,
+				Size:      10,
+			},
+		}, nil
+	}
+
 	result, err := svc.repo.GetJobsSummaryAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch job detail")
@@ -144,11 +328,11 @@ func (svc *service) GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreA
 }
 
 func (svc *service) ExportJobDetails(filter *logFilter, buf *bytes.Buffer) (string, error) {
-	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobDetailAPI, false)
+	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobDetailAPI, false, false)
 }
 
 func (svc *service) ExportJobDetailsByDateRange(filter *logFilter, buf *bytes.Buffer) (string, error) {
-	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobsSummaryAPI, true)
+	return svc.exportJobDetailsToCSV(filter, buf, svc.repo.GetJobsSummaryAPI, true, true)
 }
 
 func (svc *service) exportJobDetailsToCSV(
@@ -156,6 +340,7 @@ func (svc *service) exportJobDetailsToCSV(
 	buf *bytes.Buffer,
 	fetchFunc func(*logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error),
 	includeDate bool,
+	summary bool,
 ) (string, error) {
 	resp, err := fetchFunc(filter)
 	if err != nil {
@@ -168,7 +353,7 @@ func (svc *service) exportJobDetailsToCSV(
 	}
 
 	headers := cfg.headers
-	eventName := cfg.event
+	eventName := cfg.event(summary)
 	mapper := func(d *logTransProductCatalog) []string {
 		return cfg.mapper(filter.IsMasked, d)
 	}
@@ -276,7 +461,7 @@ func withDateColumn(mapper rowMapper) rowMapper {
 
 type exportProductConfig struct {
 	headers []string
-	event   string
+	event   func(summary bool) string
 	mapper  func(isMasked bool, d *logTransProductCatalog) []string
 }
 
@@ -284,7 +469,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Loan Record
 	constant.SlugLoanRecordChecker: {
 		headers: constant.CSVExportHeaderLoanRecord,
-		event:   constant.EventLoanRecordDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventLoanRecordDownloadSummary
+			}
+			return constant.EventLoanRecordDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapLoanRecordCheckerRow(isMasked, d)
 		},
@@ -293,7 +483,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 7D
 	constant.Slug7DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event7DMLDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.Event7DMLDownloadSummary
+			}
+			return constant.Event7DMLDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -302,7 +497,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 30D
 	constant.Slug30DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event30DMLDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.Event30DMLDownloadSummary
+			}
+			return constant.Event30DMLDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -311,7 +511,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Multiple Loan 90D
 	constant.Slug90DaysMultipleLoan: {
 		headers: constant.CSVExportHeaderMultipleLoan,
-		event:   constant.Event90DMLDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.Event90DMLDownloadSummary
+			}
+			return constant.Event90DMLDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapMultipleLoanRow(isMasked, d)
 		},
@@ -320,7 +525,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Compliance Status
 	constant.SlugTaxComplianceStatus: {
 		headers: constant.CSVExportHeaderTaxCompliance,
-		event:   constant.EventPTaxComplianceDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventTaxComplianceDownloadSummary
+			}
+			return constant.EventTaxComplianceDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxComplianceRow(isMasked, d)
 		},
@@ -329,7 +539,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Score
 	constant.SlugTaxScore: {
 		headers: constant.CSVExportHeaderTaxScore,
-		event:   constant.EventTaxScoreDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventTaxScoreDownloadSummary
+			}
+			return constant.EventTaxScoreDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxScoreRow(isMasked, d)
 		},
@@ -338,7 +553,12 @@ var exportProductMap = map[string]exportProductConfig{
 	// Tax Verification Detail
 	constant.SlugTaxVerificationDetail: {
 		headers: constant.CSVExportHeaderTaxVerification,
-		event:   constant.EventTaxVerificationDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventTaxVerificationDownloadSummary
+			}
+			return constant.EventTaxVerificationDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapTaxVerificationRow(isMasked, d)
 		},
@@ -347,9 +567,28 @@ var exportProductMap = map[string]exportProductConfig{
 	// NPWP Verification
 	constant.SlugNPWPVerification: {
 		headers: constant.CSVExportHeaderNPWPVerification,
-		event:   constant.EventNPWPVerificationDownload,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventNPWPVerificationDownloadSummary
+			}
+			return constant.EventNPWPVerificationDownload
+		},
 		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
 			return mapNPWPVerificationRow(isMasked, d)
+		},
+	},
+
+	// Recycle Number
+	constant.SlugRecycleNumber: {
+		headers: constant.CSVExportHeaderRecycleNumber,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventRecycleNumberDownloadSummary
+			}
+			return constant.EventRecycleNumberDownload
+		},
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapRecycleNumberRow(isMasked, d)
 		},
 	},
 }
@@ -580,7 +819,7 @@ func mapNPWPVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if isMasked {
-		npwp = ref.Input.NPWP
+		npwp = helper.MaskingHead(*d.Input.NPWP, 10)
 	} else {
 		npwp = *d.Input.NPWP
 	}
@@ -590,6 +829,41 @@ func mapNPWPVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 		npwp,
 		name,
 		address,
+		status,
+		d.Status,
+		description,
+	}
+}
+
+func mapRecycleNumberRow(isMasked bool, d *logTransProductCatalog) []string {
+	var (
+		description string
+		status      string
+		phoneNumber string
+	)
+
+	if d.Message != nil {
+		description = *d.Message
+	}
+
+	if d.Data != nil {
+		status = *d.Data.Status
+	}
+
+	var ref refTransProductCatalog
+	if raw, err := json.Marshal(d.RefTransProductCatalog); err == nil {
+		_ = json.Unmarshal(raw, &ref)
+	}
+
+	if isMasked {
+		phoneNumber = ref.Input.PhoneNumber
+	} else {
+		phoneNumber = *d.Input.PhoneNumber
+	}
+
+	return []string{
+		d.Input.LoanNo,
+		phoneNumber,
 		status,
 		d.Status,
 		description,
