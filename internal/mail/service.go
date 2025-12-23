@@ -1,33 +1,33 @@
 package mail
 
 import (
-	"context"
 	"front-office/pkg/apperror"
 )
 
 type Service interface {
-	Send(ctx context.Context, email Email) error
+	Send(mail Mail) error
 }
 
 type SendMailService struct {
 	service  Service
 	renderer *TemplateRenderer
+	queue    MailQueue
 }
 
-func NewMailService(s Service, r *TemplateRenderer) *SendMailService {
-	return &SendMailService{service: s, renderer: r}
+func NewMailService(s Service, r *TemplateRenderer, q MailQueue) *SendMailService {
+	return &SendMailService{service: s, renderer: r, queue: q}
 }
 
-func (svc *SendMailService) Execute(ctx context.Context, email Email) error {
-	if email.To == "" {
+func (svc *SendMailService) Execute(mail Mail) error {
+	if mail.To == "" {
 		return apperror.BadRequest("recipient is required")
 	}
 
-	return svc.service.Send(ctx, email)
+	// return svc.service.Send(mail)
+	return svc.queue.Enqueue(mail)
 }
 
 func (svc *SendMailService) SendWithTemplate(
-	ctx context.Context,
 	to string,
 	subject string,
 	templateName string,
@@ -35,10 +35,16 @@ func (svc *SendMailService) SendWithTemplate(
 ) error {
 	body, err := svc.renderer.Render(templateName, data)
 	if err != nil {
-		return err
+		return apperror.Internal("failed to render template", err)
 	}
 
-	return svc.service.Send(ctx, Email{
+	// return svc.service.Send(Mail{
+	// 	To:      to,
+	// 	Subject: subject,
+	// 	Body:    body,
+	// })
+
+	return svc.Execute(Mail{
 		To:      to,
 		Subject: subject,
 		Body:    body,

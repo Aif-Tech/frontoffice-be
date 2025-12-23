@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"net/smtp"
@@ -20,7 +19,7 @@ func NewSMTPService(host, port, user, pass string) *SMTPService {
 	return &SMTPService{host, port, user, pass}
 }
 
-func (s *SMTPService) Send(ctx context.Context, mail Email) error {
+func (s *SMTPService) Send(mail Mail) error {
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("AIForesee <%s>", s.user)
 	e.To = []string{mail.To}

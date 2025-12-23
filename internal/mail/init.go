@@ -23,7 +23,12 @@ func Init(cfg *application.Config) *Module {
 		cfg.Mail.Password,
 	)
 
-	sendMailSvc := NewMailService(smtpService, renderer)
+	queue := NewInMemoryMailQueue(100)
+	worker := NewMailWorker(queue, smtpService)
+
+	worker.Start()
+
+	sendMailSvc := NewMailService(smtpService, renderer, queue)
 
 	return &Module{
 		SendMail: sendMailSvc,
