@@ -12,13 +12,10 @@ type Environment struct {
 	CloudProvider                  string
 	FrontendBaseUrl                string
 	Port                           string
-	DbUser                         string
-	DbPassword                     string
-	DbName                         string
-	DbPort                         string
-	DbHost                         string
-	MailjetEmail                   string
-	MailtjetUsername               string
+	MailHost                       string
+	MailPort                       string
+	MailUser                       string
+	MailPass                       string
 	MailjetPublicKey               string
 	MailjetSecretKey               string
 	JwtSecretKey                   string
@@ -63,15 +60,10 @@ func LoadEnvironment() *Environment {
 		FrontendBaseUrl:                GetEnvironment("FO_FRONTEND_BASE_URL"),
 		CloudProvider:                  GetEnvironment("CLOUD_PROVIDER"),
 		Port:                           GetEnvironment("FO_APP_PORT"),
-		DbUser:                         GetEnvironment("DB_USER"),
-		DbPassword:                     GetEnvironment("DB_PASSWORD"),
-		DbName:                         GetEnvironment("DB_NAME"),
-		DbPort:                         GetEnvironment("DB_PORT"),
-		DbHost:                         GetEnvironment("DB_HOST"),
-		MailjetEmail:                   GetEnvironment("FO_MAILJET_EMAIL"),
-		MailtjetUsername:               GetEnvironment("FO_MAILJET_USERNAME"),
-		MailjetPublicKey:               GetEnvironment("FO_MAILJET_PUBLIC_KEY"),
-		MailjetSecretKey:               GetEnvironment("FO_MAILJET_SECRET_KEY"),
+		MailHost:                       GetEnvironment("FO_MAIL_HOST"),
+		MailPort:                       GetEnvironment("FO_MAIL_PORT"),
+		MailUser:                       GetEnvironment("FO_MAIL_USER"),
+		MailPass:                       GetEnvironment("FO_MAIL_PASSWORD"),
 		JwtSecretKey:                   GetEnvironment("FO_JWT_SECRET_KEY"),
 		JwtExpiresMinutes:              GetEnvironment("FO_JWT_EXPIRES_MINUTES"),
 		JwtRefreshTokenExpiresMinutes:  GetEnvironment("FO_JWT_REFRESH_EXPIRES_MINUTES"),
