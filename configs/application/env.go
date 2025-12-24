@@ -31,6 +31,8 @@ type Environment struct {
 	ScoreezyHost                   string
 	GenretailV3                    string
 	AllowingDomains                string
+	RedisAddr                      string
+	RedisPass                      string
 }
 
 func GetEnvironment(key string) string {
@@ -76,5 +78,7 @@ func LoadEnvironment() *Environment {
 		ScoreezyHost:                   GetEnvironment("FO_SCOREEZY_HOST"),
 		AllowingDomains:                GetEnvironment("ALLOWING_DOMAINS"),
 		CoreModuleKey:                  GetEnvironment("FO_CORE_KEY"),
+		RedisAddr:                      GetEnvironment("FO_UPSTASH_REDIS_URL"),
+		RedisPass:                      GetEnvironment("FO_UPSTASH_REDIS_TOKEN"),
 	}
 }

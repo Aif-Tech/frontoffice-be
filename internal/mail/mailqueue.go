@@ -1,26 +1,64 @@
 package mail
 
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"time"
+
+	"github.com/redis/go-redis/v9"
+)
+
 type MailQueue interface {
 	Enqueue(mail Mail) error
-	Dequeue() (Mail, error)
+	Dequeue(timeoutSeconds int) (Mail, error)
 }
 
-type InMemoryMailQueue struct {
-	ch chan Mail
+type RedisMailQueue struct {
+	client *redis.Client
+	key    string
 }
 
-func NewInMemoryMailQueue(buffer int) *InMemoryMailQueue {
-	return &InMemoryMailQueue{
-		ch: make(chan Mail, buffer),
+func NewRedisMailQueue(client *redis.Client) *RedisMailQueue {
+	return &RedisMailQueue{
+		client: client,
+		key:    "mail:queue",
 	}
 }
 
-func (q *InMemoryMailQueue) Enqueue(mail Mail) error {
-	q.ch <- mail
+func (q *RedisMailQueue) Enqueue(mail Mail) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	return nil
+	payload, err := json.Marshal(mail)
+	if err != nil {
+		return err
+	}
+
+	return q.client.LPush(ctx, q.key, payload).Err()
 }
 
-func (q *InMemoryMailQueue) Dequeue() (Mail, error) {
-	return <-q.ch, nil
+func (q *RedisMailQueue) Dequeue(timeoutSeconds int) (Mail, error) {
+	ctx := context.Background()
+
+	result, err := q.client.BRPop(
+		ctx,
+		time.Duration(timeoutSeconds)*time.Second,
+		q.key,
+	).Result()
+
+	if err == redis.Nil {
+		return Mail{}, errors.New("queue empty")
+	}
+
+	if err != nil {
+		return Mail{}, err
+	}
+
+	var mail Mail
+	if err := json.Unmarshal([]byte(result[1]), &mail); err != nil {
+		return Mail{}, err
+	}
+
+	return mail, nil
 }

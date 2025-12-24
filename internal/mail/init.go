@@ -3,10 +3,17 @@ package mail
 import (
 	"front-office/configs/application"
 
+	redisinfra "front-office/internal/infra/redis"
+
 	"github.com/rs/zerolog/log"
 )
 
 func Init(cfg *application.Config) *Module {
+	redisClient := redisinfra.NewUpstashClient(
+		cfg.App.RedisAddr,
+		cfg.App.RedisPass,
+	)
+
 	renderer, err := NewTemplateRenderer(
 		"internal/mail/template",
 	)
@@ -23,7 +30,7 @@ func Init(cfg *application.Config) *Module {
 		cfg.Mail.Password,
 	)
 
-	queue := NewInMemoryMailQueue(100)
+	queue := NewRedisMailQueue(redisClient)
 	worker := NewMailWorker(queue, smtpService)
 
 	worker.Start()

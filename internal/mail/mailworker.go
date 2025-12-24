@@ -16,11 +16,8 @@ func NewMailWorker(q MailQueue, s Service) *MailWorker {
 func (w *MailWorker) Start() {
 	go func() {
 		for {
-			mail, err := w.queue.Dequeue()
+			mail, err := w.queue.Dequeue(30)
 			if err != nil {
-				log.Warn().
-					Err(err).
-					Msg("queue error")
 				continue
 			}
 
