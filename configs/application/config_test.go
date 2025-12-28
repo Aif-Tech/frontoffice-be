@@ -13,5 +13,5 @@ func TestGetConfig(t *testing.T) {
 	env := GetConfig()
 
 	assert.Equal(t, "1234", env.App.Port)
-	assert.Equal(t, "test", env.App.Env)
+	assert.Equal(t, "test", env.App.AppEnv)
 }

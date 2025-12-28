@@ -9,10 +9,15 @@ import (
 )
 
 func Init(cfg *application.Config) *Module {
-	redisClient := redisinfra.NewUpstashClient(
+	redisClient, err := redisinfra.NewRedisClient(
+		cfg.App.AppEnv,
 		cfg.App.RedisAddr,
-		cfg.App.RedisPass,
 	)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("failed to create redis connection")
+	}
 
 	renderer, err := NewTemplateRenderer(
 		"internal/mail/template",
@@ -35,7 +40,7 @@ func Init(cfg *application.Config) *Module {
 
 	worker.Start()
 
-	sendMailSvc := NewMailService(smtpService, renderer, queue)
+	sendMailSvc := NewMailService(smtpService, renderer, queue, cfg.Mail.MaxRetry)
 
 	return &Module{
 		SendMail: sendMailSvc,

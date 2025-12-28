@@ -11,6 +11,7 @@ type (
 		Port     string
 		User     string
 		Password string
+		MaxRetry string
 	}
 )
 
@@ -24,6 +25,7 @@ func GetConfig() Config {
 			Port:     env.MailPort,
 			User:     env.MailUser,
 			Password: env.MailPass,
+			MaxRetry: env.MailMaxRetry,
 		},
 	}
 }

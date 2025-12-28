@@ -2,6 +2,7 @@ package mail
 
 import (
 	"front-office/pkg/apperror"
+	"strconv"
 )
 
 type Service interface {
@@ -12,13 +13,24 @@ type SendMailService struct {
 	service  Service
 	renderer *TemplateRenderer
 	queue    MailQueue
+	maxRetry string
 }
 
-func NewMailService(s Service, r *TemplateRenderer, q MailQueue) *SendMailService {
-	return &SendMailService{service: s, renderer: r, queue: q}
+func NewMailService(s Service, r *TemplateRenderer, q MailQueue, maxRetry string) *SendMailService {
+	return &SendMailService{service: s, renderer: r, queue: q, maxRetry: maxRetry}
 }
 
 func (svc *SendMailService) Execute(mail Mail) error {
+	mail.Retry = 0
+	maxRetry, err := strconv.Atoi(svc.maxRetry)
+	if err != nil {
+		return err
+	}
+
+	if mail.MaxRetry == 0 {
+		mail.MaxRetry = maxRetry
+	}
+
 	if mail.To == "" {
 		return apperror.BadRequest("recipient is required")
 	}

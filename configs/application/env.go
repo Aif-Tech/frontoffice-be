@@ -8,7 +8,7 @@ import (
 )
 
 type Environment struct {
-	Env                            string
+	AppEnv                         string
 	CloudProvider                  string
 	FrontendBaseUrl                string
 	Port                           string
@@ -16,6 +16,7 @@ type Environment struct {
 	MailPort                       string
 	MailUser                       string
 	MailPass                       string
+	MailMaxRetry                   string
 	MailjetPublicKey               string
 	MailjetSecretKey               string
 	JwtSecretKey                   string
@@ -32,7 +33,6 @@ type Environment struct {
 	GenretailV3                    string
 	AllowingDomains                string
 	RedisAddr                      string
-	RedisPass                      string
 }
 
 func GetEnvironment(key string) string {
@@ -58,7 +58,7 @@ func LoadEnvironment() *Environment {
 	}
 
 	return &Environment{
-		Env:                            GetEnvironment("FO_APP_ENV"),
+		AppEnv:                         GetEnvironment("FO_APP_ENV"),
 		FrontendBaseUrl:                GetEnvironment("FO_FRONTEND_BASE_URL"),
 		CloudProvider:                  GetEnvironment("CLOUD_PROVIDER"),
 		Port:                           GetEnvironment("FO_APP_PORT"),
@@ -66,6 +66,7 @@ func LoadEnvironment() *Environment {
 		MailPort:                       GetEnvironment("FO_MAIL_PORT"),
 		MailUser:                       GetEnvironment("FO_MAIL_USER"),
 		MailPass:                       GetEnvironment("FO_MAIL_PASSWORD"),
+		MailMaxRetry:                   GetEnvironment("FO_MAIL_MAX_RETRY"),
 		JwtSecretKey:                   GetEnvironment("FO_JWT_SECRET_KEY"),
 		JwtExpiresMinutes:              GetEnvironment("FO_JWT_EXPIRES_MINUTES"),
 		JwtRefreshTokenExpiresMinutes:  GetEnvironment("FO_JWT_REFRESH_EXPIRES_MINUTES"),
@@ -78,7 +79,6 @@ func LoadEnvironment() *Environment {
 		ScoreezyHost:                   GetEnvironment("FO_SCOREEZY_HOST"),
 		AllowingDomains:                GetEnvironment("ALLOWING_DOMAINS"),
 		CoreModuleKey:                  GetEnvironment("FO_CORE_KEY"),
-		RedisAddr:                      GetEnvironment("FO_UPSTASH_REDIS_URL"),
-		RedisPass:                      GetEnvironment("FO_UPSTASH_REDIS_TOKEN"),
+		RedisAddr:                      GetEnvironment("FO_REDIS_URL"),
 	}
 }

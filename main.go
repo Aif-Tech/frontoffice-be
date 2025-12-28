@@ -15,7 +15,7 @@ func main() {
 	time.Local = loc
 
 	cfg := application.GetConfig()
-	initLogger(cfg.App.Env)
+	initLogger(cfg.App.AppEnv)
 
 	server.NewServer(&cfg).Start()
 }

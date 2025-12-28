@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -12,6 +13,9 @@ import (
 type MailQueue interface {
 	Enqueue(mail Mail) error
 	Dequeue(timeoutSeconds int) (Mail, error)
+	EnqueueRetry(mail Mail, delay time.Duration) error
+	EnqueueDLQ(mail Mail) error
+	MoveReadyRetries() error
 }
 
 type RedisMailQueue struct {
@@ -61,4 +65,49 @@ func (q *RedisMailQueue) Dequeue(timeoutSeconds int) (Mail, error) {
 	}
 
 	return mail, nil
+}
+
+func (q *RedisMailQueue) EnqueueRetry(mail Mail, delay time.Duration) error {
+	ctx := context.Background()
+
+	payload, _ := json.Marshal(mail)
+	score := time.Now().Add(delay).Unix()
+
+	return q.client.ZAdd(ctx, "mail:queue:retry", redis.Z{
+		Score:  float64(score),
+		Member: payload,
+	}).Err()
+}
+
+func (q *RedisMailQueue) EnqueueDLQ(mail Mail) error {
+	ctx := context.Background()
+
+	payload, _ := json.Marshal(mail)
+
+	return q.client.LPush(ctx, "mail:queue:dlq", payload).Err()
+}
+
+func (q *RedisMailQueue) MoveReadyRetries() error {
+	ctx := context.Background()
+	now := time.Now().Unix()
+
+	items, err := q.client.ZRangeByScore(
+		ctx,
+		"mail:queue:retry",
+		&redis.ZRangeBy{
+			Min: "-inf",
+			Max: fmt.Sprint(now),
+		},
+	).Result()
+
+	if err != nil || len(items) == 0 {
+		return nil
+	}
+
+	for _, item := range items {
+		q.client.ZRem(ctx, "mail:queue:retry", item)
+		q.client.LPush(ctx, "mail:queue", item)
+	}
+
+	return nil
 }

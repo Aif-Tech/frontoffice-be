@@ -1,7 +1,7 @@
 package mail
 
 import (
-	"github.com/rs/zerolog/log"
+	"time"
 )
 
 type MailWorker struct {
@@ -15,19 +15,42 @@ func NewMailWorker(q MailQueue, s Service) *MailWorker {
 
 func (w *MailWorker) Start() {
 	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+
 		for {
-			mail, err := w.queue.Dequeue(30)
-			if err != nil {
-				continue
-			}
+			select {
+			case <-ticker.C:
+				_ = w.queue.MoveReadyRetries()
 
-			if err := w.service.Send(mail); err != nil {
-				log.Warn().
-					Err(err).
-					Msg("failed to send mail")
+			default:
+				mail, err := w.queue.Dequeue(30)
+				if err != nil {
+					continue
+				}
 
-				// todo: retry
+				if err := w.service.Send(mail); err != nil {
+					w.handleFailure(mail)
+				}
 			}
 		}
 	}()
+}
+
+func (w *MailWorker) handleFailure(mail Mail) {
+	mail.Retry++
+
+	if mail.Retry > mail.MaxRetry {
+		_ = w.queue.EnqueueDLQ(mail)
+		return
+	}
+
+	delay := backoffDuration(mail.Retry)
+	_ = w.queue.EnqueueRetry(mail, delay)
+}
+
+func backoffDuration(retry int) time.Duration {
+	base := 10 * time.Second
+
+	return time.Duration(1<<retry) * base
 }

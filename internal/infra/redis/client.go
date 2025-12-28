@@ -6,11 +6,15 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewUpstashClient(url, password string) *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:      url,
-		Password:  password,
-		TLSConfig: &tls.Config{},
-	},
-	)
+func NewRedisClient(appEnv, url string) (*redis.Client, error) {
+	opt, err := redis.ParseURL(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if appEnv != "local" {
+		opt.TLSConfig = &tls.Config{}
+	}
+
+	return redis.NewClient(opt), nil
 }

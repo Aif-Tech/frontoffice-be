@@ -10,6 +10,7 @@ import (
 	"front-office/internal/core/role"
 	"front-office/internal/core/template"
 	"front-office/internal/datahub"
+	"front-office/internal/mail"
 	"front-office/internal/scoreezy"
 	"front-office/pkg/httpclient"
 
@@ -21,8 +22,10 @@ import (
 func SetupInit(routeGroup fiber.Router, cfg *application.Config) {
 	client := httpclient.NewDefaultClient(10 * time.Second)
 
+	mailModule := mail.Init(cfg)
+
 	userGroup := routeGroup.Group("users")
-	auth.SetupInit(userGroup, cfg, client)
+	auth.SetupInit(userGroup, cfg, client, mailModule.SendMail)
 	member.SetupInit(userGroup, cfg, client)
 
 	roleGroup := routeGroup.Group("roles")
