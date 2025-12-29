@@ -82,9 +82,27 @@ func (q *RedisMailQueue) EnqueueRetry(mail Mail, delay time.Duration) error {
 func (q *RedisMailQueue) EnqueueDLQ(mail Mail) error {
 	ctx := context.Background()
 
-	payload, _ := json.Marshal(mail)
+	payload, err := json.Marshal(mail)
+	if err != nil {
+		return err
+	}
 
-	return q.client.LPush(ctx, "mail:queue:dlq", payload).Err()
+	key := "mail:queue:dlq"
+
+	if err := q.client.LPush(ctx, key, payload).Err(); err != nil {
+		return err
+	}
+
+	ttl, err := q.client.TTL(ctx, key).Result()
+	if err != nil {
+		return err
+	}
+
+	if ttl == -1 {
+		_ = q.client.Expire(ctx, key, 7*24*time.Hour).Err()
+	}
+
+	return nil
 }
 
 func (q *RedisMailQueue) MoveReadyRetries() error {
