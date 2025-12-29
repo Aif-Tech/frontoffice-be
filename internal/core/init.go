@@ -19,10 +19,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupInit(routeGroup fiber.Router, cfg *application.Config) {
+func SetupInit(routeGroup fiber.Router, cfg *application.Config, mailModule *mail.MailModule) {
 	client := httpclient.NewDefaultClient(10 * time.Second)
-
-	mailModule := mail.Init(cfg)
 
 	userGroup := routeGroup.Group("users")
 	auth.SetupInit(userGroup, cfg, client, mailModule.SendMail)

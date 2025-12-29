@@ -8,6 +8,7 @@ type Mail struct {
 	MaxRetry int
 }
 
-type Module struct {
+type MailModule struct {
 	SendMail *SendMailService
+	Worker   *MailWorker
 }

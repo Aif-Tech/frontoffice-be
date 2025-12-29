@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Init(cfg *application.Config) *Module {
+func Init(cfg *application.Config) *MailModule {
 	redisClient, err := redisinfra.NewRedisClient(
 		cfg.App.AppEnv,
 		cfg.App.RedisAddr,
@@ -42,7 +42,8 @@ func Init(cfg *application.Config) *Module {
 
 	sendMailSvc := NewMailService(smtpService, renderer, queue, cfg.Mail.MaxRetry)
 
-	return &Module{
+	return &MailModule{
 		SendMail: sendMailSvc,
+		Worker:   worker,
 	}
 }

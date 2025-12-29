@@ -3,6 +3,7 @@ package server
 import (
 	"front-office/configs/application"
 	"front-office/internal/core"
+	"front-office/internal/mail"
 	"front-office/internal/middleware"
 	"time"
 
@@ -14,22 +15,24 @@ import (
 )
 
 type fiberServer struct {
-	App *fiber.App
-	Cfg *application.Config
+	App        *fiber.App
+	Cfg        *application.Config
+	MailModule *mail.MailModule
 }
 
-func NewServer(cfg *application.Config) Server {
+func NewServer(cfg *application.Config, mailModule *mail.MailModule) Server {
 	return &fiberServer{
 		App: fiber.New(
 			fiber.Config{
 				ErrorHandler: middleware.ErrorHandler(),
 			},
 		),
-		Cfg: cfg,
+		Cfg:        cfg,
+		MailModule: mailModule,
 	}
 }
 
-func (s *fiberServer) Start() {
+func (s *fiberServer) Start() error {
 	s.App.Use(recover.New())
 
 	// Healthcheck system
@@ -63,7 +66,7 @@ func (s *fiberServer) Start() {
 	})
 
 	api := s.App.Group("/api/fo")
-	core.SetupInit(api, s.Cfg)
+	core.SetupInit(api, s.Cfg, s.MailModule)
 
 	log.Info().
 		Str("port", s.Cfg.App.Port).
@@ -75,5 +78,14 @@ func (s *fiberServer) Start() {
 			Err(err).
 			Str("addr", addr).
 			Msg("failed to start http server")
+
+		return err
 	}
+
+	return nil
+}
+
+func (s *fiberServer) Shutdown() error {
+	log.Info().Msg("shutting down fiber http server")
+	return s.App.Shutdown()
 }
