@@ -346,11 +346,11 @@ func (svc *service) ExportJobsSummary(memberId, companyId uint, filter *phoneLiv
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  memberId,
 		CompanyId: companyId,
-		Action:    constant.EventPhoneLiveDownload,
+		Action:    constant.EventPhoneLiveDownloadSummary,
 	}); err != nil {
 		log.Warn().
 			Err(err).
-			Str("action", constant.EventPhoneLiveDownload).
+			Str("action", constant.EventPhoneLiveDownloadSummary).
 			Msg("failed to add operation log")
 	}
 
