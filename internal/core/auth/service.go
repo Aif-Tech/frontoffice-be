@@ -13,7 +13,6 @@ import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
-	"front-office/pkg/utility/mailjet"
 
 	"strconv"
 	"time"
@@ -293,7 +292,7 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		log.Warn().
 			Err(err).
 			Str("member_id", userIdStr).
-			Msg("failed to send password reset email")
+			Msg("failed to send activation email")
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
@@ -351,7 +350,15 @@ func (svc *service) RequestActivation(email string) error {
 		return apperror.MapRepoError(err, "failed to create activation")
 	}
 
-	if err := mailjet.SendEmailActivation(email, token); err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		email,
+		"Welcome to Scoreezy",
+		"welcome_member.html",
+		map[string]any{
+			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, token),
+			"Year":              time.Now().Year(),
+		},
+	); err != nil {
 		log.Warn().
 			Err(err).
 			Str("member_id", userIdStr).
@@ -548,7 +555,7 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 
 	if err := svc.mailSvc.SendWithTemplate(
 		user.Email,
-		"AIForesee Password Changed",
+		"Scoreezy Password Changed",
 		"password_changed.html",
 		map[string]any{
 			"Name": user.Name,

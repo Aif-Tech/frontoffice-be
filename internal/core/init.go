@@ -24,7 +24,7 @@ func SetupInit(routeGroup fiber.Router, cfg *application.Config, mailModule *mai
 
 	userGroup := routeGroup.Group("users")
 	auth.SetupInit(userGroup, cfg, client, mailModule.SendMail)
-	member.SetupInit(userGroup, cfg, client)
+	member.SetupInit(userGroup, cfg, client, mailModule.SendMail)
 
 	roleGroup := routeGroup.Group("roles")
 	role.SetupInit(roleGroup, cfg, client)
