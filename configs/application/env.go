@@ -8,17 +8,15 @@ import (
 )
 
 type Environment struct {
-	Env                            string
+	AppEnv                         string
 	CloudProvider                  string
 	FrontendBaseUrl                string
 	Port                           string
-	DbUser                         string
-	DbPassword                     string
-	DbName                         string
-	DbPort                         string
-	DbHost                         string
-	MailjetEmail                   string
-	MailtjetUsername               string
+	MailHost                       string
+	MailPort                       string
+	MailUser                       string
+	MailPass                       string
+	MailMaxRetry                   string
 	MailjetPublicKey               string
 	MailjetSecretKey               string
 	JwtSecretKey                   string
@@ -34,6 +32,7 @@ type Environment struct {
 	ScoreezyHost                   string
 	GenretailV3                    string
 	AllowingDomains                string
+	RedisAddr                      string
 }
 
 func GetEnvironment(key string) string {
@@ -59,19 +58,15 @@ func LoadEnvironment() *Environment {
 	}
 
 	return &Environment{
-		Env:                            GetEnvironment("FO_APP_ENV"),
+		AppEnv:                         GetEnvironment("FO_APP_ENV"),
 		FrontendBaseUrl:                GetEnvironment("FO_FRONTEND_BASE_URL"),
 		CloudProvider:                  GetEnvironment("CLOUD_PROVIDER"),
 		Port:                           GetEnvironment("FO_APP_PORT"),
-		DbUser:                         GetEnvironment("DB_USER"),
-		DbPassword:                     GetEnvironment("DB_PASSWORD"),
-		DbName:                         GetEnvironment("DB_NAME"),
-		DbPort:                         GetEnvironment("DB_PORT"),
-		DbHost:                         GetEnvironment("DB_HOST"),
-		MailjetEmail:                   GetEnvironment("FO_MAILJET_EMAIL"),
-		MailtjetUsername:               GetEnvironment("FO_MAILJET_USERNAME"),
-		MailjetPublicKey:               GetEnvironment("FO_MAILJET_PUBLIC_KEY"),
-		MailjetSecretKey:               GetEnvironment("FO_MAILJET_SECRET_KEY"),
+		MailHost:                       GetEnvironment("FO_MAIL_HOST"),
+		MailPort:                       GetEnvironment("FO_MAIL_PORT"),
+		MailUser:                       GetEnvironment("FO_MAIL_USER"),
+		MailPass:                       GetEnvironment("FO_MAIL_PASSWORD"),
+		MailMaxRetry:                   GetEnvironment("FO_MAIL_MAX_RETRY"),
 		JwtSecretKey:                   GetEnvironment("FO_JWT_SECRET_KEY"),
 		JwtExpiresMinutes:              GetEnvironment("FO_JWT_EXPIRES_MINUTES"),
 		JwtRefreshTokenExpiresMinutes:  GetEnvironment("FO_JWT_REFRESH_EXPIRES_MINUTES"),
@@ -84,5 +79,6 @@ func LoadEnvironment() *Environment {
 		ScoreezyHost:                   GetEnvironment("FO_SCOREEZY_HOST"),
 		AllowingDomains:                GetEnvironment("ALLOWING_DOMAINS"),
 		CoreModuleKey:                  GetEnvironment("FO_CORE_KEY"),
+		RedisAddr:                      GetEnvironment("FO_REDIS_URL"),
 	}
 }

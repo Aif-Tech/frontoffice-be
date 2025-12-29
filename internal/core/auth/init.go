@@ -7,6 +7,7 @@ import (
 	"front-office/internal/core/member"
 	"front-office/internal/core/passwordreset"
 	"front-office/internal/core/role"
+	"front-office/internal/mail"
 	"front-office/internal/middleware"
 
 	"front-office/pkg/httpclient"
@@ -14,7 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupInit(authAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {
+func SetupInit(authAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient, mailSvc *mail.SendMailService) {
 	repo := NewRepository(cfg, client, nil)
 	memberRepo := member.NewRepository(cfg, client, nil)
 	roleRepo := role.NewRepository(cfg, client)
@@ -22,11 +23,11 @@ func SetupInit(authAPI fiber.Router, cfg *application.Config, client httpclient.
 	passwordResetRepo := passwordreset.NewRepository(cfg, client, nil)
 	logOperationRepo := operation.NewRepository(cfg, client, nil)
 
-	service := NewService(cfg, repo, memberRepo, roleRepo, logOperationRepo, activationTokenRepo, passwordResetRepo)
-	serviceUser := member.NewService(memberRepo, roleRepo, logOperationRepo)
+	serviceUser := member.NewService(memberRepo, roleRepo, logOperationRepo, mailSvc)
 	serviceActivationToken := activation.NewService(activationTokenRepo, cfg)
 	servicePasswordResetToken := passwordreset.NewService(passwordResetRepo, cfg)
 	serviceLogOperation := operation.NewService(logOperationRepo)
+	service := NewService(cfg, repo, memberRepo, roleRepo, logOperationRepo, activationTokenRepo, passwordResetRepo, mailSvc)
 
 	controller := NewController(service, serviceUser, serviceActivationToken, servicePasswordResetToken, serviceLogOperation, cfg)
 

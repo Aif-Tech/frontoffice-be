@@ -3,6 +3,7 @@ package member
 import (
 	"front-office/internal/core/log/operation"
 	"front-office/internal/core/role"
+	"front-office/internal/mail"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
@@ -17,11 +18,13 @@ func NewService(
 	repo Repository,
 	roleRepo role.Repository,
 	operationRepo operation.Repository,
+	mailSvc *mail.SendMailService,
 ) Service {
 	return &service{
 		repo,
 		roleRepo,
 		operationRepo,
+		mailSvc,
 	}
 }
 
@@ -29,6 +32,7 @@ type service struct {
 	repo          Repository
 	roleRepo      role.Repository
 	operationRepo operation.Repository
+	mailSvc       *mail.SendMailService
 }
 
 type Service interface {
@@ -250,11 +254,22 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 	}
 
 	if sendEmailConfirmation {
-		if err := mailjet.SendConfirmationEmailUserEmailChangeSuccess(member.Name, member.Email, newEmail, helper.FormatWIB(time.Now())); err != nil {
+		if err := svc.mailSvc.SendWithTemplate(
+			member.Email,
+			"Scoreezy Account Email Updated",
+			"email_changed.html",
+			map[string]any{
+				"Name":         member.Name,
+				"OldEmail":     member.Email,
+				"NewEmail":     newEmail,
+				"DateOfChange": helper.FormatWIB(time.Now()),
+				"Year":         time.Now().Year(),
+			},
+		); err != nil {
 			log.Warn().
 				Err(err).
 				Str("member_id", memberId).
-				Msg("failed to send email confirmation")
+				Msg("failed to send email change confirmation")
 		}
 	}
 

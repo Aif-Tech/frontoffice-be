@@ -10,6 +10,7 @@ import (
 	"front-office/internal/core/role"
 	"front-office/internal/core/template"
 	"front-office/internal/datahub"
+	"front-office/internal/mail"
 	"front-office/internal/scoreezy"
 	"front-office/pkg/httpclient"
 
@@ -18,12 +19,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupInit(routeGroup fiber.Router, cfg *application.Config) {
+func SetupInit(routeGroup fiber.Router, cfg *application.Config, mailModule *mail.MailModule) {
 	client := httpclient.NewDefaultClient(10 * time.Second)
 
 	userGroup := routeGroup.Group("users")
-	auth.SetupInit(userGroup, cfg, client)
-	member.SetupInit(userGroup, cfg, client)
+	auth.SetupInit(userGroup, cfg, client, mailModule.SendMail)
+	member.SetupInit(userGroup, cfg, client, mailModule.SendMail)
 
 	roleGroup := routeGroup.Group("roles")
 	role.SetupInit(roleGroup, cfg, client)

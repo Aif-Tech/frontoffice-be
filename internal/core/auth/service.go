@@ -9,10 +9,10 @@ import (
 	"front-office/internal/core/member"
 	"front-office/internal/core/passwordreset"
 	"front-office/internal/core/role"
+	"front-office/internal/mail"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
-	"front-office/pkg/utility/mailjet"
 
 	"strconv"
 	"time"
@@ -28,6 +28,7 @@ func NewService(
 	operationRepo operation.Repository,
 	activationRepo activation.Repository,
 	passwordResetRepo passwordreset.Repository,
+	mailSvc *mail.SendMailService,
 ) Service {
 	return &service{
 		cfg,
@@ -37,6 +38,7 @@ func NewService(
 		operationRepo,
 		activationRepo,
 		passwordResetRepo,
+		mailSvc,
 	}
 }
 
@@ -48,6 +50,7 @@ type service struct {
 	operationRepo     operation.Repository
 	activationRepo    activation.Repository
 	passwordResetRepo passwordreset.Repository
+	mailSvc           *mail.SendMailService
 }
 
 type Service interface {
@@ -264,8 +267,15 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		return apperror.MapRepoError(err, "failed to create activation")
 	}
 
-	err = mailjet.SendEmailActivation(req.Email, activationToken)
-	if err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		req.Email,
+		"Welcome to Scoreezy",
+		"welcome_member.html",
+		map[string]any{
+			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, activationToken),
+			"Year":              time.Now().Year(),
+		},
+	); err != nil {
 		updateFields := map[string]interface{}{
 			"mail_status": mailStatusResend,
 			"updated_at":  time.Now(),
@@ -273,7 +283,10 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 
 		err := svc.memberRepo.UpdateMemberAPI(userIdStr, updateFields)
 		if err != nil {
-			return apperror.MapRepoError(err, "failed to update member after email failure")
+			log.Warn().
+				Err(err).
+				Str("member_id", userIdStr).
+				Msg("failed to update member after email failure")
 		}
 
 		log.Warn().
@@ -337,7 +350,15 @@ func (svc *service) RequestActivation(email string) error {
 		return apperror.MapRepoError(err, "failed to create activation")
 	}
 
-	if err := mailjet.SendEmailActivation(email, token); err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		email,
+		"Welcome to Scoreezy",
+		"welcome_member.html",
+		map[string]any{
+			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, token),
+			"Year":              time.Now().Year(),
+		},
+	); err != nil {
 		log.Warn().
 			Err(err).
 			Str("member_id", userIdStr).
@@ -390,7 +411,17 @@ func (svc *service) RequestPasswordReset(email string) error {
 		return apperror.MapRepoError(err, "failed to create password reset token")
 	}
 
-	if err := mailjet.SendEmailPasswordReset(email, user.Name, token); err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		email,
+		"Reset Your Password",
+		"request_password_reset.html",
+		map[string]any{
+			"Name":      user.Name,
+			"ResetURL":  fmt.Sprintf("%s/users-management/password-reset/%s", svc.cfg.App.FrontendBaseUrl, token),
+			"ExpiredIn": svc.cfg.App.JwtResetPasswordExpiresMinutes,
+			"Year":      time.Now().Year(),
+		},
+	); err != nil {
 		log.Warn().
 			Err(err).
 			Str("member_id", userIdStr).
@@ -522,7 +553,15 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 		return apperror.Internal("failed to change password", err)
 	}
 
-	if err := mailjet.SendConfirmationEmailPasswordChangeSuccess(user.Name, user.Email); err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		user.Email,
+		"Scoreezy Password Changed",
+		"password_changed.html",
+		map[string]any{
+			"Name": user.Name,
+			"Year": time.Now().Year(),
+		},
+	); err != nil {
 		log.Warn().
 			Err(err).
 			Str("member_id", userId).

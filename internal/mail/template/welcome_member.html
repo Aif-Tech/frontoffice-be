@@ -1,0 +1,134 @@
+{{ define "content" }}
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  style="
+    background-color: #f4f6f8;
+    padding: 24px 0;
+    font-family: Arial, Helvetica, sans-serif;
+  "
+>
+  <tr>
+    <td align="center">
+      <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        style="
+          max-width: 600px;
+          background: #ffffff;
+          border-radius: 8px;
+          overflow: hidden;
+        "
+      >
+        <!-- Header -->
+        <tr>
+          <td style="background: #1f2937; padding: 24px; text-align: center">
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px">
+              AIForesee
+            </h1>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding: 32px">
+            <p style="margin: 0 0 16px; font-size: 14px; color: #111827">
+              Hello,
+            </p>
+
+            <p
+              style="
+                margin: 0 0 16px;
+                font-size: 14px;
+                color: #374151;
+                line-height: 1.6;
+              "
+            >
+              Welcome to Scoreezy! We're thrilled to have you on board. To
+              complete your registration, we've provided a unique token that
+              will take you directly to a page where you can create a new
+              password and activate your account.
+            </p>
+
+            <!-- Button -->
+            <div style="text-align: center; margin: 32px 0">
+              <a
+                href="{{ .CreatePasswordURL }}"
+                style="
+                  display: inline-block;
+                  background: #2563eb;
+                  color: #ffffff;
+                  text-decoration: none;
+                  padding: 14px 28px;
+                  border-radius: 6px;
+                  font-size: 14px;
+                  font-weight: bold;
+                "
+              >
+                Create New Password
+              </a>
+            </div>
+
+            <p
+              style="
+                margin: 0 0 12px;
+                font-size: 13px;
+                color: #374151;
+                line-height: 1.6;
+              "
+            >
+              If the button above doesn’t work, copy and paste the following
+              link into your browser:
+            </p>
+
+            <p style="word-break: break-all; font-size: 13px; margin: 0 0 24px">
+              <a href="{{ .CreatePasswordURL }}" style="color: #2563eb">
+                {{ .CreatePasswordURL }}
+              </a>
+            </p>
+
+            <p
+              style="
+                margin: 0 0 16px;
+                font-size: 13px;
+                color: #374151;
+                line-height: 1.6;
+              "
+            >
+              After clicking the link or opening the URL, you'll be taken to a
+              page where you can create your new password following our security
+              guidelines.
+            </p>
+
+            <p style="margin: 0; font-size: 13px; color: #374151">
+              Thank you for choosing AIForesee. We're excited to serve you, and
+              if you have any questions or need assistance, please don't
+              hesitate to reach out to our support team at
+              <a href="mailto:info@aiforesee.com" style="color: #2563eb"
+                >info@aiforesee.com</a
+              >.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background: #f9fafb; padding: 20px; text-align: center">
+            <p style="margin: 0 0 4px; font-size: 12px; color: #6b7280">
+              Best regards,
+            </p>
+            <p style="margin: 0; font-size: 12px; color: #6b7280">
+              AIForesee Team
+            </p>
+            <p style="margin: 8px 0 0; font-size: 11px; color: #9ca3af">
+              © {{ .Year }} AIForesee. All rights reserved.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+{{ end }}

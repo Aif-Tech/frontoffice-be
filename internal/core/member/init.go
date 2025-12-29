@@ -4,6 +4,7 @@ import (
 	"front-office/configs/application"
 	"front-office/internal/core/log/operation"
 	"front-office/internal/core/role"
+	"front-office/internal/mail"
 	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
 	"time"
@@ -13,13 +14,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func SetupInit(userAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {
+func SetupInit(userAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient, mailSvc *mail.SendMailService) {
 	repo := NewRepository(cfg, client, nil)
 	roleRepo := role.NewRepository(cfg, client)
 	logOperationRepo := operation.NewRepository(cfg, client, nil)
 
 	serviceRole := role.NewService(roleRepo)
-	service := NewService(repo, roleRepo, logOperationRepo)
+	service := NewService(repo, roleRepo, logOperationRepo, mailSvc)
 	serviceLogOperation := operation.NewService(logOperationRepo)
 
 	controller := NewController(service, serviceRole, serviceLogOperation)
