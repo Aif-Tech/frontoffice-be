@@ -268,8 +268,15 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		return apperror.MapRepoError(err, "failed to create activation")
 	}
 
-	err = mailjet.SendEmailActivation(req.Email, activationToken)
-	if err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		req.Email,
+		"Welcome to Scoreezy",
+		"welcome_member.html",
+		map[string]any{
+			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, activationToken),
+			"Year":              time.Now().Year(),
+		},
+	); err != nil {
 		updateFields := map[string]interface{}{
 			"mail_status": mailStatusResend,
 			"updated_at":  time.Now(),
@@ -277,13 +284,16 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 
 		err := svc.memberRepo.UpdateMemberAPI(userIdStr, updateFields)
 		if err != nil {
-			return apperror.MapRepoError(err, "failed to update member after email failure")
+			log.Warn().
+				Err(err).
+				Str("member_id", userIdStr).
+				Msg("failed to update member after email failure")
 		}
 
 		log.Warn().
 			Err(err).
 			Str("member_id", userIdStr).
-			Msg("failed to send activation email")
+			Msg("failed to send password reset email")
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
