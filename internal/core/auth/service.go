@@ -397,7 +397,7 @@ func (svc *service) RequestPasswordReset(email string) error {
 	if err := svc.mailSvc.SendWithTemplate(
 		email,
 		"Reset Your Password",
-		"password_reset.html",
+		"request_password_reset.html",
 		map[string]any{
 			"Name":      user.Name,
 			"ResetURL":  fmt.Sprintf("%s/users-management/password-reset/%s", svc.cfg.App.FrontendBaseUrl, token),
@@ -536,7 +536,15 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 		return apperror.Internal("failed to change password", err)
 	}
 
-	if err := mailjet.SendConfirmationEmailPasswordChangeSuccess(user.Name, user.Email); err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		user.Email,
+		"AIForesee Password Changed",
+		"password_changed.html",
+		map[string]any{
+			"Name": user.Name,
+			"Year": time.Now().Year(),
+		},
+	); err != nil {
 		log.Warn().
 			Err(err).
 			Str("member_id", userId).
