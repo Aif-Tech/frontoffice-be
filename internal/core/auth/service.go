@@ -9,6 +9,7 @@ import (
 	"front-office/internal/core/member"
 	"front-office/internal/core/passwordreset"
 	"front-office/internal/core/role"
+	"front-office/internal/mail"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
@@ -28,6 +29,7 @@ func NewService(
 	operationRepo operation.Repository,
 	activationRepo activation.Repository,
 	passwordResetRepo passwordreset.Repository,
+	mailSvc *mail.SendMailService,
 ) Service {
 	return &service{
 		cfg,
@@ -37,6 +39,7 @@ func NewService(
 		operationRepo,
 		activationRepo,
 		passwordResetRepo,
+		mailSvc,
 	}
 }
 
@@ -48,6 +51,7 @@ type service struct {
 	operationRepo     operation.Repository
 	activationRepo    activation.Repository
 	passwordResetRepo passwordreset.Repository
+	mailSvc           *mail.SendMailService
 }
 
 type Service interface {
@@ -390,7 +394,17 @@ func (svc *service) RequestPasswordReset(email string) error {
 		return apperror.MapRepoError(err, "failed to create password reset token")
 	}
 
-	if err := mailjet.SendEmailPasswordReset(email, user.Name, token); err != nil {
+	if err := svc.mailSvc.SendWithTemplate(
+		email,
+		"Reset Your Password",
+		"password_reset.html",
+		map[string]any{
+			"Name":      user.Name,
+			"ResetURL":  fmt.Sprintf("%s/users-management/password-reset/%s", svc.cfg.App.FrontendBaseUrl, token),
+			"ExpiredIn": svc.cfg.App.JwtResetPasswordExpiresMinutes,
+			"Year":      time.Now().Year(),
+		},
+	); err != nil {
 		log.Warn().
 			Err(err).
 			Str("member_id", userIdStr).
