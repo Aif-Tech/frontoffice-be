@@ -156,17 +156,17 @@ spec:
             - name: FO_MAIL_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: frontoffice-be-secret
+                  name: frontoffice-be-config
                   key: FO_MAIL_PORT
             - name: FO_MAIL_USER
               valueFrom:
                 configMapKeyRef:
-                  name: frontoffice-be-secret
+                  name: frontoffice-be-config
                   key: FO_MAIL_USER
             - name: FO_MAIL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: frontoffice-be-secret
+                  name: frontoffice-be-config
                   key: FO_MAIL_PASSWORD
             - name: FO_MAIL_MAX_RETRY
               valueFrom:
