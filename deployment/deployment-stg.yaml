@@ -148,6 +148,36 @@ spec:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_SCOREEZY_KEY
+            - name: FO_MAIL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-config
+                  key: FO_MAIL_HOST
+            - name: FO_MAIL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-secret
+                  key: FO_MAIL_PORT
+            - name: FO_MAIL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-secret
+                  key: FO_MAIL_USER
+            - name: FO_MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: frontoffice-be-secret
+                  key: FO_MAIL_PASSWORD
+            - name: FO_MAIL_MAX_RETRY
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-config
+                  key: FO_MAIL_MAX_RETRY
+            - name: FO_REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: frontoffice-be-config
+                  key: FO_REDIS_URL
 
 ---
 apiVersion: autoscaling/v1
