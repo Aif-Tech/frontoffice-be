@@ -38,6 +38,6 @@ func SetupInit(authAPI fiber.Router, cfg *application.Config, client httpclient.
 	authAPI.Post("/refresh-access", middleware.GetPayloadFromRefreshToken(), controller.RefreshAccessToken)
 	authAPI.Put("/send-email-activation/:email", middleware.Auth(), middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.RequestActivation)
 	authAPI.Post("/request-password-reset", middleware.ValidateRequest(requestPasswordResetRequest{}), controller.RequestPasswordReset)
-	authAPI.Put("/password-reset/:token", middleware.SetCookiePasswordResetToken, middleware.GetJWTPayloadPasswordResetFromCookie(), middleware.ValidateRequest(passwordResetRequest{}), controller.PasswordReset)
+	authAPI.Put("/password-reset/:token", middleware.ValidateRequest(passwordResetRequest{}), controller.PasswordReset)
 	authAPI.Put("/change-password", middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(changePasswordRequest{}), controller.ChangePassword)
 }
