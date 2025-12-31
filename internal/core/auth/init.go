@@ -33,7 +33,7 @@ func SetupInit(authAPI fiber.Router, cfg *application.Config, client httpclient.
 
 	authAPI.Post("/register-member", middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(member.RegisterMemberRequest{}), controller.RegisterMember)
 	authAPI.Post("/login", middleware.ValidateRequest(userLoginRequest{}), controller.Login)
-	authAPI.Put("/verify/:token", middleware.SetHeaderAuth, middleware.ValidateRequest(passwordResetRequest{}), controller.VerifyUser)
+	authAPI.Put("/verify/:token", middleware.ValidateRequest(passwordResetRequest{}), controller.VerifyUser)
 	authAPI.Post("/logout", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.Logout)
 	authAPI.Post("/refresh-access", middleware.GetPayloadFromRefreshToken(), controller.RefreshAccessToken)
 	authAPI.Put("/send-email-activation/:email", middleware.Auth(), middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.RequestActivation)

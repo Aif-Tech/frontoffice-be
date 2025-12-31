@@ -51,7 +51,7 @@ func (w *MailWorker) Start() {
 
 			// main dequeue loop
 			default:
-				mail, err := w.queue.Dequeue(30)
+				mail, err := w.queue.Dequeue(120)
 				if err != nil {
 					continue
 				}
