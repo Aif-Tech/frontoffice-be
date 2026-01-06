@@ -174,6 +174,10 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 		return err
 	}
 
+	if filename == "" {
+		return c.SendStatus(fiber.StatusNoContent)
+	}
+
 	c.Set(constant.HeaderContentType, constant.TextOrCSVContentType)
 	c.Set(constant.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s", filename))
 
