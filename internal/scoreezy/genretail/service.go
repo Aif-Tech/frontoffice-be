@@ -344,25 +344,14 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 		return "", apperror.MapRepoError(err, "failed to fetch logs scoreezy")
 	}
 
-	var mappedDetails []*logTransScoreezy
-	mappedDetails = append(mappedDetails, result.Data...)
-
-	if err := writeToCSV(buf, includeDate, filter.Masked, mappedDetails); err != nil {
-		return "", apperror.Internal("failed to write CSV", err)
-	}
-
-	filename := formatCSVFileName("job_summary", filter.StartDate, filter.EndDate)
-
 	companyIdUint, err := strconv.ParseUint(filter.CompanyId, 10, 32)
 	if err != nil {
 		return "", apperror.Internal("failed to parse company id", err)
 	}
 
-	var action string
+	action := constant.EventScoreezySingleDownload
 	if len(result.Data) > 1 {
 		action = constant.EventScoreezyBulkDownload
-	} else {
-		action = constant.EventScoreezySingleDownload
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
@@ -375,6 +364,19 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 			Str("action", action).
 			Msg("failed to add operation log")
 	}
+
+	if len(result.Data) <= 1 {
+		return "", nil
+	}
+
+	var mappedDetails []*logTransScoreezy
+	mappedDetails = append(mappedDetails, result.Data...)
+
+	if err := writeToCSV(buf, includeDate, filter.Masked, mappedDetails); err != nil {
+		return "", apperror.Internal("failed to write CSV", err)
+	}
+
+	filename := formatCSVFileName("job_summary", filter.StartDate, filter.EndDate)
 
 	return filename, nil
 }
