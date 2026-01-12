@@ -60,24 +60,37 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 		return nil, apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugRecycleNumber)
+	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugRecycleNumber)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
-	// todo: update
-	// jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-	// 	ProductId: subscribedResp.Data.ProductId,
-	// 	MemberId:  authCtx.UserIdStr(),
-	// 	CompanyId: authCtx.CompanyIdStr(),
-	// 	Total:     1,
-	// })
-	// if err != nil {
-	// 	return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
-	// }
-	// jobIdStr := helper.ConvertUintToString(jobRes.JobId)
+	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
+		ProductId: subscribedResp.Data.ProductId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
+		Total:     1,
+	})
+	if err != nil {
+		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
+	}
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	jobIdStr := "dummy" // todo: remove
+	// todo: remove
+	if err := svc.dummyLogTrans(&recycleNumberContext{
+		APIKey:         authCtx.APIKey,
+		JobIdStr:       jobIdStr,
+		MemberIdStr:    authCtx.UserIdStr(),
+		CompanyIdStr:   authCtx.CompanyIdStr(),
+		MemberId:       authCtx.UserId,
+		CompanyId:      authCtx.CompanyId,
+		ProductId:      subscribedResp.Data.ProductId,
+		ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
+		JobId:          jobRes.JobId,
+		Request:        reqBody,
+	}); err != nil {
+		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
+	}
 
 	result, err := svc.repo.RecycleNumberAPI(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
 	if err != nil {
@@ -90,24 +103,24 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 			return nil, apperror.MapLoanError(apiErr)
 		}
 
-		return nil, apperror.Internal("failed to process loan record checker", err)
+		return nil, apperror.Internal("failed to process recycle number", err)
 	}
 
 	// todo: update
-	// if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
-	// 	return nil, err
-	// }
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return nil, err
+	}
 
-	// if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
-	// 	MemberId:  authCtx.UserId,
-	// 	CompanyId: authCtx.CompanyId,
-	// 	Action:    constant.EventRecycleNumberSingleReq,
-	// }); err != nil {
-	// 	log.Warn().
-	// 		Err(err).
-	// 		Str("action", constant.EventRecycleNumberSingleReq).
-	// 		Msg("failed to add operation log")
-	// }
+	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
+		MemberId:  authCtx.UserId,
+		CompanyId: authCtx.CompanyId,
+		Action:    constant.EventRecycleNumberSingleReq,
+	}); err != nil {
+		log.Warn().
+			Err(err).
+			Str("action", constant.EventRecycleNumberSingleReq).
+			Msg("failed to add operation log")
+	}
 
 	return result, nil
 }
@@ -139,19 +152,16 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 		return apperror.Forbidden(constant.ErrQuotaExceeded)
 	}
 
-	// todo: update
-	// jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
-	// 	ProductId: subscribedResp.Data.ProductId,
-	// 	MemberId:  authCtx.UserIdStr(),
-	// 	CompanyId: authCtx.CompanyIdStr(),
-	// 	Total:     totalRequests,
-	// })
-	// if err != nil {
-	// 	return apperror.MapRepoError(err, constant.FailedCreateJob)
-	// }
-	// jobIdStr := helper.ConvertUintToString(jobRes.JobId)
-
-	jobIdStr := "1" // todo: remove
+	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
+		ProductId: subscribedResp.Data.ProductId,
+		MemberId:  authCtx.UserIdStr(),
+		CompanyId: authCtx.CompanyIdStr(),
+		Total:     totalRequests,
+	})
+	if err != nil {
+		return apperror.MapRepoError(err, constant.FailedCreateJob)
+	}
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
 	var requests []*recycleNumberRequest
 	for i, rec := range records {
@@ -188,8 +198,8 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 				CompanyId:      authCtx.CompanyId,
 				ProductId:      subscribedResp.Data.ProductId,
 				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
-				// JobId:          jobRes.JobId, // todo: update
-				Request: recycleNumberReq,
+				JobId:          jobRes.JobId,
+				Request:        recycleNumberReq,
 			}); err != nil {
 				errChan <- err
 			}
@@ -247,12 +257,16 @@ func (svc *service) processSingleRecycleNumber(params *recycleNumberContext) err
 		return apperror.BadRequest(err.Error())
 	}
 
+	if err := svc.dummyLogTrans(params); err != nil {
+		return apperror.MapRepoError(err, constant.FailedCreateJob)
+	}
+
 	_, err := svc.repo.RecycleNumberAPI(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
-		return apperror.Internal("failed to process loan record checker", err)
+		return apperror.Internal("failed to process recycle number", err)
 	}
 
 	return nil
@@ -309,4 +323,37 @@ func detectOperator(phone string) string {
 	}
 
 	return "unknown"
+}
+
+// todo: remove
+func (svc *service) dummyLogTrans(params *recycleNumberContext) error {
+	dummyTrxId := helper.GenerateTrx(constant.TrxIdRecycleNumber)
+
+	status := "phone number has never been recycled"
+	if params.Request.Phone == "085700000001" {
+		status = "phone number never happens recycled"
+	}
+
+	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+		TransactionID:  dummyTrxId,
+		MemberID:       params.MemberId,
+		CompanyID:      params.CompanyId,
+		ProductID:      params.ProductId,
+		ProductGroupID: params.ProductGroupId,
+		JobID:          params.JobId,
+		Message:        constant.Success,
+		Status:         http.StatusOK,
+		Success:        true,
+		LoanNo:         params.Request.LoanNo,
+		ResponseBody: &transaction.ResponseBody{
+			Data: dataRecycleNumberAPI{
+				Status: status,
+			},
+			Input:    params.Request,
+			DateTime: time.Now().Format(constant.FormatDateAndTime),
+		},
+		RequestBody:  params.Request,
+		RequestTime:  time.Now(),
+		ResponseTime: time.Now(),
+	})
 }

@@ -4,7 +4,7 @@ type recycleNumberRequest struct {
 	Phone     string `json:"phone_number" validate:"required~Phone Number cannot be empty, indophone, min(9)"`
 	LoanNo    string `json:"loan_no" validate:"required~Loan No cannot be empty."`
 	Timestamp string `json:"timestamp" validate:"required~Timestamp cannot be empty"`
-	Period    string `json:"period"`
+	Period    string `json:"period,omitempty"`
 }
 
 type dataRecycleNumberAPI struct {
