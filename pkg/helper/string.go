@@ -3,6 +3,7 @@ package helper
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -84,10 +85,10 @@ func ValidatePasswordStrength(password string) bool {
 	return true
 }
 
-func ParseDate(layout, date string) error {
-	_, err := time.Parse(layout, date)
+func ValidateDateYYYYMMDD(value string) error {
+	_, err := time.Parse("2006-01-02", value)
 	if err != nil {
-		return err
+		return errors.New("timestamp must be in YYYY-MM-DD format")
 	}
 
 	return nil

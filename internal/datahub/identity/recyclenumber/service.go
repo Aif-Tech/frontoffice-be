@@ -52,6 +52,14 @@ type Service interface {
 }
 
 func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
+	if err := helper.ValidateDateYYYYMMDD(reqBody.Timestamp); err != nil {
+		return nil, apperror.BadRequest(err.Error())
+	}
+
+	if err := validatePeriodByOperator(reqBody.Phone, reqBody.Period); err != nil {
+		return nil, apperror.BadRequest(err.Error())
+	}
+
 	_, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugRecycleNumber)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
@@ -256,4 +264,35 @@ func (svc *service) logFailedTransaction(params *recycleNumberContext, trxId, ms
 		RequestTime:  time.Now(),
 		ResponseTime: time.Now(),
 	})
+}
+
+func validatePeriodByOperator(phone, period string) error {
+	operator := detectOperator(phone)
+
+	if operator != constant.OperatorIsat {
+		return nil
+	}
+
+	if period == "" {
+		return errors.New("period is required for Isat numbers")
+	}
+
+	if period != "30" && period != "90" {
+		return errors.New("period must be either 30 or 90 for Isat numbers")
+	}
+
+	return nil
+}
+
+func detectOperator(phone string) string {
+	if len(phone) < 4 {
+		return "unknown"
+	}
+
+	prefix := phone[:4]
+	if op, ok := constant.OperatorByPrefix[prefix]; ok {
+		return op
+	}
+
+	return "unknown"
 }
