@@ -106,7 +106,6 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 		return nil, apperror.Internal("failed to process recycle number", err)
 	}
 
-	// todo: update
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
 		return nil, err
 	}
