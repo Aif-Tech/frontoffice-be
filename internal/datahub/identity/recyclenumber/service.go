@@ -160,8 +160,10 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 		}
 
 		requests = append(requests, &recycleNumberRequest{
-			Phone:  rec[0],
-			LoanNo: rec[1],
+			Phone:     rec[0],
+			LoanNo:    rec[1],
+			Timestamp: rec[2],
+			Period:    rec[3],
 		})
 	}
 
@@ -174,7 +176,7 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 	for _, req := range requests {
 		wg.Add(1)
 
-		go func(loanCheckerReq *recycleNumberRequest) {
+		go func(recycleNumberReq *recycleNumberRequest) {
 			defer wg.Done()
 
 			if err := svc.processSingleRecycleNumber(&recycleNumberContext{
@@ -187,7 +189,7 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 				ProductId:      subscribedResp.Data.ProductId,
 				ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 				// JobId:          jobRes.JobId, // todo: update
-				Request: loanCheckerReq,
+				Request: recycleNumberReq,
 			}); err != nil {
 				errChan <- err
 			}
@@ -228,6 +230,18 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 func (svc *service) processSingleRecycleNumber(params *recycleNumberContext) error {
 	trxId := helper.GenerateTrx(constant.TrxIdLoanRecord)
 	if err := validator.ValidateStruct(params.Request); err != nil {
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
+
+		return apperror.BadRequest(err.Error())
+	}
+
+	if err := helper.ValidateDateYYYYMMDD(params.Request.Timestamp); err != nil {
+		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
+
+		return apperror.BadRequest(err.Error())
+	}
+
+	if err := validatePeriodByOperator(params.Request.Phone, params.Request.Period); err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
