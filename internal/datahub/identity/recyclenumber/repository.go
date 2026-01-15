@@ -30,10 +30,10 @@ type repository struct {
 }
 
 type Repository interface {
-	RecycleNumberAPI(apiKey string, jobId string, memberId string, companyId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error)
+	RecycleNumberAPI(apiKey, jobId, memberId, companyId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error)
 }
 
-func (repo *repository) RecycleNumberAPI(apiKey string, jobId string, memberId string, companyId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
+func (repo *repository) RecycleNumberAPI(apiKey, jobId, memberId, companyId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
 	status := "phone number never happens recycled"
 	if payload.Phone == "08111111110" {
 		status = "phone number has never been recycled"
@@ -47,7 +47,7 @@ func (repo *repository) RecycleNumberAPI(apiKey string, jobId string, memberId s
 		Input: recycleNumberRequest{
 			Phone:     payload.Phone,
 			LoanNo:    payload.LoanNo,
-			Timestamp: payload.Timestamp,
+			Timestamp: time.Now().Format(constant.FormatYYYYMMDD),
 			Period:    payload.Period,
 		},
 		Message:         "Succeed to Request Data",

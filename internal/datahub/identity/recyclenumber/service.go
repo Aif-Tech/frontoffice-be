@@ -52,9 +52,7 @@ type Service interface {
 }
 
 func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
-	if err := helper.ValidateDateYYYYMMDD(reqBody.Timestamp); err != nil {
-		return nil, apperror.BadRequest(err.Error())
-	}
+	reqBody.Timestamp = time.Now().Format(constant.FormatYYYYMMDD)
 
 	if err := validatePeriodByOperator(reqBody.Phone, reqBody.Period); err != nil {
 		return nil, apperror.BadRequest(err.Error())
@@ -169,10 +167,9 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 		}
 
 		requests = append(requests, &recycleNumberRequest{
-			Phone:     rec[0],
-			LoanNo:    rec[1],
-			Timestamp: rec[2],
-			Period:    rec[3],
+			Phone:  rec[0],
+			LoanNo: rec[1],
+			Period: rec[2],
 		})
 	}
 
@@ -238,13 +235,8 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 
 func (svc *service) processSingleRecycleNumber(params *recycleNumberContext) error {
 	trxId := helper.GenerateTrx(constant.TrxIdLoanRecord)
+	params.Request.Timestamp = time.Now().Format(constant.FormatYYYYMMDD)
 	if err := validator.ValidateStruct(params.Request); err != nil {
-		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
-
-		return apperror.BadRequest(err.Error())
-	}
-
-	if err := helper.ValidateDateYYYYMMDD(params.Request.Timestamp); err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
