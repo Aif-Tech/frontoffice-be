@@ -52,12 +52,6 @@ type Service interface {
 }
 
 func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
-	reqBody.Timestamp = time.Now().Format(constant.FormatYYYYMMDD)
-
-	if err := validatePeriodByOperator(reqBody.Phone, reqBody.Period); err != nil {
-		return nil, apperror.BadRequest(err.Error())
-	}
-
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugRecycleNumber)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
@@ -75,6 +69,7 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
 	// todo: remove
+	dummyTrxId := helper.GenerateTrx(constant.TrxIdRecycleNumber)
 	if err := svc.dummyLogTrans(&recycleNumberContext{
 		APIKey:         authCtx.APIKey,
 		JobIdStr:       jobIdStr,
@@ -86,11 +81,11 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 		ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 		JobId:          jobRes.JobId,
 		Request:        reqBody,
-	}); err != nil {
+	}, dummyTrxId); err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
 
-	result, err := svc.repo.RecycleNumberAPI(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
+	result, err := svc.repo.RecycleNumberAPI(authCtx.APIKey, dummyTrxId, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -169,7 +164,6 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 		requests = append(requests, &recycleNumberRequest{
 			Phone:  rec[0],
 			LoanNo: rec[1],
-			Period: rec[2],
 		})
 	}
 
@@ -235,24 +229,17 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 
 func (svc *service) processSingleRecycleNumber(params *recycleNumberContext) error {
 	trxId := helper.GenerateTrx(constant.TrxIdLoanRecord)
-	params.Request.Timestamp = time.Now().Format(constant.FormatYYYYMMDD)
 	if err := validator.ValidateStruct(params.Request); err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 
 		return apperror.BadRequest(err.Error())
 	}
 
-	if err := validatePeriodByOperator(params.Request.Phone, params.Request.Period); err != nil {
-		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
-
-		return apperror.BadRequest(err.Error())
-	}
-
-	if err := svc.dummyLogTrans(params); err != nil {
+	if err := svc.dummyLogTrans(params, trxId); err != nil {
 		return apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
 
-	_, err := svc.repo.RecycleNumberAPI(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
+	_, err := svc.repo.RecycleNumberAPI(params.APIKey, trxId, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
@@ -285,41 +272,8 @@ func (svc *service) logFailedTransaction(params *recycleNumberContext, trxId, ms
 	})
 }
 
-func validatePeriodByOperator(phone, period string) error {
-	operator := detectOperator(phone)
-
-	if operator != constant.OperatorIsat {
-		return nil
-	}
-
-	if period == "" {
-		return errors.New("period is required for Isat numbers")
-	}
-
-	if period != "30" && period != "90" {
-		return errors.New("period must be either 30 or 90 for Isat numbers")
-	}
-
-	return nil
-}
-
-func detectOperator(phone string) string {
-	if len(phone) < 4 {
-		return "unknown"
-	}
-
-	prefix := phone[:4]
-	if op, ok := constant.OperatorByPrefix[prefix]; ok {
-		return op
-	}
-
-	return "unknown"
-}
-
 // todo: remove
-func (svc *service) dummyLogTrans(params *recycleNumberContext) error {
-	dummyTrxId := helper.GenerateTrx(constant.TrxIdRecycleNumber)
-
+func (svc *service) dummyLogTrans(params *recycleNumberContext, dummyTrxId string) error {
 	status := "phone number has never been recycled"
 	if params.Request.Phone == "085700000001" {
 		status = "phone number never happens recycled"
@@ -340,8 +294,10 @@ func (svc *service) dummyLogTrans(params *recycleNumberContext) error {
 			Data: dataRecycleNumberAPI{
 				Status: status,
 			},
-			Input:    params.Request,
-			DateTime: time.Now().Format(constant.FormatDateAndTime),
+			Input:           params.Request,
+			TransactionId:   dummyTrxId,
+			PricingStrategy: "FREE",
+			DateTime:        time.Now().Format(constant.FormatDateAndTime),
 		},
 		RequestBody:  params.Request,
 		RequestTime:  time.Now(),
