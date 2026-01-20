@@ -51,94 +51,6 @@ const (
 	hitTypeBulk   = "bulk"
 )
 
-// todo: remove
-var dummyJobDetailRecycleNumber = []*logTransProductCatalog{
-	{
-		MemberID:  1,
-		CompanyID: 1,
-		JobID:     1,
-		ProductID: 1,
-		LoanNo:    "dummy",
-		Status:    "success",
-		Input: &logTransInput{
-			PhoneNumber: helper.StringPtr("085755700000"),
-			LoanNo:      "dummy",
-		},
-		Data: &logTransData{
-			Status: helper.StringPtr("phone number has never been recycled"),
-		},
-		PricingStrategy: "FREE",
-		TransactionId:   constant.DummyTransactionId,
-		RefTransProductCatalog: map[string]any{
-			"data": map[string]any{
-				"status": "phone number has never been recycled",
-			},
-			"datetime": "2025-12-12 09:13:09",
-			"input": map[string]any{
-				"loan_no":      "dummy",
-				"phone_number": "08575***000",
-			},
-			"transaction_id": constant.DummyTransactionId,
-		},
-	},
-	{
-		MemberID:  1,
-		CompanyID: 1,
-		JobID:     1,
-		ProductID: 1,
-		LoanNo:    "dummy",
-		Status:    "success",
-		Input: &logTransInput{
-			PhoneNumber: helper.StringPtr("085755700001"),
-			LoanNo:      "dummy",
-		},
-		Data: &logTransData{
-			Status: helper.StringPtr("phone number has never been recycled"),
-		},
-		PricingStrategy: "FREE",
-		TransactionId:   constant.DummyTransactionId,
-		RefTransProductCatalog: map[string]any{
-			"data": map[string]any{
-				"status": "phone number has never been recycled",
-			},
-			"datetime": "2025-12-12 09:13:09",
-			"input": map[string]any{
-				"loan_no":      "dummy",
-				"phone_number": "08575***001",
-			},
-			"transaction_id": constant.DummyTransactionId,
-		},
-	},
-	{
-		MemberID:  1,
-		CompanyID: 1,
-		JobID:     1,
-		ProductID: 1,
-		LoanNo:    "dummy",
-		Status:    "success",
-		Input: &logTransInput{
-			PhoneNumber: helper.StringPtr("085755700002"),
-			LoanNo:      "dummy",
-		},
-		Data: &logTransData{
-			Status: helper.StringPtr("phone number has never been recycled"),
-		},
-		PricingStrategy: "FREE",
-		TransactionId:   constant.DummyTransactionId,
-		RefTransProductCatalog: map[string]any{
-			"data": map[string]any{
-				"status": "phone number has never been recycled",
-			},
-			"datetime": "2025-12-12 09:13:09",
-			"input": map[string]any{
-				"loan_no":      "dummy",
-				"phone_number": "08575***002",
-			},
-			"transaction_id": constant.DummyTransactionId,
-		},
-	},
-}
-
 func (svc *service) CreateJob(req *CreateJobRequest) (*createJobRespData, error) {
 	result, err := svc.repo.CreateJobAPI(req)
 	if err != nil {
@@ -172,54 +84,6 @@ func (svc *service) UpdateJobAPI(jobId string, req *UpdateJobRequest) error {
 }
 
 func (svc *service) GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error) {
-	// todo: remove
-	dummyJobs := []job{
-		{
-			Id:           1,
-			ProductId:    1,
-			MemberId:     1,
-			CompanyId:    1,
-			Total:        3,
-			SuccessCount: 3,
-			Status:       "done",
-			StartTime:    "2025-12-12 17:32:39",
-			EndTime:      "2025-12-12 17:32:39",
-		},
-		{
-			Id:           2,
-			ProductId:    1,
-			MemberId:     1,
-			CompanyId:    1,
-			Total:        5,
-			SuccessCount: 5,
-			Status:       "done",
-			StartTime:    "2025-12-12 07:32:12",
-			EndTime:      "2025-12-12 07:32:13",
-		},
-		{
-			Id:           3,
-			ProductId:    1,
-			MemberId:     1,
-			CompanyId:    1,
-			Total:        4,
-			SuccessCount: 4,
-			Status:       "done",
-			StartTime:    "2025-12-12 14:23:15",
-			EndTime:      "2025-12-12 14:23:15",
-		},
-	}
-
-	if filter.ProductSlug == constant.SlugRecycleNumber {
-		return &model.AifcoreAPIResponse[*jobListResponse]{
-			Success: true,
-			Message: "success",
-			Data: &jobListResponse{
-				Jobs:      dummyJobs,
-				TotalData: int64(len(dummyJobs)),
-			},
-		}, nil
-	}
-
 	result, err := svc.repo.GetJobsAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch jobs")
@@ -262,30 +126,6 @@ func (svc *service) GetGenRetailJobs(filter *logFilter) (*model.APIResponse[*job
 }
 
 func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
-	// todo: remove
-	if filter.ProductSlug == constant.SlugRecycleNumber {
-		return &model.AifcoreAPIResponse[*jobDetailResponse]{
-			Success: true,
-			Message: "success",
-			Data: &jobDetailResponse{
-				JobDetails:                 dummyJobDetailRecycleNumber,
-				TotalData:                  int64(len(dummyJobDetailRecycleNumber)),
-				TotalDataPercentageSuccess: 3,
-				TotalDataPercentageFail:    0,
-				TotalDataPercentageError:   0,
-			},
-			Meta: &model.Meta{
-				Message:   "Success",
-				Total:     3,
-				Page:      1,
-				Visible:   3,
-				StartData: 1,
-				EndData:   1,
-				Size:      10,
-			},
-		}, nil
-	}
-
 	result, err := svc.repo.GetJobDetailAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch job detail")
@@ -295,30 +135,6 @@ func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[
 }
 
 func (svc *service) GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error) {
-	// todo: remove
-	if filter.ProductSlug == constant.SlugRecycleNumber {
-		return &model.AifcoreAPIResponse[*jobDetailResponse]{
-			Success: true,
-			Message: "success",
-			Data: &jobDetailResponse{
-				JobDetails:                 dummyJobDetailRecycleNumber,
-				TotalData:                  int64(len(dummyJobDetailRecycleNumber)),
-				TotalDataPercentageSuccess: 1,
-				TotalDataPercentageFail:    0,
-				TotalDataPercentageError:   0,
-			},
-			Meta: &model.Meta{
-				Message:   "Success",
-				Total:     1,
-				Page:      1,
-				Visible:   1,
-				StartData: 1,
-				EndData:   1,
-				Size:      10,
-			},
-		}, nil
-	}
-
 	result, err := svc.repo.GetJobsSummaryAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch job detail")

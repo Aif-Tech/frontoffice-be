@@ -8,6 +8,7 @@ const (
 	TrxId90DaysMultipleLoan = "ML90"
 	TrxIdNPWPVerification   = "NPV"
 	TrxIdPhoneLiveStatus    = "PLS"
+	TrxIdRecycleNumber      = "RCN"
 	TrxIdTaxCompliance      = "TCS"
 	TrxIdTaxVerification    = "TVD"
 	TrxIdTaxScore           = "TXS"

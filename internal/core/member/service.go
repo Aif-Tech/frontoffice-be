@@ -8,7 +8,6 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
-	"front-office/pkg/utility/mailjet"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -109,12 +108,24 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *up
 	}
 
 	if shouldSendEmailConfirmation {
-		if err := mailjet.SendConfirmationEmailUserEmailChangeSuccess(user.Name, user.Email, newEmail, helper.FormatWIB(time.Now())); err != nil {
+		if err := svc.mailSvc.SendWithTemplate(
+			newEmail,
+			"Scoreezy Account Email Updated",
+			"email_changed.html",
+			map[string]any{
+				"Name":         user.Name,
+				"OldEmail":     user.Email,
+				"NewEmail":     newEmail,
+				"DateOfChange": helper.FormatWIB(time.Now()),
+				"Year":         time.Now().Year(),
+			},
+		); err != nil {
 			log.Warn().
 				Err(err).
 				Str("member_id", userId).
-				Msg("failed to send email confirmation")
+				Msg("failed to send email change confirmation")
 		}
+
 		user.Email = newEmail
 	}
 
