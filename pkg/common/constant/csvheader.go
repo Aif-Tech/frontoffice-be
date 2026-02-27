@@ -22,7 +22,6 @@ const (
 	CSVHeaderGrade                = "Grade"
 	CSVHeaderBehavior             = "Behavior"
 	CSVHeaderIdentity             = "Identity"
-	CSVHeaderPeriod               = "Period"
 	CSVHeaderStatus               = "Status"
 	CSVHeaderDescription          = "Description"
 )
@@ -79,7 +78,6 @@ var CSVExportHeaderPhoneLive = []string{
 var CSVTemplateHeaderRecycleNumber = []string{
 	CSVHeaderPhone,
 	CSVHeaderLoanNumber,
-	CSVHeaderPeriod,
 }
 
 var CSVExportHeaderLoanRecord = []string{
