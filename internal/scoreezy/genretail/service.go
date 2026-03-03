@@ -104,6 +104,8 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 		return nil, apperror.MapRepoError(err, "failed to process gen retail v3")
 	}
 
+	result.Data.JobId = jobRes.JobId
+
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
 		MemberId:  memberId,
 		CompanyId: companyId,

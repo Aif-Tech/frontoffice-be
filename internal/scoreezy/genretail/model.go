@@ -13,6 +13,7 @@ type genRetailRequest struct {
 
 type dataGenRetailV3 struct {
 	TransactionId        string  `json:"transaction_id"`
+	JobId                uint    `json:"job_id"`
 	Name                 string  `json:"name"`
 	IdCardNo             string  `json:"id_card_no"`
 	PhoneNo              string  `json:"phone_no"`
