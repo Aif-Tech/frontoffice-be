@@ -31,8 +31,12 @@ func (svc *SendMailService) Execute(mail Mail) error {
 		mail.MaxRetry = maxRetry
 	}
 
-	if mail.To == "" {
+	if mail.To == "" && len(mail.ToList) == 0 {
 		return apperror.BadRequest("recipient is required")
+	}
+
+	if mail.To != "" && len(mail.ToList) == 0 {
+		mail.ToList = []string{mail.To}
 	}
 
 	// return svc.service.Send(mail)
@@ -40,25 +44,23 @@ func (svc *SendMailService) Execute(mail Mail) error {
 }
 
 func (svc *SendMailService) SendWithTemplate(
-	to string,
+	toList []string,
+	cc []string,
 	subject string,
 	templateName string,
 	data any,
+	attachment []MailAttachment,
 ) error {
 	body, err := svc.renderer.Render(templateName, data)
 	if err != nil {
 		return apperror.Internal("failed to render template", err)
 	}
 
-	// return svc.service.Send(Mail{
-	// 	To:      to,
-	// 	Subject: subject,
-	// 	Body:    body,
-	// })
-
 	return svc.Execute(Mail{
-		To:      to,
-		Subject: subject,
-		Body:    body,
+		ToList:      toList,
+		CC:          cc,
+		Subject:     subject,
+		Body:        body,
+		Attachments: attachment,
 	})
 }

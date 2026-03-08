@@ -268,13 +268,15 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		req.Email,
+		[]string{req.Email},
+		nil,
 		"Welcome to Scoreezy",
 		"welcome_member.html",
 		map[string]any{
 			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, activationToken),
 			"Year":              time.Now().Year(),
 		},
+		nil,
 	); err != nil {
 		updateFields := map[string]interface{}{
 			"mail_status": mailStatusResend,
@@ -351,13 +353,15 @@ func (svc *service) RequestActivation(email string) error {
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		email,
+		[]string{email},
+		nil,
 		"Welcome to Scoreezy",
 		"welcome_member.html",
 		map[string]any{
 			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, token),
 			"Year":              time.Now().Year(),
 		},
+		nil,
 	); err != nil {
 		log.Warn().
 			Err(err).
@@ -412,7 +416,8 @@ func (svc *service) RequestPasswordReset(email string) error {
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		email,
+		[]string{email},
+		nil,
 		"Reset Your Password",
 		"request_password_reset.html",
 		map[string]any{
@@ -421,6 +426,7 @@ func (svc *service) RequestPasswordReset(email string) error {
 			"ExpiredIn": svc.cfg.App.JwtResetPasswordExpiresMinutes,
 			"Year":      time.Now().Year(),
 		},
+		nil,
 	); err != nil {
 		log.Warn().
 			Err(err).
@@ -554,13 +560,15 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		user.Email,
+		[]string{user.Email},
+		nil,
 		"Scoreezy Password Changed",
 		"password_changed.html",
 		map[string]any{
 			"Name": user.Name,
 			"Year": time.Now().Year(),
 		},
+		nil,
 	); err != nil {
 		log.Warn().
 			Err(err).

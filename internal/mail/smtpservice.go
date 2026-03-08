@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"net/smtp"
@@ -22,9 +23,29 @@ func NewSMTPService(host, port, user, pass string) *SMTPService {
 func (s *SMTPService) Send(mail Mail) error {
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("AIForesee <%s>", s.user)
-	e.To = []string{mail.To}
+
+	if len(mail.ToList) > 0 {
+		e.To = mail.ToList
+	} else if mail.To != "" {
+		e.To = []string{mail.To}
+	}
+
+	if len(mail.CC) > 0 {
+		e.Cc = mail.CC
+	}
+
 	e.Subject = mail.Subject
 	e.HTML = []byte(mail.Body)
+
+	for _, att := range mail.Attachments {
+		if _, err := e.Attach(
+			bytes.NewReader(att.Data),
+			att.FileName,
+			att.MimeType,
+		); err != nil {
+			return fmt.Errorf("failed to attach file %s: %w", att.FileName, err)
+		}
+	}
 
 	addr := fmt.Sprintf("%s:%s", s.host, s.port)
 	auth := smtp.PlainAuth("", s.user, s.pass, s.host)
