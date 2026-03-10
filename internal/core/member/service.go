@@ -109,7 +109,7 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *up
 
 	if shouldSendEmailConfirmation {
 		if err := svc.mailSvc.SendWithTemplate(
-			[]string{newEmail},
+			newEmail,
 			nil,
 			"Scoreezy Account Email Updated",
 			"email_changed.html",
@@ -120,7 +120,6 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *up
 				"DateOfChange": helper.FormatWIB(time.Now()),
 				"Year":         time.Now().Year(),
 			},
-			nil,
 		); err != nil {
 			log.Warn().
 				Err(err).
@@ -268,7 +267,7 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 
 	if sendEmailConfirmation {
 		if err := svc.mailSvc.SendWithTemplate(
-			[]string{member.Email},
+			member.Email,
 			nil,
 			"Scoreezy Account Email Updated",
 			"email_changed.html",
@@ -279,7 +278,6 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 				"DateOfChange": helper.FormatWIB(time.Now()),
 				"Year":         time.Now().Year(),
 			},
-			nil,
 		); err != nil {
 			log.Warn().
 				Err(err).

@@ -268,7 +268,7 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		[]string{req.Email},
+		req.Email,
 		nil,
 		"Welcome to Scoreezy",
 		"welcome_member.html",
@@ -276,7 +276,6 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, activationToken),
 			"Year":              time.Now().Year(),
 		},
-		nil,
 	); err != nil {
 		updateFields := map[string]interface{}{
 			"mail_status": mailStatusResend,
@@ -353,7 +352,7 @@ func (svc *service) RequestActivation(email string) error {
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		[]string{email},
+		email,
 		nil,
 		"Welcome to Scoreezy",
 		"welcome_member.html",
@@ -361,7 +360,6 @@ func (svc *service) RequestActivation(email string) error {
 			"CreatePasswordURL": fmt.Sprintf("%s/users-management/verif/%s", svc.cfg.App.FrontendBaseUrl, token),
 			"Year":              time.Now().Year(),
 		},
-		nil,
 	); err != nil {
 		log.Warn().
 			Err(err).
@@ -416,7 +414,7 @@ func (svc *service) RequestPasswordReset(email string) error {
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		[]string{email},
+		email,
 		nil,
 		"Reset Your Password",
 		"request_password_reset.html",
@@ -426,7 +424,6 @@ func (svc *service) RequestPasswordReset(email string) error {
 			"ExpiredIn": svc.cfg.App.JwtResetPasswordExpiresMinutes,
 			"Year":      time.Now().Year(),
 		},
-		nil,
 	); err != nil {
 		log.Warn().
 			Err(err).
@@ -560,7 +557,7 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 	}
 
 	if err := svc.mailSvc.SendWithTemplate(
-		[]string{user.Email},
+		user.Email,
 		nil,
 		"Scoreezy Password Changed",
 		"password_changed.html",
@@ -568,7 +565,6 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 			"Name": user.Name,
 			"Year": time.Now().Year(),
 		},
-		nil,
 	); err != nil {
 		log.Warn().
 			Err(err).
