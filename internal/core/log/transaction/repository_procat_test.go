@@ -32,7 +32,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -45,7 +45,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -56,7 +56,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -72,7 +72,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId)
 
 		assert.Nil(t, result)
 		assert.Error(t, err)

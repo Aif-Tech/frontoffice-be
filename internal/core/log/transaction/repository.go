@@ -35,7 +35,7 @@ type Repository interface {
 
 	// product catalog
 	CreateLogTransAPI(req *LogTransProCatRequest) error
-	GetLogTransByJobIdAPI(jobId, companyId string) ([]*LogTransProductCatalog, error)
+	GetLogTransByJobIdAPI(jobId, productId, companyId string) ([]*LogTransProductCatalog, error)
 	ProcessedLogCountAPI(jobId string) (*getProcessedCountResp, error)
 	UpdateLogTransAPI(transId string, req map[string]interface{}) error
 }
