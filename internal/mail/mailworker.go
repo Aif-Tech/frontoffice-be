@@ -40,23 +40,24 @@ func (w *MailWorker) Start() {
 
 		for {
 			select {
-
-			// shutdown signal
 			case <-w.ctx.Done():
+				log.Info().Msg("[mail-worker] stopped")
+
 				return
-
-			// move retry mails
 			case <-ticker.C:
-				_ = w.queue.MoveReadyRetries()
+				if err := w.queue.MoveReadyRetries(); err != nil {
+					log.Warn().Err(err).Msg("[mail-worker] failed to move ready retries")
+				}
 
-			// main dequeue loop
 			default:
-				mail, err := w.queue.Dequeue(120)
+				mail, err := w.queue.Dequeue(5)
 				if err != nil {
+					time.Sleep(200 * time.Millisecond)
 					continue
 				}
 
 				if err := w.service.Send(mail); err != nil {
+					log.Error().Err(err).Str("to", mail.To).Msg("[mail-worker] failed to send mail")
 					w.handleFailure(mail)
 				}
 			}
@@ -73,17 +74,20 @@ func (w *MailWorker) Stop() {
 func (w *MailWorker) handleFailure(mail Mail) {
 	mail.Retry++
 
-	if mail.Retry > mail.MaxRetry {
-		_ = w.queue.EnqueueDLQ(mail)
+	if mail.Retry >= mail.MaxRetry {
+		if err := w.queue.EnqueueDLQ(mail); err != nil {
+			log.Error().Err(err).Str("to", mail.To).Msg("[mail-worker] failed to enqueue DLQ")
+		}
+		log.Warn().Str("to", mail.To).Msg("[mail-worker] mail moved to DLQ")
+
 		return
 	}
+	// Exponential backoff: retry ke-1 = 30s, ke-2 = 120s, ke-3 = 270s, dst.
+	delay := time.Duration(mail.Retry*mail.Retry) * 30 * time.Second
+	if err := w.queue.EnqueueRetry(mail, delay); err != nil {
+		log.Error().Err(err).Str("to", mail.To).Msg("[mail-worker] failed to enqueue retry")
+	}
 
-	delay := backoffDuration(mail.Retry)
-	_ = w.queue.EnqueueRetry(mail, delay)
-}
-
-func backoffDuration(retry int) time.Duration {
-	base := 10 * time.Second
-
-	return time.Duration(1<<retry) * base
+	log.Warn().Str("to", mail.To).Int("retry", mail.Retry).Dur("delay", delay).
+		Msg("[mail-worker] mail scheduled for retry")
 }

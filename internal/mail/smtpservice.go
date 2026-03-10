@@ -23,26 +23,25 @@ func NewSMTPService(host, port, user, pass string) *SMTPService {
 func (s *SMTPService) Send(mail Mail) error {
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("AIForesee <%s>", s.user)
-
-	if len(mail.ToList) > 0 {
-		e.To = mail.ToList
-	} else if mail.To != "" {
-		e.To = []string{mail.To}
-	}
-
-	if len(mail.CC) > 0 {
-		e.Cc = mail.CC
-	}
+	e.To = []string{mail.To}
+	e.Cc = mail.CC
 
 	e.Subject = mail.Subject
 	e.HTML = []byte(mail.Body)
 
+	// attachment
 	for _, att := range mail.Attachments {
-		if _, err := e.Attach(
-			bytes.NewReader(att.Data),
+		mimeType := att.MimeType
+		if mimeType == "" {
+			mimeType = "application/octet-stream"
+		}
+
+		_, err := e.Attach(
+			bytes.NewReader(att.Content),
 			att.FileName,
-			att.MimeType,
-		); err != nil {
+			mimeType,
+		)
+		if err != nil {
 			return fmt.Errorf("failed to attach file %s: %w", att.FileName, err)
 		}
 	}

@@ -13,7 +13,7 @@ type Mail struct {
 
 type MailAttachment struct {
 	FileName string
-	Data     []byte
+	Content  []byte
 	MimeType string
 }
 
@@ -24,6 +24,4 @@ type MailModule struct {
 
 const (
 	MimeXlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-	MimePdf  = "application/pdf"
-	MimeCsv  = "text/csv"
 )
