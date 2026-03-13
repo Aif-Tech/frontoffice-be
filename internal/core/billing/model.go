@@ -83,6 +83,7 @@ var productRegistry = map[string]ProductSheetDef{
 	constant.SlugLoanRecordChecker:     productLoanRecord,
 	constant.Slug7DaysMultipleLoan:     product7DMultipleLoan,
 	constant.Slug30DaysMultipleLoan:    product30DMultipleLoan,
+	constant.Slug90DaysMultipleLoan:    product90DMultipleLoan,
 	constant.SlugNPWPVerification:      productNPWPVerification,
 	constant.SlugPhoneLiveStatus:       productPhoneLive,
 	constant.SlugRecycleNumber:         productRecycleNumber,
@@ -117,6 +118,18 @@ var product7DMultipleLoan = ProductSheetDef{
 
 var product30DMultipleLoan = ProductSheetDef{
 	ProductName: constant.MultipleLoan30D,
+	Columns: []ColumnDef{
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.MultipleLoan30D)},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
+		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: dataStr("query_count")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+	},
+}
+
+var product90DMultipleLoan = ProductSheetDef{
+	ProductName: constant.MultipleLoan90D,
 	Columns: []ColumnDef{
 		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.MultipleLoan30D)},
