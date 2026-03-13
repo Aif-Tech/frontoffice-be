@@ -80,10 +80,24 @@ type ProductData struct {
 }
 
 var productRegistry = map[string]ProductSheetDef{
+	constant.SlugNPWPVerification:      productNPWPVerification,
 	constant.SlugPhoneLiveStatus:       productPhoneLive,
 	constant.SlugRecycleNumber:         productRecycleNumber,
 	constant.SlugTaxScore:              productTaxScore,
 	constant.SlugTaxVerificationDetail: productTaxVerification,
+}
+
+var productNPWPVerification = ProductSheetDef{
+	ProductName: constant.NPWPVerification,
+	Columns: []ColumnDef{
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.NPWPVerification)},
+		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("npwp")},
+		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: dataStr("nama")},
+		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: dataStr("alamat")},
+		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+	},
 }
 
 var productPhoneLive = ProductSheetDef{

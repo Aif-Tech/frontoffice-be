@@ -18,8 +18,9 @@ const (
 )
 
 const (
-	PhoneLiveStatus = "Phone Live Status"
-	RecycleNumber   = "Recycle Number"
-	TaxScore        = "Tax Score"
-	TaxVerification = "Tax Verification Detail"
+	NPWPVerification = "NPWP Verification"
+	PhoneLiveStatus  = "Phone Live Status"
+	RecycleNumber    = "Recycle Number"
+	TaxScore         = "Tax Score"
+	TaxVerification  = "Tax Verification Detail"
 )
