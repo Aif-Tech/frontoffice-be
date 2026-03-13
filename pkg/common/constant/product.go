@@ -16,3 +16,8 @@ const (
 	SlugTaxScore              = "INCOMETAX_tax_score"
 	SlugTaxVerificationDetail = "INCOMETAX_tax_verification_detail"
 )
+
+const (
+	PhoneLiveStatus = "Phone Live Status"
+	TaxVerification = "Tax Verification Detail"
+)

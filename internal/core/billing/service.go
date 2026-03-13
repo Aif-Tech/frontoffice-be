@@ -2,12 +2,12 @@ package billing
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"front-office/configs/application"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/mail"
 	"front-office/pkg/apperror"
+	"front-office/pkg/helper"
 	"strconv"
 	"strings"
 	"time"
@@ -328,18 +328,7 @@ func parseCCEmails(raw string) []string {
 }
 
 func extractData(log *transaction.LogTransProductCatalog, key string) interface{} {
-	if log.Data == nil {
-		return ""
-	}
-	var m map[string]interface{}
-	if err := json.Unmarshal(log.Data, &m); err != nil {
-		return ""
-	}
-	v, ok := m[key]
-	if !ok || v == nil {
-		return ""
-	}
-	return v
+	return helper.LookupKey(helper.ParseJSON(log.Data), key)
 }
 
 func dataStr(key string) ExtractFn {
@@ -353,9 +342,59 @@ func dataStr(key string) ExtractFn {
 	}
 }
 
-func dataNum(key string) ExtractFn {
+func extractRespInput(log *transaction.LogTransProductCatalog, key string) interface{} {
+	body := helper.ParseJSON(log.ResponseBody)
+	if body == nil {
+		return ""
+	}
+
+	inputSection, ok := body["input"].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+
+	return helper.LookupKey(inputSection, key)
+}
+
+func respInputStr(key string) ExtractFn {
 	return func(log *transaction.LogTransProductCatalog) interface{} {
-		return extractData(log, key)
+		v := extractRespInput(log, key)
+		if s, ok := v.(string); ok {
+			return s
+		}
+
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+func splitIndex(sep string, n int) func(string) string {
+	return func(s string) string {
+		if s == "" {
+			return ""
+		}
+		parts := strings.Split(s, sep)
+		for i, p := range parts {
+			parts[i] = strings.TrimSpace(p)
+		}
+		idx := n
+		if idx < 0 {
+			idx = len(parts) + n
+		}
+		if idx < 0 || idx >= len(parts) {
+			return ""
+		}
+		return parts[idx]
+	}
+}
+
+func dataTransform(key string, fn func(string) string) ExtractFn {
+	return func(log *transaction.LogTransProductCatalog) interface{} {
+		v := extractData(log, key)
+		s, ok := v.(string)
+		if !ok {
+			s = fmt.Sprintf("%v", v)
+		}
+		return fn(s)
 	}
 }
 
@@ -368,10 +407,6 @@ func staticVal(val interface{}) ExtractFn {
 var (
 	ExtractTransactionID = func(log *transaction.LogTransProductCatalog) interface{} {
 		return log.TransactionID
-	}
-
-	ExtractNPWP = func(log *transaction.LogTransProductCatalog) interface{} {
-		return dataStr("npwp")(log)
 	}
 
 	ExtractRequestTime = func(log *transaction.LogTransProductCatalog) interface{} {

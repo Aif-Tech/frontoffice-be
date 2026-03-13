@@ -1,6 +1,8 @@
 package constant
 
 const (
+	CSVHeaderTransactionID        = "Transaction ID"
+	CSVHeaderProductName          = "Product Name"
 	CSVHeaderName                 = "Name"
 	CSVHeaderDateCreated          = "Date Created"
 	CSVHeaderIDCard               = "ID Card Number"
