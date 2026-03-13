@@ -135,9 +135,9 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	builtAny := false
 
 	for _, key := range input.Products {
-		def, ok := ProductRegistry[key.ProductSlug]
+		def, ok := productRegistry[key.ProductSlug]
 		if !ok {
-			return nil, fmt.Errorf("produk '%s' tidak ditemukan di ProductRegistry", key.ProductName)
+			return nil, fmt.Errorf("produk '%s' tidak ditemukan di productRegistry", key.ProductName)
 		}
 
 		productId := strconv.FormatUint(uint64(key.ProductId), 10)
