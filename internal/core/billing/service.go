@@ -306,7 +306,7 @@ func toXlsxProducts(products []usagePerProduct) []XlsxReportProduct {
 			ProductSlug:  p.ProductSlug,
 			ProductName:  p.ProductName,
 			TotalRequest: p.TotalRequest,
-			TotalSuccess: p.TotalSuccess,
+			TotalPay:     p.TotalPay,
 		})
 	}
 
