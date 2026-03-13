@@ -21,6 +21,7 @@ const (
 	NPWPVerification = "NPWP Verification"
 	PhoneLiveStatus  = "Phone Live Status"
 	RecycleNumber    = "Recycle Number"
+	TaxCompliance    = "Tax Compliance Status"
 	TaxScore         = "Tax Score"
 	TaxVerification  = "Tax Verification Detail"
 )

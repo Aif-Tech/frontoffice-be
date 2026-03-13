@@ -83,6 +83,7 @@ var productRegistry = map[string]ProductSheetDef{
 	constant.SlugNPWPVerification:      productNPWPVerification,
 	constant.SlugPhoneLiveStatus:       productPhoneLive,
 	constant.SlugRecycleNumber:         productRecycleNumber,
+	constant.SlugTaxComplianceStatus:   productTaxCompliance,
 	constant.SlugTaxScore:              productTaxScore,
 	constant.SlugTaxVerificationDetail: productTaxVerification,
 }
@@ -121,6 +122,19 @@ var productRecycleNumber = ProductSheetDef{
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.RecycleNumber)},
 		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
 		{Header: constant.CSVHeaderStatus, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+	},
+}
+
+var productTaxCompliance = ProductSheetDef{
+	ProductName: constant.TaxCompliance,
+	Columns: []ColumnDef{
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.TaxCompliance)},
+		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("npwp")},
+		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: dataStr("nama")},
+		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: dataStr("alamat")},
+		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
 		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
 	},
 }
