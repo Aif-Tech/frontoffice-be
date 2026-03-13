@@ -19,5 +19,6 @@ const (
 
 const (
 	PhoneLiveStatus = "Phone Live Status"
+	RecycleNumber   = "Recycle Number"
 	TaxVerification = "Tax Verification Detail"
 )
