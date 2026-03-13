@@ -80,12 +80,25 @@ type ProductData struct {
 }
 
 var productRegistry = map[string]ProductSheetDef{
+	constant.SlugLoanRecordChecker:     productLoanRecord,
 	constant.SlugNPWPVerification:      productNPWPVerification,
 	constant.SlugPhoneLiveStatus:       productPhoneLive,
 	constant.SlugRecycleNumber:         productRecycleNumber,
 	constant.SlugTaxComplianceStatus:   productTaxCompliance,
 	constant.SlugTaxScore:              productTaxScore,
 	constant.SlugTaxVerificationDetail: productTaxVerification,
+}
+
+var productLoanRecord = ProductSheetDef{
+	ProductName: constant.LoanRecordChecker,
+	Columns: []ColumnDef{
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.LoanRecordChecker)},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
+		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
+		{Header: constant.CSVHeaderRemarks, Type: ColTypeText, Width: 36, ExtractFn: dataStr("remarks")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+	},
 }
 
 var productNPWPVerification = ProductSheetDef{
