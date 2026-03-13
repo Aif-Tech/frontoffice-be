@@ -32,7 +32,7 @@ type repository struct {
 
 type Repository interface {
 	GetMonthlyReport() ([]companyUsageSummary, error)
-	GetAdminEmails(companyId uint) ([]adminEmail, error)
+	GetAdminsData(companyId uint) ([]adminEmail, error)
 }
 
 func (repo *repository) GetMonthlyReport() ([]companyUsageSummary, error) {
@@ -59,8 +59,8 @@ func (repo *repository) GetMonthlyReport() ([]companyUsageSummary, error) {
 	return apiResp.Data, nil
 }
 
-func (repo *repository) GetAdminEmails(companyId uint) ([]adminEmail, error) {
-	url := fmt.Sprintf(`%v/api/core/billing/admin-emails/%d`, repo.cfg.App.AifcoreHost, companyId)
+func (repo *repository) GetAdminsData(companyId uint) ([]adminEmail, error) {
+	url := fmt.Sprintf(`%v/api/core/billing/admins/%d`, repo.cfg.App.AifcoreHost, companyId)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
