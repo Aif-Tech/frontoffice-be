@@ -40,12 +40,13 @@ type XlsxReportProduct struct {
 }
 
 type XlsxReportInput struct {
-	CompanyId   uint
-	CompanyName string
-	PeriodYear  int
-	PeriodMonth int
-	Products    []XlsxReportProduct
-	Password    string
+	CompanyId       uint
+	CompanyName     string
+	PeriodYear      int
+	PeriodMonth     int
+	Products        []XlsxReportProduct
+	PricingStrategy string
+	Password        string
 }
 
 type ColumnType int

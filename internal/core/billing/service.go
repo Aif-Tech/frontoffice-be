@@ -79,12 +79,13 @@ func (svc *service) SendMonthlyUsageReport() error {
 			xlxsPassword := admin.Key
 
 			xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
-				CompanyId:   summary.CompanyId,
-				CompanyName: summary.CompanyName,
-				PeriodYear:  year,
-				PeriodMonth: int(month),
-				Products:    toXlsxProducts(summary.Products),
-				Password:    xlxsPassword,
+				CompanyId:       summary.CompanyId,
+				CompanyName:     summary.CompanyName,
+				PeriodYear:      year,
+				PeriodMonth:     int(month),
+				Products:        toXlsxProducts(summary.Products),
+				PricingStrategy: "PAY",
+				Password:        xlxsPassword,
 			})
 			if xlsxErr != nil {
 				log.Warn().
@@ -137,14 +138,14 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	for _, key := range input.Products {
 		def, ok := productRegistry[key.ProductSlug]
 		if !ok {
-			return nil, fmt.Errorf("produk '%s' tidak ditemukan di productRegistry", key.ProductName)
+			return nil, fmt.Errorf("product '%s' not found", key.ProductName)
 		}
 
 		productId := strconv.FormatUint(uint64(key.ProductId), 10)
 		companyId := strconv.FormatUint(uint64(input.CompanyId), 10)
-		rows, err := svc.transactionRepo.GetLogTransByJobIdAPI("", productId, companyId)
+		rows, err := svc.transactionRepo.GetLogTransByJobIdAPI("", productId, companyId, input.PricingStrategy)
 		if err != nil {
-			return nil, fmt.Errorf("gagal mengambil data untuk '%s': %w", key.ProductName, err)
+			return nil, fmt.Errorf("failed to fetch data for '%s': %w", key.ProductName, err)
 		}
 
 		sheetName := def.SheetName
@@ -154,7 +155,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 
 		idx, err := f.NewSheet(sheetName)
 		if err != nil {
-			return nil, fmt.Errorf("gagal membuat sheet '%s': %w", sheetName, err)
+			return nil, fmt.Errorf("failed to create sheet '%s': %w", sheetName, err)
 		}
 		if !builtAny {
 			f.SetActiveSheet(idx)
@@ -162,7 +163,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 		}
 
 		if err := writeProductSheet(f, sheetName, def, rows); err != nil {
-			return nil, fmt.Errorf("gagal menulis sheet '%s': %w", sheetName, err)
+			return nil, fmt.Errorf("failed to write sheet '%s': %w", sheetName, err)
 		}
 	}
 
@@ -178,7 +179,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	if input.Password != "" {
 		encrypted, err := excelize.Encrypt(buf.Bytes(), &excelize.Options{Password: input.Password})
 		if err != nil {
-			return nil, fmt.Errorf("gagal menulis xlsx terenkripsi ke buffer: %w", err)
+			return nil, fmt.Errorf("failed to write encypted xlxs in buffer: %w", err)
 		}
 
 		return encrypted, nil
@@ -203,11 +204,11 @@ func writeProductSheet(
 	// 	fmt.Sprintf("Generated on: %s", time.Now().Format("02 January 2006, 15:04:05")))
 	// f.SetRowHeight(sheetName, 2, 18)
 
-	f.SetRowHeight(sheetName, 3, 6) // spacer
+	// f.SetRowHeight(sheetName, 3, 6) // spacer
 
 	// Header
 	for i, col := range cols {
-		cell := colLetters[i] + "4"
+		cell := colLetters[i] + "1"
 		f.SetCellValue(sheetName, cell, col.Header)
 
 		w := col.Width
@@ -216,18 +217,18 @@ func writeProductSheet(
 		}
 		f.SetColWidth(sheetName, colLetters[i], colLetters[i], w)
 	}
-	f.SetRowHeight(sheetName, 4, 22)
+	f.SetRowHeight(sheetName, 1, 22)
 
 	// Freeze header
 	f.SetPanes(sheetName, &excelize.Panes{
 		Freeze:      true,
-		YSplit:      4,
+		YSplit:      1,
 		TopLeftCell: "A5",
 		ActivePane:  "bottomLeft",
 	})
 
 	// Data rows
-	dataStart := 5
+	dataStart := 2
 	for ri, row := range rows {
 		r := dataStart + ri
 		for ci, col := range cols {
@@ -410,6 +411,6 @@ var (
 	}
 
 	ExtractRequestTime = func(log *transaction.LogTransProductCatalog) interface{} {
-		return log.RequestTime
+		return log.CreatedAt
 	}
 )
