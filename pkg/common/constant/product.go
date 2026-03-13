@@ -19,6 +19,7 @@ const (
 
 const (
 	LoanRecordChecker = "Loan Record Checker"
+	MultipleLoan7D    = "7 Days Multiple Loan"
 	NPWPVerification  = "NPWP Verification"
 	PhoneLiveStatus   = "Phone Live Status"
 	RecycleNumber     = "Recycle Number"

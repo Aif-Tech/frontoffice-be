@@ -81,6 +81,7 @@ type ProductData struct {
 
 var productRegistry = map[string]ProductSheetDef{
 	constant.SlugLoanRecordChecker:     productLoanRecord,
+	constant.Slug7DaysMultipleLoan:     product7DMultipleLoan,
 	constant.SlugNPWPVerification:      productNPWPVerification,
 	constant.SlugPhoneLiveStatus:       productPhoneLive,
 	constant.SlugRecycleNumber:         productRecycleNumber,
@@ -97,6 +98,18 @@ var productLoanRecord = ProductSheetDef{
 		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
 		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
 		{Header: constant.CSVHeaderRemarks, Type: ColTypeText, Width: 36, ExtractFn: dataStr("remarks")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+	},
+}
+
+var product7DMultipleLoan = ProductSheetDef{
+	ProductName: constant.MultipleLoan7D,
+	Columns: []ColumnDef{
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.MultipleLoan7D)},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
+		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: dataStr("query_count")},
 		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
 	},
 }
