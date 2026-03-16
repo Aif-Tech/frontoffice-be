@@ -23,6 +23,8 @@ type LogTransScoreezy struct {
 	Grade                string           `json:"grade"`
 	LoanNo               string           `json:"loan_no"`
 	Data                 datatypes.JSON   `json:"data" swaggertype:"object"`
+	Behavior             string           `json:"behavior"`
+	Identity             string           `json:"identity"`
 	Duration             time.Duration    `json:"duration" format:"duration" example:"2h30m"`
 	CreatedAt            time.Time        `json:"created_at" format:"date-time"`
 }
@@ -81,10 +83,13 @@ type ResponseBody struct {
 }
 
 type scoreezyLogResponse struct {
-	Name      string    `json:"name"`
-	Type      string    `json:"type"`
-	Grade     string    `json:"grade"`
-	CreatedAt time.Time `json:"created_at"`
+	TrxId                string    `json:"trx_id"`
+	Type                 string    `json:"type,omitempty"`
+	Grade                string    `json:"grade"`
+	ProbabilityToDefault string    `json:"probability_to_default"`
+	Behavior             string    `json:"behavior"`
+	Identity             string    `json:"identity"`
+	CreatedAt            time.Time `json:"created_at"`
 }
 
 type getProcessedCountResp struct {
@@ -93,4 +98,12 @@ type getProcessedCountResp struct {
 
 type UpdateTransRequest struct {
 	Success *bool `json:"success"`
+}
+
+type LogFilter struct {
+	CompanyId string
+	Page      string
+	Size      string
+	StartDate string
+	EndDate   string
 }

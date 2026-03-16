@@ -20,4 +20,6 @@ const (
 	TestCaseHTTPRequestError = "HTTPRequestError"
 	TestCaseParseError       = "ParseError"
 	InvalidJSON              = `{invalid-json`
+
+	PaidStatus = "PAY"
 )
