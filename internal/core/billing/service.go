@@ -7,6 +7,7 @@ import (
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/mail"
 	"front-office/pkg/apperror"
+	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
 	"strconv"
 	"strings"
@@ -42,6 +43,37 @@ type Service interface {
 	generateUsageXlsx(input XlsxReportInput) ([]byte, error)
 }
 
+func (svc *service) NewProcatFetchFn(pricingStrategy string) FetchFn {
+	return func(productId, companyId string) ([]LogRow, error) {
+		rows, err := svc.transactionRepo.GetLogTransByJobIdAPI(
+			"", productId, companyId, pricingStrategy,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return WrapProcat(rows), nil
+	}
+}
+
+func (svc *service) NewScoreezyFetchFn(startDate, endDate string) FetchFn {
+	return func(productId, companyId string) ([]LogRow, error) {
+		rows, err := svc.transactionRepo.GetLogsScoreezyByDateRangeAPI(
+			&transaction.LogFilter{
+				CompanyId: companyId,
+				StartDate: startDate,
+				EndDate:   endDate,
+				Size:      constant.SizeUnlimited,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return WrapScoreezy(rows), nil
+	}
+}
+
 func (svc *service) SendMonthlyUsageReport() error {
 	summaries, err := svc.repo.GetMonthlyReport()
 	if err != nil {
@@ -51,8 +83,11 @@ func (svc *service) SendMonthlyUsageReport() error {
 	now := time.Now()
 	firstOfThisMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	lastMonth := firstOfThisMonth.AddDate(0, -1, 0)
+
 	year := lastMonth.Year()
 	month := lastMonth.Month()
+	startDate := fmt.Sprintf("%d-%02d-01", year, int(month))
+	endDate := fmt.Sprintf("%d-%02d-%02d", year, int(month), lastDayOfMonth(lastMonth))
 
 	ccEmails := parseCCEmails(svc.cfg.App.MailInternalCC)
 
@@ -79,12 +114,23 @@ func (svc *service) SendMonthlyUsageReport() error {
 			xlxsPassword := admin.Key
 
 			xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
-				CompanyId:       summary.CompanyId,
-				CompanyName:     summary.CompanyName,
-				PeriodYear:      year,
-				PeriodMonth:     int(month),
-				Products:        toXlsxProducts(summary.Products),
-				PricingStrategy: "PAY",
+				CompanyId:   summary.CompanyId,
+				CompanyName: summary.CompanyName,
+				PeriodYear:  year,
+				PeriodMonth: int(month),
+				ProductGroups: []ProductGroup{
+					{
+						GroupName: "Procat",
+						Products:  toXlsxProducts(summary.ProcatProducts),
+						FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus),
+					},
+					{
+						GroupName: "Scoreezy",
+						Products:  toXlsxProducts(summary.ScoreezyProducts),
+						FetchFn:   svc.NewScoreezyFetchFn(startDate, endDate),
+					},
+				},
+				PricingStrategy: constant.PaidStatus,
 				Password:        xlxsPassword,
 			})
 			if xlsxErr != nil {
@@ -97,7 +143,7 @@ func (svc *service) SendMonthlyUsageReport() error {
 			var attachments []mail.MailAttachment
 			if xlsxBytes != nil {
 				attachments = append(attachments, mail.MailAttachment{
-					FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d>", summary.CompanyName, month, year),
+					FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
 					Content:  xlsxBytes,
 					MimeType: mail.MimeXlsx,
 				})
@@ -109,10 +155,12 @@ func (svc *service) SendMonthlyUsageReport() error {
 				fmt.Sprintf("Monthly Usage Report for %s - %s %d", summary.CompanyName, month, year),
 				"monthly_usage_report.html",
 				map[string]any{
-					"Name":     summary.CompanyName,
-					"Products": summary.Products,
-					"Month":    month.String(),
-					"Year":     year,
+					"Name":             summary.CompanyName,
+					"ProcatProducts":   summary.ProcatProducts,
+					"ScoreezyProducts": summary.ScoreezyProducts,
+					"HasUsage":         len(summary.ProcatProducts) > 0 || len(summary.ScoreezyProducts) > 0,
+					"Month":            month.String(),
+					"Year":             year,
 				},
 				attachments...,
 			); err != nil {
@@ -128,6 +176,10 @@ func (svc *service) SendMonthlyUsageReport() error {
 	return nil
 }
 
+func lastDayOfMonth(t time.Time) int {
+	return time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
+}
+
 func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	f := excelize.NewFile()
 	defer f.Close()
@@ -135,39 +187,56 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	defaultSheet := f.GetSheetName(0)
 	builtAny := false
 
-	for _, key := range input.Products {
-		def, ok := productRegistry[key.ProductSlug]
-		if !ok {
-			return nil, fmt.Errorf("product '%s' not found", key.ProductName)
-		}
+	for _, group := range input.ProductGroups {
+		for _, product := range group.Products {
+			def, ok := productRegistry[product.ProductSlug]
+			if !ok {
+				log.Warn().
+					Str("group", group.GroupName).
+					Str("product_slug", product.ProductSlug).
+					Msg("product not found in registry, skipping")
 
-		productId := strconv.FormatUint(uint64(key.ProductId), 10)
-		companyId := strconv.FormatUint(uint64(input.CompanyId), 10)
-		rows, err := svc.transactionRepo.GetLogTransByJobIdAPI("", productId, companyId, input.PricingStrategy)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch data for '%s': %w", key.ProductName, err)
-		}
+				continue
+			}
 
-		sheetName := def.SheetName
-		if sheetName == "" {
-			sheetName = def.ProductName
-		}
+			productId := strconv.FormatUint(uint64(product.ProductId), 10)
+			companyId := strconv.FormatUint(uint64(input.CompanyId), 10)
 
-		idx, err := f.NewSheet(sheetName)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create sheet '%s': %w", sheetName, err)
-		}
-		if !builtAny {
-			f.SetActiveSheet(idx)
-			builtAny = true
-		}
+			rows, err := group.FetchFn(productId, companyId)
+			if err != nil {
+				log.Warn().
+					Err(err).
+					Str("group", group.GroupName).
+					Str("product_slug", product.ProductSlug).
+					Uint("company_id", input.CompanyId).
+					Msg("failed to fetch transaction data, skipping sheet")
+				continue
+			}
 
-		if err := writeProductSheet(f, sheetName, def, rows); err != nil {
-			return nil, fmt.Errorf("failed to write sheet '%s': %w", sheetName, err)
+			sheetName := def.SheetName
+			if sheetName == "" {
+				sheetName = def.ProductName
+			}
+
+			idx, err := f.NewSheet(sheetName)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create sheet '%s': %w", sheetName, err)
+			}
+			if !builtAny {
+				f.SetActiveSheet(idx)
+				builtAny = true
+			}
+
+			if err := writeProductSheet(f, sheetName, def, rows); err != nil {
+				return nil, fmt.Errorf("failed to write sheet '%s': %w", sheetName, err)
+			}
 		}
 	}
 
-	// Hapus sheet default Excel
+	if !builtAny {
+		return nil, fmt.Errorf("no sheets generated for company %d", input.CompanyId)
+	}
+
 	f.DeleteSheet(defaultSheet)
 
 	var buf bytes.Buffer
@@ -192,19 +261,11 @@ func writeProductSheet(
 	f *excelize.File,
 	sheetName string,
 	def ProductSheetDef,
-	rows []*transaction.LogTransProductCatalog,
+	rows []LogRow,
 ) error {
 	cols := def.Columns
 	colLetters := makeColLetters(len(cols))
 	lastCol := colLetters[len(colLetters)-1]
-
-	// ── Sub-header tanggal generate ───────────────────────────────────────────
-	// f.MergeCell(sheetName, "A2", lastCol+"2")
-	// f.SetCellValue(sheetName, "A2",
-	// 	fmt.Sprintf("Generated on: %s", time.Now().Format("02 January 2006, 15:04:05")))
-	// f.SetRowHeight(sheetName, 2, 18)
-
-	// f.SetRowHeight(sheetName, 3, 6) // spacer
 
 	// Header
 	for i, col := range cols {
@@ -328,22 +389,99 @@ func parseCCEmails(raw string) []string {
 	return result
 }
 
-func extractData(log *transaction.LogTransProductCatalog, key string) interface{} {
+type LogRow interface {
+	logRow()
+}
+
+type ProcatRow struct {
+	*transaction.LogTransProductCatalog
+}
+
+func (r ProcatRow) logRow() {}
+
+func WrapProcat(rows []*transaction.LogTransProductCatalog) []LogRow {
+	out := make([]LogRow, len(rows))
+	for i, r := range rows {
+		out[i] = ProcatRow{r}
+	}
+	return out
+}
+
+type ScoreezyRow struct {
+	*transaction.LogTransScoreezy
+}
+
+func (r ScoreezyRow) logRow() {}
+
+func WrapScoreezy(rows []*transaction.LogTransScoreezy) []LogRow {
+	out := make([]LogRow, len(rows))
+	for i, r := range rows {
+		out[i] = ScoreezyRow{r}
+	}
+	return out
+}
+
+type RowExtractFn func(row LogRow) interface{}
+
+func fromProcat(fn func(*transaction.LogTransProductCatalog) interface{}) RowExtractFn {
+	return func(row LogRow) interface{} {
+		r, ok := row.(ProcatRow)
+		if !ok {
+			return ""
+		}
+
+		return fn(r.LogTransProductCatalog)
+	}
+}
+
+func fromScoreezy(fn func(*transaction.LogTransScoreezy) interface{}) RowExtractFn {
+	return func(row LogRow) interface{} {
+		r, ok := row.(ScoreezyRow)
+		if !ok {
+			return ""
+		}
+		return fn(r.LogTransScoreezy)
+	}
+}
+
+func scoreezyNestedDataStr(keys ...string) RowExtractFn {
+	return fromScoreezy(func(r *transaction.LogTransScoreezy) interface{} {
+		v := helper.ExtractNestedField(r.Data, keys...)
+		if s, ok := v.(string); ok {
+			return s
+		}
+		if v == nil || v == "" {
+			return ""
+		}
+		return fmt.Sprintf("%v", v)
+	})
+}
+
+var (
+	ScoreezyExtractTrxID = fromScoreezy(func(r *transaction.LogTransScoreezy) interface{} {
+		return r.TrxId
+	})
+	ScoreezyExtractCreatedAt = fromScoreezy(func(r *transaction.LogTransScoreezy) interface{} {
+		return r.CreatedAt
+	})
+)
+
+func procatExtractData(log *transaction.LogTransProductCatalog, key string) interface{} {
 	return helper.LookupKey(helper.ParseJSON(log.Data), key)
 }
 
-func dataStr(key string) ExtractFn {
-	return func(log *transaction.LogTransProductCatalog) interface{} {
-		v := extractData(log, key)
+func procatDataStr(key string) RowExtractFn {
+	return fromProcat(func(r *transaction.LogTransProductCatalog) interface{} {
+		v := procatExtractData(r, key)
 		if s, ok := v.(string); ok {
 			return s
 		}
 
-		return fmt.Sprintf("%v", v)
-	}
+		return ""
+	})
 }
 
-func extractRespInput(log *transaction.LogTransProductCatalog, key string) interface{} {
+func procatExtractRespInput(log *transaction.LogTransProductCatalog, key string) interface{} {
 	body := helper.ParseJSON(log.ResponseBody)
 	if body == nil {
 		return ""
@@ -357,15 +495,15 @@ func extractRespInput(log *transaction.LogTransProductCatalog, key string) inter
 	return helper.LookupKey(inputSection, key)
 }
 
-func respInputStr(key string) ExtractFn {
-	return func(log *transaction.LogTransProductCatalog) interface{} {
-		v := extractRespInput(log, key)
+func procatRespInputStr(key string) RowExtractFn {
+	return fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
+		v := procatExtractRespInput(log, key)
 		if s, ok := v.(string); ok {
 			return s
 		}
 
 		return fmt.Sprintf("%v", v)
-	}
+	})
 }
 
 func splitIndex(sep string, n int) func(string) string {
@@ -373,10 +511,12 @@ func splitIndex(sep string, n int) func(string) string {
 		if s == "" {
 			return ""
 		}
+
 		parts := strings.Split(s, sep)
 		for i, p := range parts {
 			parts[i] = strings.TrimSpace(p)
 		}
+
 		idx := n
 		if idx < 0 {
 			idx = len(parts) + n
@@ -384,33 +524,33 @@ func splitIndex(sep string, n int) func(string) string {
 		if idx < 0 || idx >= len(parts) {
 			return ""
 		}
+
 		return parts[idx]
 	}
 }
 
-func dataTransform(key string, fn func(string) string) ExtractFn {
-	return func(log *transaction.LogTransProductCatalog) interface{} {
-		v := extractData(log, key)
+func procatDataTransform(key string, fn func(string) string) RowExtractFn {
+	return fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
+		v := procatExtractData(log, key)
 		s, ok := v.(string)
 		if !ok {
 			s = fmt.Sprintf("%v", v)
 		}
+
 		return fn(s)
-	}
+	})
 }
 
-func staticVal(val interface{}) ExtractFn {
-	return func(_ *transaction.LogTransProductCatalog) interface{} {
-		return val
-	}
+func staticVal(val interface{}) RowExtractFn {
+	return func(_ LogRow) interface{} { return val }
 }
 
 var (
-	ExtractTransactionID = func(log *transaction.LogTransProductCatalog) interface{} {
+	ProcatExtractTransactionID = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
 		return log.TransactionID
-	}
+	})
 
-	ExtractRequestTime = func(log *transaction.LogTransProductCatalog) interface{} {
+	ProcatExtractCreatedAt = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
 		return log.CreatedAt
-	}
+	})
 )

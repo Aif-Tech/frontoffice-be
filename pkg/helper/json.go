@@ -27,3 +27,28 @@ func LookupKey(m map[string]interface{}, key string) interface{} {
 
 	return v
 }
+
+func ExtractNestedField(raw []byte, keys ...string) interface{} {
+	if len(keys) == 0 {
+		return ""
+	}
+
+	current := ParseJSON(raw)
+	if current == nil {
+		return ""
+	}
+
+	for _, k := range keys[:len(keys)-1] {
+		v, ok := current[k]
+		if !ok || v == nil {
+			return ""
+		}
+		next, ok := v.(map[string]interface{})
+		if !ok {
+			return ""
+		}
+		current = next
+	}
+
+	return LookupKey(current, keys[len(keys)-1])
+}
