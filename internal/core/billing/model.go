@@ -13,14 +13,15 @@ type usagePerProduct struct {
 	TotalPay     int64  `json:"total_pay"`
 }
 
-type companyUsageSummary struct {
-	CompanyId         uint              `json:"company_id"`
-	CompanyName       string            `json:"company_name"`
-	PeriodYear        int               `json:"period_year"`
-	PeriodMonth       int               `json:"period_month"`
-	Products          []usagePerProduct `json:"products"`
-	GrandTotalRequest int64             `json:"grand_total_request"`
-	GrandTotalPay     int64             `json:"grand_total_pay"`
+type monthlySummary struct {
+	CompanyId        uint              `json:"company_id"`
+	CompanyName      string            `json:"company_name"`
+	PeriodYear       int               `json:"period_year"`
+	PeriodMonth      int               `json:"period_month"`
+	ProcatProducts   []usagePerProduct `json:"procat_products"`
+	ScoreezyProducts []usagePerProduct `json:"scoreezy_products"`
+	// GrandTotalRequest int64             `json:"grand_total_request"`
+	// GrandTotalPay     int64             `json:"grand_total_pay"`
 }
 
 type adminEmail struct {
@@ -39,12 +40,20 @@ type XlsxReportProduct struct {
 	TotalPay     int64
 }
 
+type FetchFn func(productId, companyId string) ([]LogRow, error)
+
+type ProductGroup struct {
+	GroupName string
+	Products  []XlsxReportProduct
+	FetchFn   FetchFn
+}
+
 type XlsxReportInput struct {
 	CompanyId       uint
 	CompanyName     string
 	PeriodYear      int
 	PeriodMonth     int
-	Products        []XlsxReportProduct
+	ProductGroups   []ProductGroup
 	PricingStrategy string
 	Password        string
 }
@@ -62,7 +71,7 @@ type ColumnDef struct {
 	Header    string
 	Type      ColumnType
 	Width     float64
-	ExtractFn ExtractFn
+	ExtractFn RowExtractFn
 }
 
 type ExtractFn func(log *transaction.LogTransProductCatalog) interface{}
@@ -81,6 +90,7 @@ type ProductData struct {
 }
 
 var productRegistry = map[string]ProductSheetDef{
+	constant.SlugGenRetailV3:           productGenRetail,
 	constant.SlugLoanRecordChecker:     productLoanRecord,
 	constant.Slug7DaysMultipleLoan:     product7DMultipleLoan,
 	constant.Slug30DaysMultipleLoan:    product30DMultipleLoan,
@@ -93,128 +103,140 @@ var productRegistry = map[string]ProductSheetDef{
 	constant.SlugTaxVerificationDetail: productTaxVerification,
 }
 
+var productGenRetail = ProductSheetDef{
+	ProductName: constant.GenRetail,
+	Columns: []ColumnDef{
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ScoreezyExtractTrxID},
+		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.GenRetail)},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: scoreezyNestedDataStr("data", "data", "id_card_no")},
+		{Header: constant.CSVHeaderIdentity, Type: ColTypeText, Width: 24, ExtractFn: scoreezyNestedDataStr("data", "behavior")},
+		{Header: constant.CSVHeaderBehavior, Type: ColTypeText, Width: 36, ExtractFn: scoreezyNestedDataStr("data", "identity")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ScoreezyExtractCreatedAt},
+	},
+}
+
 var productLoanRecord = ProductSheetDef{
 	ProductName: constant.LoanRecordChecker,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.LoanRecordChecker)},
-		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
-		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
-		{Header: constant.CSVHeaderRemarks, Type: ColTypeText, Width: 36, ExtractFn: dataStr("remarks")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("nik")},
+		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("status")},
+		{Header: constant.CSVHeaderRemarks, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("remarks")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var product7DMultipleLoan = ProductSheetDef{
 	ProductName: constant.MultipleLoan7D,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.MultipleLoan7D)},
-		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
-		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
-		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: dataStr("query_count")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("nik")},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("phone_number")},
+		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("query_count")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var product30DMultipleLoan = ProductSheetDef{
 	ProductName: constant.MultipleLoan30D,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.MultipleLoan30D)},
-		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
-		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
-		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: dataStr("query_count")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("nik")},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("phone_number")},
+		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("query_count")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var product90DMultipleLoan = ProductSheetDef{
 	ProductName: constant.MultipleLoan90D,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.MultipleLoan30D)},
-		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("nik")},
-		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
-		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: dataStr("query_count")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("nik")},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("phone_number")},
+		{Header: constant.CSVHeaderQueryCount, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("query_count")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var productNPWPVerification = ProductSheetDef{
 	ProductName: constant.NPWPVerification,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.NPWPVerification)},
-		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("npwp")},
-		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: dataStr("nama")},
-		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: dataStr("alamat")},
-		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("npwp")},
+		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("nama")},
+		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("alamat")},
+		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("status")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var productPhoneLive = ProductSheetDef{
 	ProductName: constant.PhoneLiveStatus,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.PhoneLiveStatus)},
-		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
-		{Header: constant.CSVHeaderSubscriberStatus, Type: ColTypeText, Width: 24, ExtractFn: dataTransform("live_status", splitIndex(",", 0))},
-		{Header: constant.CSVHeaderDeviceStatus, Type: ColTypeText, Width: 24, ExtractFn: dataTransform("live_status", splitIndex(",", 1))},
-		{Header: constant.CSVHeaderOperator, Type: ColTypeText, Width: 36, ExtractFn: dataStr("operator")},
-		{Header: constant.CSVHeaderPhoneType, Type: ColTypeText, Width: 24, ExtractFn: dataStr("phone_type")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("phone_number")},
+		{Header: constant.CSVHeaderSubscriberStatus, Type: ColTypeText, Width: 24, ExtractFn: procatDataTransform("live_status", splitIndex(",", 0))},
+		{Header: constant.CSVHeaderDeviceStatus, Type: ColTypeText, Width: 24, ExtractFn: procatDataTransform("live_status", splitIndex(",", 1))},
+		{Header: constant.CSVHeaderOperator, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("operator")},
+		{Header: constant.CSVHeaderPhoneType, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("phone_type")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var productRecycleNumber = ProductSheetDef{
 	ProductName: constant.RecycleNumber,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.RecycleNumber)},
-		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("phone_number")},
-		{Header: constant.CSVHeaderStatus, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("phone_number")},
+		{Header: constant.CSVHeaderStatus, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("status")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var productTaxCompliance = ProductSheetDef{
 	ProductName: constant.TaxCompliance,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.TaxCompliance)},
-		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("npwp")},
-		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: dataStr("nama")},
-		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: dataStr("alamat")},
-		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("npwp")},
+		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("nama")},
+		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("alamat")},
+		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("status")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var productTaxScore = ProductSheetDef{
 	ProductName: constant.TaxScore,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.TaxScore)},
-		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: respInputStr("npwp")},
-		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: dataStr("nama")},
-		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: dataStr("alamat")},
-		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: dataStr("status")},
-		{Header: constant.CSVHeaderScore, Type: ColTypeText, Width: 24, ExtractFn: dataStr("score")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("npwp")},
+		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("nama")},
+		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("alamat")},
+		{Header: constant.CSVHeaderResult, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("status")},
+		{Header: constant.CSVHeaderScore, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("score")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }
 
 var productTaxVerification = ProductSheetDef{
 	ProductName: constant.TaxVerification,
 	Columns: []ColumnDef{
-		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ExtractTransactionID},
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.TaxVerification)},
-		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: dataStr("npwp")},
-		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: dataStr("nama")},
-		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: dataStr("alamat")},
-		{Header: constant.CSVHeaderNPWPVerification, Type: ColTypeText, Width: 24, ExtractFn: dataStr("npwp_verification")},
-		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ExtractRequestTime},
+		{Header: constant.CSVHeaderNPWP, Type: ColTypeText, Width: 20, ExtractFn: procatDataStr("npwp")},
+		{Header: constant.CSVHeaderName, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("nama")},
+		{Header: constant.CSVHeaderAddress, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("alamat")},
+		{Header: constant.CSVHeaderNPWPVerification, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("npwp_verification")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }

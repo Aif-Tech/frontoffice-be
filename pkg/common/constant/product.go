@@ -18,6 +18,7 @@ const (
 )
 
 const (
+	GenRetail         = "Gen Retail"
 	LoanRecordChecker = "Loan Record Checker"
 	MultipleLoan7D    = "7 Days Multiple Loan"
 	MultipleLoan30D   = "30 Days Multiple Loan"

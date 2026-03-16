@@ -31,11 +31,11 @@ type repository struct {
 }
 
 type Repository interface {
-	GetMonthlyReport() ([]companyUsageSummary, error)
+	GetMonthlyReport() ([]monthlySummary, error)
 	GetAdminsData(companyId uint) ([]adminEmail, error)
 }
 
-func (repo *repository) GetMonthlyReport() ([]companyUsageSummary, error) {
+func (repo *repository) GetMonthlyReport() ([]monthlySummary, error) {
 	url := fmt.Sprintf(`%v/api/core/billing/summaries`, repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -51,7 +51,7 @@ func (repo *repository) GetMonthlyReport() ([]companyUsageSummary, error) {
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseAifcoreAPIResponse[[]companyUsageSummary](resp)
+	apiResp, err := helper.ParseAifcoreAPIResponse[[]monthlySummary](resp)
 	if err != nil {
 		return nil, err
 	}
