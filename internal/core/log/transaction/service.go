@@ -12,7 +12,7 @@ type Service interface {
 	// scoreezy
 	GetScoreezyLogs() ([]*scoreezyLogResponse, error)
 	GetScoreezyLogsByDate(companyId, date string) ([]*scoreezyLogResponse, error)
-	GetScoreezyLogsByDateRange(startDate, endDate, companyId, page string) ([]*scoreezyLogResponse, error)
+	GetScoreezyLogsByDateRange(filter *LogFilter) ([]*scoreezyLogResponse, error)
 	GetScoreezyLogsByMonth(companyId, month string) ([]*scoreezyLogResponse, error)
 
 	// product catalog

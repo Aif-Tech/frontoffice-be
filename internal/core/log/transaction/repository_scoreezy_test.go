@@ -160,7 +160,7 @@ func TestGetLogsScoreezyByDateRangeAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogsScoreezyByDateRangeAPI(constant.DummyCompanyId, constant.DummyDate, constant.DummyDate)
+		result, err := repo.GetLogsScoreezyByDateRangeAPI(&LogFilter{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -173,7 +173,7 @@ func TestGetLogsScoreezyByDateRangeAPI(t *testing.T) {
 			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		result, err := repo.GetLogsScoreezyByDateRangeAPI(constant.DummyCompanyId, constant.DummyDate, constant.DummyDate)
+		result, err := repo.GetLogsScoreezyByDateRangeAPI(&LogFilter{})
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -184,7 +184,7 @@ func TestGetLogsScoreezyByDateRangeAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		result, err := repo.GetLogsScoreezyByDateRangeAPI(constant.DummyCompanyId, constant.DummyDate, constant.DummyDate)
+		result, err := repo.GetLogsScoreezyByDateRangeAPI(&LogFilter{})
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -200,7 +200,7 @@ func TestGetLogsScoreezyByDateRangeAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogsScoreezyByDateRangeAPI(constant.DummyCompanyId, constant.DummyDate, constant.DummyDate)
+		result, err := repo.GetLogsScoreezyByDateRangeAPI(&LogFilter{})
 
 		assert.Nil(t, result)
 		assert.Error(t, err)
