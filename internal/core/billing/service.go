@@ -186,7 +186,7 @@ func (svc *service) SendMonthlyUsageReport() error {
 				log.Warn().
 					Err(xlsxErr).
 					Uint("company_id", summary.CompanyId).
-					Msg("failed to generate xlsx, sending email without attachment")
+					Msg("sending email without attachment")
 			}
 
 			var attachments []mail.MailAttachment
