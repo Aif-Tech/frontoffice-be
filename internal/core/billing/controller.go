@@ -75,9 +75,14 @@ func parseDownloadRequest(c *fiber.Ctx) (*downloadUsageXlsxRequest, error) {
 		return nil, apperror.Unauthorized(err.Error())
 	}
 
-	companyId := authCtx.CompanyId
-	if companyId == 0 {
-		return nil, fiber.NewError(fiber.StatusBadRequest, "company_id is required")
+	companyId := c.Query("company_id")
+	if companyId == "0" {
+		return nil, apperror.BadRequest("company_id is required")
+	}
+
+	companyIdUint, err := strconv.ParseUint(companyId, 10, 64)
+	if err != nil {
+		return nil, apperror.BadRequest("company_id must be a valid number")
 	}
 
 	// year & month — default ke bulan lalu
@@ -120,7 +125,7 @@ func parseDownloadRequest(c *fiber.Ctx) (*downloadUsageXlsxRequest, error) {
 	pricingStrategy := strings.ToUpper(c.Query("pricing_strategy"))
 
 	return &downloadUsageXlsxRequest{
-		CompanyId:       companyId,
+		CompanyId:       uint(companyIdUint),
 		Year:            year,
 		Month:           month,
 		Groups:          groups,

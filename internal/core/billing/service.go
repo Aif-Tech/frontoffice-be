@@ -90,12 +90,12 @@ func (svc *service) DownloadUsageXlsx(input downloadUsageXlsxInput) (*downloadUs
 
 	allGroups, companyName, err := svc.buildProductGroups(input.CompanyId, input.PricingStrategy, startDate, endDate, input.Month, input.Year)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build product groups: %w", err)
+		return nil, apperror.Internal("failed to build product groups", err)
 	}
 
 	filtered := filterGroups(allGroups, input.Groups)
 	if len(filtered) == 0 {
-		return nil, fmt.Errorf("no valid product groups found for: %v", input.Groups)
+		return nil, apperror.BadRequest(fmt.Sprintf("no valid product groups found for: %v", input.Groups))
 	}
 
 	xlsxBytes, err := svc.generateUsageXlsx(XlsxReportInput{
@@ -236,7 +236,7 @@ func (svc *service) buildProductGroups(
 
 	summary, err := svc.repo.GetUsageReportByCompany(companyIdStr, pricingStrategy, monthStr, yearStr)
 	if err != nil {
-		return nil, "", err
+		return nil, "", apperror.MapRepoError(err, "failed to get usage report")
 	}
 
 	return []ProductGroup{
@@ -311,6 +311,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 					Str("product_slug", product.ProductSlug).
 					Uint("company_id", input.CompanyId).
 					Msg("failed to fetch transaction data, skipping sheet")
+
 				continue
 			}
 
@@ -321,7 +322,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 
 			idx, err := f.NewSheet(sheetName)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create sheet '%s': %w", sheetName, err)
+				return nil, apperror.Internal(fmt.Sprintf("failed to create sheet '%s': %s", sheetName, err), err)
 			}
 			if !builtAny {
 				f.SetActiveSheet(idx)
@@ -329,7 +330,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 			}
 
 			if err := writeProductSheet(f, sheetName, def, rows); err != nil {
-				return nil, fmt.Errorf("failed to write sheet '%s': %w", sheetName, err)
+				return nil, apperror.Internal(fmt.Sprintf("failed to write sheet '%s': %s", sheetName, err), err)
 			}
 		}
 	}
@@ -349,7 +350,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	if input.Password != "" {
 		encrypted, err := excelize.Encrypt(buf.Bytes(), &excelize.Options{Password: input.Password})
 		if err != nil {
-			return nil, fmt.Errorf("failed to write encypted xlxs in buffer: %w", err)
+			return nil, apperror.Internal("failed to write encypted xlxs in buffer", err)
 		}
 
 		return encrypted, nil
