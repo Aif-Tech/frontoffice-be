@@ -31,11 +31,12 @@ type repository struct {
 }
 
 type Repository interface {
-	GetMonthlyReport() ([]monthlySummary, error)
+	GetUsageReport() ([]usageSummary, error)
+	GetUsageReportByCompany(companyId, pricingStrategy, month, year string) (*usageSummary, error)
 	GetAdminsData(companyId uint) ([]adminEmail, error)
 }
 
-func (repo *repository) GetMonthlyReport() ([]monthlySummary, error) {
+func (repo *repository) GetUsageReport() ([]usageSummary, error) {
 	url := fmt.Sprintf(`%v/api/core/billing/summaries`, repo.cfg.App.AifcoreHost)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -51,7 +52,38 @@ func (repo *repository) GetMonthlyReport() ([]monthlySummary, error) {
 	}
 	defer resp.Body.Close()
 
-	apiResp, err := helper.ParseAifcoreAPIResponse[[]monthlySummary](resp)
+	apiResp, err := helper.ParseAifcoreAPIResponse[[]usageSummary](resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiResp.Data, nil
+}
+
+func (repo *repository) GetUsageReportByCompany(companyId, pricingStrategy, month, year string) (*usageSummary, error) {
+	url := fmt.Sprintf(`%v/api/core/billing/summary`, repo.cfg.App.AifcoreHost)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
+	}
+
+	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
+
+	q := req.URL.Query()
+	q.Add("company_id", companyId)
+	q.Add("pricing_strategy", pricingStrategy)
+	q.Add("month", month)
+	q.Add("year", year)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
+	}
+	defer resp.Body.Close()
+
+	apiResp, err := helper.ParseAifcoreAPIResponse[*usageSummary](resp)
 	if err != nil {
 		return nil, err
 	}

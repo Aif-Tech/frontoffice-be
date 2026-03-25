@@ -21,7 +21,3 @@ type MailModule struct {
 	SendMail *SendMailService
 	Worker   *MailWorker
 }
-
-const (
-	MimeXlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)

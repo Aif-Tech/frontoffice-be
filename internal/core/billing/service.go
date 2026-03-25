@@ -39,6 +39,7 @@ type service struct {
 }
 
 type Service interface {
+	DownloadUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error)
 	SendMonthlyUsageReport() error
 	generateUsageXlsx(input XlsxReportInput) ([]byte, error)
 }
@@ -74,8 +75,56 @@ func (svc *service) NewScoreezyFetchFn(startDate, endDate string) FetchFn {
 	}
 }
 
+func (svc *service) DownloadUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error) {
+	if input.PricingStrategy == "" {
+		input.PricingStrategy = constant.PaidStatus
+	}
+
+	if len(input.Groups) == 0 {
+		input.Groups = []string{"procat", "scoreezy"}
+	}
+
+	period := time.Date(input.Year, time.Month(input.Month), 1, 0, 0, 0, 0, time.UTC)
+	startDate := fmt.Sprintf("%d-%02d-01", input.Year, input.Month)
+	endDate := fmt.Sprintf("%d-%02d-%02d", input.Year, input.Month, lastDayOfMonth(period))
+
+	allGroups, companyName, err := svc.buildProductGroups(input.CompanyId, input.PricingStrategy, startDate, endDate, input.Month, input.Year)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build product groups: %w", err)
+	}
+
+	filtered := filterGroups(allGroups, input.Groups)
+	if len(filtered) == 0 {
+		return nil, fmt.Errorf("no valid product groups found for: %v", input.Groups)
+	}
+
+	xlsxBytes, err := svc.generateUsageXlsx(XlsxReportInput{
+		CompanyId:       input.CompanyId,
+		CompanyName:     companyName,
+		PeriodYear:      input.Year,
+		PeriodMonth:     input.Month,
+		PricingStrategy: input.PricingStrategy,
+		ProductGroups:   filtered,
+		Password:        input.Password,
+	})
+	if err != nil {
+		return nil, apperror.Internal("failed to generate report", err)
+	}
+
+	filename := fmt.Sprintf(
+		"usage_report_%s_%d_%02d.xlsx",
+		companyName, input.Year, input.Month,
+	)
+
+	return &downloadUsageXlsxResult{
+		Filename:    filename,
+		ContentType: constant.MimeXlsx,
+		Data:        xlsxBytes,
+	}, nil
+}
+
 func (svc *service) SendMonthlyUsageReport() error {
-	summaries, err := svc.repo.GetMonthlyReport()
+	summaries, err := svc.repo.GetUsageReport()
 	if err != nil {
 		return apperror.MapRepoError(err, "failed to get monthly usage report")
 	}
@@ -145,7 +194,7 @@ func (svc *service) SendMonthlyUsageReport() error {
 				attachments = append(attachments, mail.MailAttachment{
 					FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
 					Content:  xlsxBytes,
-					MimeType: mail.MimeXlsx,
+					MimeType: constant.MimeXlsx,
 				})
 			}
 
@@ -174,6 +223,58 @@ func (svc *service) SendMonthlyUsageReport() error {
 	}
 
 	return nil
+}
+
+func (svc *service) buildProductGroups(
+	companyId uint,
+	pricingStrategy, startDate, endDate string,
+	month, year int,
+) ([]ProductGroup, string, error) {
+	companyIdStr := strconv.FormatUint(uint64(companyId), 10)
+	monthStr := strconv.FormatUint(uint64(month), 10)
+	yearStr := strconv.FormatUint(uint64(year), 10)
+
+	summary, err := svc.repo.GetUsageReportByCompany(companyIdStr, pricingStrategy, monthStr, yearStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return []ProductGroup{
+			{
+				GroupName: "Procat",
+				Key:       groupKeyProcat,
+				Products:  toXlsxProducts(summary.ProcatProducts),
+				FetchFn:   svc.NewProcatFetchFn(pricingStrategy),
+			},
+			{
+				GroupName: "Scoreezy",
+				Key:       groupKeyScorezy,
+				Products:  toXlsxProducts(summary.ScoreezyProducts),
+				FetchFn:   svc.NewScoreezyFetchFn(startDate, endDate),
+			},
+		},
+		summary.CompanyName,
+		nil
+}
+
+func filterGroups(groups []ProductGroup, allowedKeys []string) []ProductGroup {
+	if len(allowedKeys) == 0 {
+		return groups
+	}
+
+	allowed := make(map[string]struct{}, len(allowedKeys))
+	for _, k := range allowedKeys {
+		allowed[k] = struct{}{}
+	}
+
+	var out []ProductGroup
+	for _, g := range groups {
+		if _, ok := allowed[g.Key]; ok {
+			out = append(out, g)
+		}
+	}
+
+	return out
 }
 
 func lastDayOfMonth(t time.Time) int {

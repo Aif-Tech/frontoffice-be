@@ -23,3 +23,7 @@ const (
 
 	PaidStatus = "PAY"
 )
+
+const (
+	MimeXlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)

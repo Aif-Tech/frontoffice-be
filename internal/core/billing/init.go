@@ -4,6 +4,7 @@ import (
 	"front-office/configs/application"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/mail"
+	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,5 +16,6 @@ func SetupInit(billingAPI fiber.Router, cfg *application.Config, client httpclie
 	service := NewService(cfg, repo, transactionRepo, mailSvc)
 	controller := NewController(service)
 
+	billingAPI.Get("/usage/export", middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.ExportUsage)
 	billingAPI.Post("/send-monthly-report", controller.SendMonthlyUsageReport)
 }

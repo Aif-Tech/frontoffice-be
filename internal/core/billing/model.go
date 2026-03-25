@@ -5,6 +5,35 @@ import (
 	"front-office/pkg/common/constant"
 )
 
+type downloadUsageXlsxRequest struct {
+	CompanyId       uint
+	Year            int
+	Month           int
+	Groups          []string // opsional, example: "procat,scoreezy"
+	PricingStrategy string   // opsional, default: "PAY"
+	Password        string
+}
+
+type downloadUsageXlsxInput struct {
+	CompanyId       uint
+	Year            int
+	Month           int
+	Groups          []string
+	PricingStrategy string // kosong = default constant.PaidStatus
+	Password        string
+}
+
+type downloadUsageXlsxResult struct {
+	Filename    string
+	ContentType string
+	Data        []byte
+}
+
+const (
+	groupKeyProcat  = "procat"
+	groupKeyScorezy = "scoreezy"
+)
+
 type usagePerProduct struct {
 	ProductId    uint   `json:"product_id"`
 	ProductSlug  string `json:"product_slug"`
@@ -13,7 +42,7 @@ type usagePerProduct struct {
 	TotalPay     int64  `json:"total_pay"`
 }
 
-type monthlySummary struct {
+type usageSummary struct {
 	CompanyId        uint              `json:"company_id"`
 	CompanyName      string            `json:"company_name"`
 	PeriodYear       int               `json:"period_year"`
@@ -44,6 +73,7 @@ type FetchFn func(productId, companyId string) ([]LogRow, error)
 
 type ProductGroup struct {
 	GroupName string
+	Key       string
 	Products  []XlsxReportProduct
 	FetchFn   FetchFn
 }
