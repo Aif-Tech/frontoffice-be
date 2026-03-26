@@ -39,8 +39,9 @@ type service struct {
 }
 
 type Service interface {
-	DownloadUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error)
 	SendMonthlyUsageReport() error
+	DownloadUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error)
+	GetUsageReport(companyId uint, pricingStrategy string, month, year int) (*usageSummary, error)
 	generateUsageXlsx(input XlsxReportInput) ([]byte, error)
 }
 
@@ -223,6 +224,19 @@ func (svc *service) SendMonthlyUsageReport() error {
 	}
 
 	return nil
+}
+
+func (svc *service) GetUsageReport(companyId uint, pricingStrategy string, month, year int) (*usageSummary, error) {
+	companyIdStr := strconv.FormatUint(uint64(companyId), 10)
+	monthStr := strconv.FormatUint(uint64(month), 10)
+	yearStr := strconv.FormatUint(uint64(year), 10)
+
+	summary, err := svc.repo.GetUsageReportByCompany(companyIdStr, pricingStrategy, monthStr, yearStr)
+	if err != nil {
+		return nil, apperror.MapRepoError(err, "failed to get usage report")
+	}
+
+	return summary, nil
 }
 
 func (svc *service) buildProductGroups(

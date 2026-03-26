@@ -25,9 +25,11 @@ type controller struct {
 type Controller interface {
 	ExportUsage(c *fiber.Ctx) error
 	SendMonthlyUsageReport(c *fiber.Ctx) error
+	GetUsageReport(c *fiber.Ctx) error
 }
 
 func (ctrl *controller) ExportUsage(c *fiber.Ctx) error {
+	var err error
 	req, err := parseDownloadRequest(c)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
@@ -66,6 +68,24 @@ func (ctrl *controller) SendMonthlyUsageReport(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
 		"succeed to send monthly usage report",
 		nil,
+	))
+}
+
+func (ctrl *controller) GetUsageReport(c *fiber.Ctx) error {
+	var err error
+	req, err := parseDownloadRequest(c)
+	if err != nil {
+		return apperror.BadRequest(err.Error())
+	}
+
+	result, err := ctrl.svc.GetUsageReport(req.CompanyId, req.PricingStrategy, req.Month, req.Year)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
+		"succeed to get monthly usage report",
+		result,
 	))
 }
 
