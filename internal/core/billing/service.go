@@ -161,7 +161,8 @@ func (svc *service) SendMonthlyUsageReport() error {
 		}
 
 		for _, admin := range admins {
-			xlxsPassword := admin.Key
+			// xlsxPassword := admin.Key
+			xlsxPassword := svc.cfg.Mail.Password // todo: update xlsx password
 
 			xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
 				CompanyId:   summary.CompanyId,
@@ -181,7 +182,7 @@ func (svc *service) SendMonthlyUsageReport() error {
 					},
 				},
 				PricingStrategy: constant.PaidStatus,
-				Password:        xlxsPassword,
+				Password:        xlsxPassword,
 			})
 			if xlsxErr != nil {
 				log.Warn().
@@ -199,8 +200,9 @@ func (svc *service) SendMonthlyUsageReport() error {
 				})
 			}
 
+			fmt.Println("admin email: ", admin.Email)
 			if err := svc.mailSvc.SendWithTemplate(
-				admin.Email,
+				"arief@aiforesee.com", // todo: update to admin mail
 				ccEmails,
 				fmt.Sprintf("Monthly Usage Report for %s - %s %d", summary.CompanyName, month, year),
 				"monthly_usage_report.html",
