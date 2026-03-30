@@ -160,27 +160,29 @@ func (svc *service) SendMonthlyUsageReport() error {
 			continue
 		}
 
+		groups := []ProductGroup{
+			{
+				GroupName: "Procat",
+				Products:  toXlsxProducts(summary.ProcatProducts),
+				FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus),
+			},
+			{
+				GroupName: "Scoreezy",
+				Products:  toXlsxProducts(summary.ScoreezyProducts),
+				FetchFn:   svc.NewScoreezyFetchFn(startDate, endDate),
+			},
+		}
+
 		for _, admin := range admins {
 			// xlsxPassword := admin.Key
 			xlsxPassword := svc.cfg.Mail.Password // todo: update xlsx password
 
 			xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
-				CompanyId:   summary.CompanyId,
-				CompanyName: summary.CompanyName,
-				PeriodYear:  year,
-				PeriodMonth: int(month),
-				ProductGroups: []ProductGroup{
-					{
-						GroupName: "Procat",
-						Products:  toXlsxProducts(summary.ProcatProducts),
-						FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus),
-					},
-					{
-						GroupName: "Scoreezy",
-						Products:  toXlsxProducts(summary.ScoreezyProducts),
-						FetchFn:   svc.NewScoreezyFetchFn(startDate, endDate),
-					},
-				},
+				CompanyId:       summary.CompanyId,
+				CompanyName:     summary.CompanyName,
+				PeriodYear:      year,
+				PeriodMonth:     int(month),
+				ProductGroups:   groups,
 				PricingStrategy: constant.PaidStatus,
 				Password:        xlsxPassword,
 			})
@@ -200,20 +202,22 @@ func (svc *service) SendMonthlyUsageReport() error {
 				})
 			}
 
+			subject := fmt.Sprintf("Monthly Usage Report for %s - %s %d", summary.CompanyName, month, year)
+			templateData := BuildMonthlyUsageTemplateData(
+				subject,
+				summary.CompanyName,
+				month.String(),
+				year,
+				summary,
+			)
+
 			fmt.Println("admin email: ", admin.Email)
 			if err := svc.mailSvc.SendWithTemplate(
 				"arief@aiforesee.com", // todo: update to admin mail
 				ccEmails,
-				fmt.Sprintf("Monthly Usage Report for %s - %s %d", summary.CompanyName, month, year),
+				subject,
 				"monthly_usage_report.html",
-				map[string]any{
-					"Name":             summary.CompanyName,
-					"ProcatProducts":   summary.ProcatProducts,
-					"ScoreezyProducts": summary.ScoreezyProducts,
-					"HasUsage":         len(summary.ProcatProducts) > 0 || len(summary.ScoreezyProducts) > 0,
-					"Month":            month.String(),
-					"Year":             year,
-				},
+				templateData,
 				attachments...,
 			); err != nil {
 				log.Warn().
@@ -222,7 +226,6 @@ func (svc *service) SendMonthlyUsageReport() error {
 					Msg("failed to send monthly usage report")
 			}
 		}
-
 	}
 
 	return nil
@@ -373,6 +376,45 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func BuildMonthlyUsageTemplateData(
+	subject string,
+	companyName string,
+	month string,
+	year int,
+	summary usageSummary,
+) MonthlyUsageTemplateData {
+	usageByProductId := buildUsageLookup(summary.ProcatProducts, summary.ScoreezyProducts)
+
+	products := make([]TemplateProduct, 0, len(summary.SubscribedProducts))
+	for _, sp := range summary.SubscribedProducts {
+		products = append(products, TemplateProduct{
+			ProductName: sp.ProductName,
+			TotalPay:    usageByProductId[sp.ProductId],
+		})
+	}
+
+	return MonthlyUsageTemplateData{
+		Subject:  subject,
+		Name:     companyName,
+		Month:    month,
+		Year:     year,
+		Products: products,
+	}
+}
+
+func buildUsageLookup(procat, scoreezy []usagePerProduct) map[uint]int {
+	lookup := make(map[uint]int)
+	for _, p := range procat {
+		lookup[p.ProductId] += p.TotalPay
+	}
+
+	for _, p := range scoreezy {
+		lookup[p.ProductId] += p.TotalPay
+	}
+
+	return lookup
 }
 
 func writeProductSheet(

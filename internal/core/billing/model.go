@@ -38,17 +38,18 @@ type usagePerProduct struct {
 	ProductId    uint   `json:"product_id"`
 	ProductSlug  string `json:"product_slug"`
 	ProductName  string `json:"product_name"`
-	TotalRequest int64  `json:"total_request"`
-	TotalPay     int64  `json:"total_pay"`
+	TotalRequest int    `json:"total_request"`
+	TotalPay     int    `json:"total_pay"`
 }
 
 type usageSummary struct {
-	CompanyId        uint              `json:"company_id"`
-	CompanyName      string            `json:"company_name"`
-	PeriodYear       int               `json:"period_year"`
-	PeriodMonth      int               `json:"period_month"`
-	ProcatProducts   []usagePerProduct `json:"procat_products"`
-	ScoreezyProducts []usagePerProduct `json:"scoreezy_products"`
+	CompanyId          uint                `json:"company_id"`
+	CompanyName        string              `json:"company_name"`
+	PeriodYear         int                 `json:"period_year"`
+	PeriodMonth        int                 `json:"period_month"`
+	SubscribedProducts []subscribedProduct `json:"subscribed_products"`
+	ProcatProducts     []usagePerProduct   `json:"procat_products"`
+	ScoreezyProducts   []usagePerProduct   `json:"scoreezy_products"`
 	// GrandTotalRequest int64             `json:"grand_total_request"`
 	// GrandTotalPay     int64             `json:"grand_total_pay"`
 }
@@ -65,8 +66,8 @@ type XlsxReportProduct struct {
 	ProductId    uint
 	ProductName  string
 	ProductSlug  string
-	TotalRequest int64
-	TotalPay     int64
+	TotalRequest int
+	TotalPay     int
 }
 
 type FetchFn func(productId, companyId string) ([]LogRow, error)
@@ -117,6 +118,24 @@ type RowData map[string]interface{}
 type ProductData struct {
 	Def  ProductSheetDef
 	Rows []RowData
+}
+
+type TemplateProduct struct {
+	ProductName string
+	TotalPay    int
+}
+
+type MonthlyUsageTemplateData struct {
+	Subject  string
+	Name     string
+	Month    string
+	Year     int
+	Products []TemplateProduct
+}
+
+type subscribedProduct struct {
+	ProductId   uint   `json:"product_id"`
+	ProductName string `json:"product_name"`
 }
 
 var productRegistry = map[string]ProductSheetDef{

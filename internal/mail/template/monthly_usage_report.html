@@ -66,54 +66,58 @@
               Total usage this month:
             </p>
 
-            {{ if .HasUsage }}
+            <!-- ── Product Usage Table ──────────────────────────────────── -->
             <table
               width="100%"
               cellpadding="0"
               cellspacing="0"
-              style="margin: 0 0 20px"
+              style="margin: 0 0 24px; border-collapse: collapse"
             >
-              {{ range .ProcatProducts }}
-              <tr>
-                <td style="padding: 8px 0; font-size: 14px; color: #374151">
-                  • {{ .ProductName }}
+              <tr style="border-bottom: 2px solid #e5e7eb">
+                <td
+                  style="
+                    padding: 8px 0;
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  Product
                 </td>
                 <td
                   align="right"
                   style="
                     padding: 8px 0;
-                    font-size: 14px;
+                    font-size: 12px;
                     font-weight: bold;
-                    color: #111827;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
                   "
                 >
-                  {{ .TotalPay }}
+                  Total Usage
                 </td>
               </tr>
-              {{ end }} {{ range .ScoreezyProducts }}
-              <tr>
-                <td style="padding: 8px 0; font-size: 14px; color: #374151">
-                  • {{ .ProductName }}
+
+              {{ range .Products }}
+              <tr style="border-bottom: 1px solid #f3f4f6">
+                <td style="padding: 10px 0; font-size: 14px; color: #374151">
+                  {{ .ProductName }}
                 </td>
-                <td
-                  align="right"
-                  style="
-                    padding: 8px 0;
-                    font-size: 14px;
-                    font-weight: bold;
-                    color: #111827;
-                  "
-                >
-                  {{ .TotalPay }}
+                <td align="right" style="padding: 10px 0; font-size: 14px">
+                  {{ if eq .TotalPay 0 }}
+                  <span style="color: #9ca3af; font-style: italic">0</span>
+                  {{ else }}
+                  <span style="font-weight: bold; color: #111827">
+                    {{ .TotalPay }}
+                  </span>
+                  {{ end }}
                 </td>
               </tr>
               {{ end }}
             </table>
-            {{ else }}
-            <p style="margin: 0 0 20px; font-size: 14px; color: #6b7280">
-              No API usage was recorded during this period.
-            </p>
-            {{ end }}
 
             <p
               style="

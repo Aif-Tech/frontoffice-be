@@ -100,6 +100,10 @@ func parseDownloadRequest(c *fiber.Ctx) (*downloadUsageXlsxRequest, error) {
 		return nil, apperror.BadRequest("company_id is required")
 	}
 
+	if authCtx.RoleId != 0 && authCtx.CompanyIdStr() != companyId {
+		return nil, apperror.Unauthorized(constant.RequestProhibited)
+	}
+
 	companyIdUint, err := strconv.ParseUint(companyId, 10, 64)
 	if err != nil {
 		return nil, apperror.BadRequest("company_id must be a valid number")
