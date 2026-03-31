@@ -70,7 +70,7 @@ type XlsxReportProduct struct {
 	TotalPay     int
 }
 
-type FetchFn func(productId, companyId string) ([]LogRow, error)
+type FetchFn func(productId, companyId, productSlug string) ([]LogRow, error)
 
 type ProductGroup struct {
 	GroupName string
@@ -136,6 +136,11 @@ type MonthlyUsageTemplateData struct {
 type subscribedProduct struct {
 	ProductId   uint   `json:"product_id"`
 	ProductName string `json:"product_name"`
+}
+
+var dedupCompanyNames = []string{
+	"pt. bank raya indonesia",
+	"pt. bank raya indonesia (pinang maxima)",
 }
 
 var productRegistry = map[string]ProductSheetDef{

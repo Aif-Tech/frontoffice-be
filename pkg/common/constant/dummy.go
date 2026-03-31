@@ -6,6 +6,7 @@ const (
 	DummyToken           = "dummy-token"
 	DummyMemberId        = "member-id"
 	DummyCompanyId       = "company-id"
+	DummyWithDedup       = "company-id"
 	DummyJobId           = "job-id"
 	DummyJobDetailId     = "job-detail-id"
 	DummyTransactionId   = "transaction-id"

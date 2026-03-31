@@ -35,7 +35,7 @@ func (ctrl *controller) ExportUsage(c *fiber.Ctx) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	result, err := ctrl.svc.DownloadUsageXlsx(downloadUsageXlsxInput{
+	result, err := ctrl.svc.ExportUsageXlsx(downloadUsageXlsxInput{
 		CompanyId:       req.CompanyId,
 		Year:            req.Year,
 		Month:           req.Month,

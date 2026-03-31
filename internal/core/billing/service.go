@@ -40,15 +40,15 @@ type service struct {
 
 type Service interface {
 	SendMonthlyUsageReport() error
-	DownloadUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error)
+	ExportUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error)
 	GetUsageReport(companyId uint, pricingStrategy string, month, year int) (*usageSummary, error)
 	generateUsageXlsx(input XlsxReportInput) ([]byte, error)
 }
 
-func (svc *service) NewProcatFetchFn(pricingStrategy string) FetchFn {
-	return func(productId, companyId string) ([]LogRow, error) {
-		rows, err := svc.transactionRepo.GetLogTransByJobIdAPI(
-			"", productId, companyId, pricingStrategy,
+func (svc *service) NewProcatFetchFn(pricingStrategy, applyDedup string) FetchFn {
+	return func(productId, companyId, productSlug string) ([]LogRow, error) {
+		rows, err := svc.transactionRepo.GetLogTransByCompanyAPI(
+			"", productId, companyId, pricingStrategy, productSlug, applyDedup,
 		)
 		if err != nil {
 			return nil, err
@@ -59,7 +59,7 @@ func (svc *service) NewProcatFetchFn(pricingStrategy string) FetchFn {
 }
 
 func (svc *service) NewScoreezyFetchFn(startDate, endDate string) FetchFn {
-	return func(productId, companyId string) ([]LogRow, error) {
+	return func(productId, companyId, productSlug string) ([]LogRow, error) {
 		rows, err := svc.transactionRepo.GetLogsScoreezyByDateRangeAPI(
 			&transaction.LogFilter{
 				CompanyId: companyId,
@@ -76,7 +76,7 @@ func (svc *service) NewScoreezyFetchFn(startDate, endDate string) FetchFn {
 	}
 }
 
-func (svc *service) DownloadUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error) {
+func (svc *service) ExportUsageXlsx(input downloadUsageXlsxInput) (*downloadUsageXlsxResult, error) {
 	if input.PricingStrategy == "" {
 		input.PricingStrategy = constant.PaidStatus
 	}
@@ -160,11 +160,13 @@ func (svc *service) SendMonthlyUsageReport() error {
 			continue
 		}
 
+		applyDedup := strconv.FormatBool(isDedupCompany(summary.CompanyName))
+
 		groups := []ProductGroup{
 			{
 				GroupName: "Procat",
 				Products:  toXlsxProducts(summary.ProcatProducts),
-				FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus),
+				FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus, applyDedup),
 			},
 			{
 				GroupName: "Scoreezy",
@@ -203,7 +205,7 @@ func (svc *service) SendMonthlyUsageReport() error {
 			}
 
 			subject := fmt.Sprintf("Monthly Usage Report for %s - %s %d", summary.CompanyName, month, year)
-			templateData := BuildMonthlyUsageTemplateData(
+			templateData := buildMonthlyUsageTemplateData(
 				subject,
 				summary.CompanyName,
 				month.String(),
@@ -258,12 +260,14 @@ func (svc *service) buildProductGroups(
 		return nil, "", apperror.MapRepoError(err, "failed to get usage report")
 	}
 
+	applyDedup := strconv.FormatBool(isDedupCompany(summary.CompanyName))
+
 	return []ProductGroup{
 			{
 				GroupName: "Procat",
 				Key:       groupKeyProcat,
 				Products:  toXlsxProducts(summary.ProcatProducts),
-				FetchFn:   svc.NewProcatFetchFn(pricingStrategy),
+				FetchFn:   svc.NewProcatFetchFn(pricingStrategy, applyDedup),
 			},
 			{
 				GroupName: "Scoreezy",
@@ -322,7 +326,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 			productId := strconv.FormatUint(uint64(product.ProductId), 10)
 			companyId := strconv.FormatUint(uint64(input.CompanyId), 10)
 
-			rows, err := group.FetchFn(productId, companyId)
+			rows, err := group.FetchFn(productId, companyId, product.ProductSlug)
 			if err != nil {
 				log.Warn().
 					Err(err).
@@ -378,7 +382,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func BuildMonthlyUsageTemplateData(
+func buildMonthlyUsageTemplateData(
 	subject string,
 	companyName string,
 	month string,
@@ -547,6 +551,17 @@ func parseCCEmails(raw string) []string {
 		}
 	}
 	return result
+}
+
+func isDedupCompany(companyName string) bool {
+	nameLower := strings.ToLower(strings.TrimSpace(companyName))
+	for _, name := range dedupCompanyNames {
+		if nameLower == name {
+			return true
+		}
+	}
+
+	return false
 }
 
 type LogRow interface {
