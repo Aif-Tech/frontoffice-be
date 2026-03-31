@@ -20,4 +20,10 @@ const (
 	TestCaseHTTPRequestError = "HTTPRequestError"
 	TestCaseParseError       = "ParseError"
 	InvalidJSON              = `{invalid-json`
+
+	PaidStatus = "PAY"
+)
+
+const (
+	MimeXlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )

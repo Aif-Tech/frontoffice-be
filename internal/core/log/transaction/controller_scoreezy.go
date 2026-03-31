@@ -40,16 +40,22 @@ func (ctrl *controller) GetLogScoreezyByDate(c *fiber.Ctx) error {
 }
 
 func (ctrl *controller) GetLogScoreezyByDateRange(c *fiber.Ctx) error {
-	page := c.Query(constant.Page, "1")
 	startDate := c.Query(constant.StartDate)
 	endDate := c.Query(constant.EndDate)
-	companyId := c.Query("company_id")
 
 	if startDate == "" || endDate == "" {
 		return apperror.BadRequest("start_date and end_date  are required")
 	}
 
-	logs, err := ctrl.svc.GetScoreezyLogsByDateRange(startDate, endDate, companyId, page)
+	filter := &LogFilter{
+		Page:      c.Query(constant.Page, "1"),
+		Size:      c.Query(constant.Size, "10"),
+		CompanyId: c.Query("company_id"),
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+
+	logs, err := ctrl.svc.GetScoreezyLogsByDateRange(filter)
 	if err != nil {
 		return err
 	}

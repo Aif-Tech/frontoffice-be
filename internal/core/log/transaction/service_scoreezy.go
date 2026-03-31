@@ -14,7 +14,6 @@ func (svc *service) GetScoreezyLogs() ([]*scoreezyLogResponse, error) {
 	result := make([]*scoreezyLogResponse, 0, len(logs))
 	for _, log := range logs {
 		result = append(result, &scoreezyLogResponse{
-			Name:      log.Member.Name,
 			Grade:     log.Grade,
 			CreatedAt: log.CreatedAt,
 		})
@@ -32,7 +31,6 @@ func (svc *service) GetScoreezyLogsByDate(companyId, date string) ([]*scoreezyLo
 	result := make([]*scoreezyLogResponse, 0, len(logs))
 	for _, log := range logs {
 		result = append(result, &scoreezyLogResponse{
-			Name:      log.Member.Name,
 			Grade:     log.Grade,
 			CreatedAt: log.CreatedAt,
 		})
@@ -41,8 +39,8 @@ func (svc *service) GetScoreezyLogsByDate(companyId, date string) ([]*scoreezyLo
 	return result, nil
 }
 
-func (svc *service) GetScoreezyLogsByDateRange(startDate, endDate, companyId, page string) ([]*scoreezyLogResponse, error) {
-	logs, err := svc.repo.GetLogsScoreezyByDateRangeAPI(companyId, startDate, endDate)
+func (svc *service) GetScoreezyLogsByDateRange(filter *LogFilter) ([]*scoreezyLogResponse, error) {
+	logs, err := svc.repo.GetLogsScoreezyByDateRangeAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedFetchLogs)
 	}
@@ -50,9 +48,12 @@ func (svc *service) GetScoreezyLogsByDateRange(startDate, endDate, companyId, pa
 	result := make([]*scoreezyLogResponse, 0, len(logs))
 	for _, log := range logs {
 		result = append(result, &scoreezyLogResponse{
-			Name:      log.Member.Name,
-			Grade:     log.Grade,
-			CreatedAt: log.CreatedAt,
+			TrxId:                log.TrxId,
+			ProbabilityToDefault: log.ProbabilityToDefault,
+			Grade:                log.Grade,
+			Behavior:             log.Behavior,
+			Identity:             log.Identity,
+			CreatedAt:            log.CreatedAt,
 		})
 	}
 
@@ -68,7 +69,6 @@ func (svc *service) GetScoreezyLogsByMonth(companyId, month string) ([]*scoreezy
 	result := make([]*scoreezyLogResponse, 0, len(logs))
 	for _, log := range logs {
 		result = append(result, &scoreezyLogResponse{
-			Name:      log.Member.Name,
 			Grade:     log.Grade,
 			CreatedAt: log.CreatedAt,
 		})

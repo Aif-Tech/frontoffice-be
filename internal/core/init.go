@@ -3,6 +3,7 @@ package core
 import (
 	"front-office/configs/application"
 	"front-office/internal/core/auth"
+	"front-office/internal/core/billing"
 	"front-office/internal/core/grade"
 	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
@@ -39,6 +40,9 @@ func SetupInit(routeGroup fiber.Router, cfg *application.Config, mailModule *mai
 	productGroup := routeGroup.Group("products")
 	datahub.SetupInit(productGroup, cfg)
 	scoreezy.SetupInit(productGroup, cfg, client)
+
+	billingGroup := routeGroup.Group("billing")
+	billing.SetupInit(billingGroup, cfg, client, mailModule.SendMail)
 
 	templateGroup := routeGroup.Group("templates")
 	template.SetupInit(templateGroup)

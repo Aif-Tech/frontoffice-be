@@ -110,6 +110,7 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *up
 	if shouldSendEmailConfirmation {
 		if err := svc.mailSvc.SendWithTemplate(
 			newEmail,
+			nil,
 			"Scoreezy Account Email Updated",
 			"email_changed.html",
 			map[string]any{
@@ -267,6 +268,7 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 	if sendEmailConfirmation {
 		if err := svc.mailSvc.SendWithTemplate(
 			member.Email,
+			nil,
 			"Scoreezy Account Email Updated",
 			"email_changed.html",
 			map[string]any{

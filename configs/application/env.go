@@ -13,9 +13,10 @@ type Environment struct {
 	FrontendBaseUrl                string
 	Port                           string
 	MailHost                       string
+	MailInternalCC                 string
+	MailPass                       string
 	MailPort                       string
 	MailUser                       string
-	MailPass                       string
 	MailMaxRetry                   string
 	MailjetPublicKey               string
 	MailjetSecretKey               string
@@ -62,11 +63,12 @@ func LoadEnvironment() *Environment {
 		FrontendBaseUrl:                GetEnvironment("FO_FRONTEND_BASE_URL"),
 		CloudProvider:                  GetEnvironment("CLOUD_PROVIDER"),
 		Port:                           GetEnvironment("FO_APP_PORT"),
+		MailInternalCC:                 GetEnvironment("FO_INTERNAL_CC_EMAILS"),
 		MailHost:                       GetEnvironment("FO_MAIL_HOST"),
-		MailPort:                       GetEnvironment("FO_MAIL_PORT"),
-		MailUser:                       GetEnvironment("FO_MAIL_USER"),
-		MailPass:                       GetEnvironment("FO_MAIL_PASSWORD"),
 		MailMaxRetry:                   GetEnvironment("FO_MAIL_MAX_RETRY"),
+		MailPort:                       GetEnvironment("FO_MAIL_PORT"),
+		MailPass:                       GetEnvironment("FO_MAIL_PASSWORD"),
+		MailUser:                       GetEnvironment("FO_MAIL_USER"),
 		JwtSecretKey:                   GetEnvironment("FO_JWT_SECRET_KEY"),
 		JwtExpiresMinutes:              GetEnvironment("FO_JWT_EXPIRES_MINUTES"),
 		JwtRefreshTokenExpiresMinutes:  GetEnvironment("FO_JWT_REFRESH_EXPIRES_MINUTES"),

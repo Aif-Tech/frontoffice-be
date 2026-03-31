@@ -35,30 +35,29 @@ func (svc *SendMailService) Execute(mail Mail) error {
 		return apperror.BadRequest("recipient is required")
 	}
 
-	// return svc.service.Send(mail)
-	return svc.queue.Enqueue(mail)
+	return svc.service.Send(mail)
+
+	// return svc.queue.Enqueue(mail)
 }
 
 func (svc *SendMailService) SendWithTemplate(
 	to string,
+	cc []string,
 	subject string,
 	templateName string,
 	data any,
+	attachment ...MailAttachment,
 ) error {
 	body, err := svc.renderer.Render(templateName, data)
 	if err != nil {
 		return apperror.Internal("failed to render template", err)
 	}
 
-	// return svc.service.Send(Mail{
-	// 	To:      to,
-	// 	Subject: subject,
-	// 	Body:    body,
-	// })
-
 	return svc.Execute(Mail{
-		To:      to,
-		Subject: subject,
-		Body:    body,
+		To:          to,
+		CC:          cc,
+		Subject:     subject,
+		Body:        body,
+		Attachments: attachment,
 	})
 }

@@ -269,6 +269,7 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 
 	if err := svc.mailSvc.SendWithTemplate(
 		req.Email,
+		nil,
 		"Welcome to Scoreezy",
 		"welcome_member.html",
 		map[string]any{
@@ -352,6 +353,7 @@ func (svc *service) RequestActivation(email string) error {
 
 	if err := svc.mailSvc.SendWithTemplate(
 		email,
+		nil,
 		"Welcome to Scoreezy",
 		"welcome_member.html",
 		map[string]any{
@@ -413,6 +415,7 @@ func (svc *service) RequestPasswordReset(email string) error {
 
 	if err := svc.mailSvc.SendWithTemplate(
 		email,
+		nil,
 		"Reset Your Password",
 		"request_password_reset.html",
 		map[string]any{
@@ -555,6 +558,7 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 
 	if err := svc.mailSvc.SendWithTemplate(
 		user.Email,
+		nil,
 		"Scoreezy Password Changed",
 		"password_changed.html",
 		map[string]any{

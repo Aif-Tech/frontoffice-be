@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetLogTransByJobIdAPI(t *testing.T) {
+func TestGetLogTransByCompanyAPI(t *testing.T) {
 	t.Run(constant.TestCaseSuccess, func(t *testing.T) {
 		mockData := model.AifcoreAPIResponse[[]*LogTransProductCatalog]{
 			Success: true,
@@ -32,7 +32,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -45,7 +45,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -56,7 +56,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -72,7 +72,7 @@ func TestGetLogTransByJobIdAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogTransByJobIdAPI(constant.DummyJobId, constant.DummyCompanyId)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
 
 		assert.Nil(t, result)
 		assert.Error(t, err)

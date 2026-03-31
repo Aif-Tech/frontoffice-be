@@ -30,12 +30,12 @@ type Repository interface {
 	CreateLogScoreezyAPI(req *LogTransScoreezy) error
 	GetLogsScoreezyAPI() ([]*LogTransScoreezy, error)
 	GetLogsScoreezyByDateAPI(companyId, date string) ([]*LogTransScoreezy, error)
-	GetLogsScoreezyByDateRangeAPI(companyId, startDate, endDate string) ([]*LogTransScoreezy, error)
+	GetLogsScoreezyByDateRangeAPI(filter *LogFilter) ([]*LogTransScoreezy, error)
 	GetLogsScoreezyByMonthAPI(companyId, month string) ([]*LogTransScoreezy, error)
 
 	// product catalog
 	CreateLogTransAPI(req *LogTransProCatRequest) error
-	GetLogTransByJobIdAPI(jobId, companyId string) ([]*LogTransProductCatalog, error)
+	GetLogTransByCompanyAPI(jobId, productId, companyId, pricingStrategy, productSlug, applyDedup string) ([]*LogTransProductCatalog, error)
 	ProcessedLogCountAPI(jobId string) (*getProcessedCountResp, error)
 	UpdateLogTransAPI(transId string, req map[string]interface{}) error
 }

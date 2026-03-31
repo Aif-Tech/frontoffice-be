@@ -1,0 +1,168 @@
+{{ define "content" }}
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  style="
+    background-color: #f4f6f8;
+    padding: 24px 0;
+    font-family: Arial, Helvetica, sans-serif;
+  "
+>
+  <tr>
+    <td align="center">
+      <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        style="
+          max-width: 600px;
+          background: #ffffff;
+          border-radius: 8px;
+          overflow: hidden;
+        "
+      >
+        <!-- Header -->
+        <tr>
+          <td style="background: #1f2937; padding: 24px; text-align: center">
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px">
+              AIForesee
+            </h1>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding: 32px">
+            <p style="margin: 0 0 16px; font-size: 14px; color: #111827">
+              Dear {{ .Name }} Team,
+            </p>
+
+            <p
+              style="
+                margin: 0 0 16px;
+                font-size: 14px;
+                color: #374151;
+                line-height: 1.6;
+              "
+            >
+              This email contains your API usage summary for
+              <strong>{{ .Month }}</strong> <strong>{{ .Year }}</strong>.
+            </p>
+
+            <p
+              style="
+                margin: 0 0 12px;
+                font-size: 14px;
+                color: #374151;
+                line-height: 1.6;
+              "
+            >
+              Below is the total usage recorded for your account:
+            </p>
+
+            <!-- Product Breakdown -->
+            <p style="margin: 0 0 12px; font-size: 14px; color: #374151">
+              Total usage this month:
+            </p>
+
+            <!-- ── Product Usage Table ──────────────────────────────────── -->
+            <table
+              width="100%"
+              cellpadding="0"
+              cellspacing="0"
+              style="margin: 0 0 24px; border-collapse: collapse"
+            >
+              <tr style="border-bottom: 2px solid #e5e7eb">
+                <td
+                  style="
+                    padding: 8px 0;
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  Product
+                </td>
+                <td
+                  align="right"
+                  style="
+                    padding: 8px 0;
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  Total Usage
+                </td>
+              </tr>
+
+              {{ range .Products }}
+              <tr style="border-bottom: 1px solid #f3f4f6">
+                <td style="padding: 10px 0; font-size: 14px; color: #374151">
+                  {{ .ProductName }}
+                </td>
+                <td align="right" style="padding: 10px 0; font-size: 14px">
+                  {{ if eq .TotalPay 0 }}
+                  <span style="color: #9ca3af; font-style: italic">0</span>
+                  {{ else }}
+                  <span style="font-weight: bold; color: #111827">
+                    {{ .TotalPay }}
+                  </span>
+                  {{ end }}
+                </td>
+              </tr>
+              {{ end }}
+            </table>
+
+            <p
+              style="
+                margin: 0 0 16px;
+                font-size: 14px;
+                color: #374151;
+                line-height: 1.6;
+              "
+            >
+              For detailed product usage, please refer to the attached XLXS
+              file.
+            </p>
+
+            <p
+              style="
+                margin: 0 0 16px;
+                font-size: 14px;
+                color: #374151;
+                line-height: 1.6;
+              "
+            >
+              If you have any questions or need further clarification, feel free
+              to contact our team at at
+              <a href="mailto:info@aiforesee.com" style="color: #2563eb"
+                >info@aiforesee.com</a
+              >.
+            </p>
+
+            <div style="font-size: 14px; color: #374151">
+              <p>Best regards,</p>
+              <p>AIForesee Team</p>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background: #f9fafb; padding: 20px; text-align: center">
+            <p style="margin: 8px 0 0; font-size: 11px; color: #9ca3af">
+              © {{ .Year }} AIForesee. All rights reserved.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+{{ end }}

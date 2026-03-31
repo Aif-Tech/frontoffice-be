@@ -47,7 +47,7 @@ func TestCallTaxComplianceStatusAPI(t *testing.T) {
 			Data: taxComplianceRespData{
 				Status: "Reported",
 			},
-			PricingStrategy: "PAY",
+			PricingStrategy: constant.PaidStatus,
 		}
 		body, err := json.Marshal(mockData)
 		require.NoError(t, err)
@@ -66,7 +66,7 @@ func TestCallTaxComplianceStatusAPI(t *testing.T) {
 		assert.True(t, result.Success)
 		assert.Equal(t, "Succeed to Request Data.", result.Message)
 		assert.Equal(t, "Reported", result.Data.Status)
-		assert.Equal(t, "PAY", result.PricingStrategy)
+		assert.Equal(t, constant.PaidStatus, result.PricingStrategy)
 		mockClient.AssertExpectations(t)
 	})
 
