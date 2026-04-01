@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"front-office/configs/application"
+	"front-office/internal/core/internalteam"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/mail"
 	"front-office/pkg/apperror"
@@ -21,12 +22,14 @@ func NewService(
 	cfg *application.Config,
 	repo Repository,
 	transactionRepo transaction.Repository,
+	internalRepo internalteam.Repository,
 	mailSvc *mail.SendMailService,
 ) Service {
 	return &service{
 		cfg,
 		repo,
 		transactionRepo,
+		internalRepo,
 		mailSvc,
 	}
 }
@@ -35,6 +38,7 @@ type service struct {
 	cfg             *application.Config
 	repo            Repository
 	transactionRepo transaction.Repository
+	internalRepo    internalteam.Repository
 	mailSvc         *mail.SendMailService
 }
 
@@ -139,7 +143,17 @@ func (svc *service) SendMonthlyUsageReport() error {
 	startDate := fmt.Sprintf("%d-%02d-01", year, int(month))
 	endDate := fmt.Sprintf("%d-%02d-%02d", year, int(month), lastDayOfMonth(lastMonth))
 
-	ccEmails := parseCCEmails(svc.cfg.App.MailInternalCC)
+	internalTeam, err := svc.internalRepo.GetMemberAPI()
+	if err != nil {
+		log.Warn().
+			Err(err).
+			Msg("failed to get internal team emails")
+	}
+
+	var ccEmails []string
+	for _, data := range internalTeam.Data {
+		ccEmails = append(ccEmails, data.Email)
+	}
 
 	for _, summary := range summaries {
 		admins, err := svc.repo.GetAdminsData(summary.CompanyId)
@@ -536,20 +550,6 @@ func toXlsxProducts(products []usagePerProduct) []XlsxReportProduct {
 		})
 	}
 
-	return result
-}
-
-func parseCCEmails(raw string) []string {
-	if raw == "" {
-		return []string{}
-	}
-	parts := strings.Split(raw, ",")
-	result := make([]string, 0, len(parts))
-	for _, p := range parts {
-		if trimmed := strings.TrimSpace(p); trimmed != "" {
-			result = append(result, trimmed)
-		}
-	}
 	return result
 }
 

@@ -13,7 +13,6 @@ type Environment struct {
 	FrontendBaseUrl                string
 	Port                           string
 	MailHost                       string
-	MailInternalCC                 string
 	MailPass                       string
 	MailPort                       string
 	MailUser                       string
@@ -63,7 +62,6 @@ func LoadEnvironment() *Environment {
 		FrontendBaseUrl:                GetEnvironment("FO_FRONTEND_BASE_URL"),
 		CloudProvider:                  GetEnvironment("CLOUD_PROVIDER"),
 		Port:                           GetEnvironment("FO_APP_PORT"),
-		MailInternalCC:                 GetEnvironment("FO_INTERNAL_CC_EMAILS"),
 		MailHost:                       GetEnvironment("FO_MAIL_HOST"),
 		MailMaxRetry:                   GetEnvironment("FO_MAIL_MAX_RETRY"),
 		MailPort:                       GetEnvironment("FO_MAIL_PORT"),
