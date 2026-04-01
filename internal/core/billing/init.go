@@ -2,6 +2,7 @@ package billing
 
 import (
 	"front-office/configs/application"
+	"front-office/internal/core/internalteam"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/mail"
 	"front-office/internal/middleware"
@@ -16,7 +17,8 @@ import (
 func SetupInit(billingAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient, mailSvc *mail.SendMailService) {
 	repo := NewRepository(cfg, client, nil)
 	transactionRepo := transaction.NewRepository(cfg, client, nil)
-	service := NewService(cfg, repo, transactionRepo, mailSvc)
+	internalTeamRepo := internalteam.NewRepository(cfg, client, nil)
+	service := NewService(cfg, repo, transactionRepo, internalTeamRepo, mailSvc)
 	controller := NewController(service)
 
 	billingAPI.Get("/usage", middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.GetUsageReport)

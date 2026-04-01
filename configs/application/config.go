@@ -27,7 +27,6 @@ func GetConfig() Config {
 			User:     env.MailUser,
 			Password: env.MailPass,
 			MaxRetry: env.MailMaxRetry,
-			CCMails:  env.MailInternalCC,
 		},
 	}
 }
