@@ -63,6 +63,12 @@ const (
 	EventPhoneLiveDownload        = "phone live status download result"
 	EventPhoneLiveDownloadSummary = "phone live status download result summary"
 
+	// phone to nik
+	EventPhoneToNIKSingleReq       = "phone to nik single request"
+	EventPhoneToNIKBulkReq         = "phone to nik bulk request"
+	EventPhoneToNIKDownload        = "phone to nik download result"
+	EventPhoneToNIKDownloadSummary = "phone to nik download result summary"
+
 	// recycle number
 	EventRecycleNumberSingleReq       = "recycle number single request"
 	EventRecycleNumberBulkReq         = "recycle number bulk request"

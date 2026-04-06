@@ -4,6 +4,7 @@ const (
 	SlugGenRetailV3 = "SCOREEZY_genretail_v3"
 
 	SlugPhoneLiveStatus  = "IDENTITY_phone_live_status"
+	SlugPhoneNIKMatching = "IDENTITY_phone_nik_matching"
 	SlugRecycleNumber    = "IDENTITY_recycle_number"
 	SlugNPWPVerification = "IDENTITY_npwp_verification"
 
@@ -25,6 +26,7 @@ const (
 	MultipleLoan90D   = "90 Days Multiple Loan"
 	NPWPVerification  = "NPWP Verification"
 	PhoneLiveStatus   = "Phone Live Status"
+	PhoneNIKMatching  = "Phone NIK Matching"
 	RecycleNumber     = "Recycle Number"
 	TaxCompliance     = "Tax Compliance Status"
 	TaxScore          = "Tax Score"
