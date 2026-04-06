@@ -407,6 +407,20 @@ var exportProductMap = map[string]exportProductConfig{
 			return mapRecycleNumberRow(isMasked, d)
 		},
 	},
+
+	// Phone NIK Matching
+	constant.SlugPhoneNIKMatching: {
+		headers: constant.CSVExportHeaderPhoneNIk,
+		event: func(summary bool) string {
+			if summary {
+				return constant.EventPhoneToNIKDownloadSummary
+			}
+			return constant.EventPhoneToNIKDownload
+		},
+		mapper: func(isMasked bool, d *logTransProductCatalog) []string {
+			return mapPhoneNIKRow(isMasked, d)
+		},
+	},
 }
 
 func mapLoanRecordCheckerRow(isMasked bool, d *logTransProductCatalog) []string {
@@ -680,6 +694,45 @@ func mapRecycleNumberRow(isMasked bool, d *logTransProductCatalog) []string {
 	return []string{
 		d.Input.LoanNo,
 		phoneNumber,
+		status,
+		d.Status,
+		description,
+	}
+}
+
+func mapPhoneNIKRow(isMasked bool, d *logTransProductCatalog) []string {
+	var (
+		description string
+		status      string
+		phoneNumber string
+		nik         string
+	)
+
+	if d.Message != nil {
+		description = *d.Message
+	}
+
+	if d.Data != nil {
+		status = *d.Data.Status
+	}
+
+	var ref refTransProductCatalog
+	if raw, err := json.Marshal(d.RefTransProductCatalog); err == nil {
+		_ = json.Unmarshal(raw, &ref)
+	}
+
+	if isMasked {
+		phoneNumber = ref.Input.PhoneNumber
+		nik = ref.Input.NIK
+	} else {
+		phoneNumber = *d.Input.PhoneNumber
+		nik = *d.Input.NIK
+	}
+
+	return []string{
+		d.Input.LoanNo,
+		phoneNumber,
+		nik,
 		status,
 		d.Status,
 		description,
