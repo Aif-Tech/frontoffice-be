@@ -35,9 +35,9 @@ func (svc *SendMailService) Execute(mail Mail) error {
 		return apperror.BadRequest("recipient is required")
 	}
 
-	return svc.service.Send(mail)
+	// return svc.service.Send(mail)
 
-	// return svc.queue.Enqueue(mail)
+	return svc.queue.Enqueue(mail)
 }
 
 func (svc *SendMailService) SendWithTemplate(

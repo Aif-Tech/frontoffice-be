@@ -154,6 +154,15 @@ var CSVExportHeaderRecycleNumber = []string{
 	CSVHeaderDescription,
 }
 
+var CSVExportHeaderPhoneNIk = []string{
+	CSVHeaderLoanNumber,
+	CSVHeaderPhone,
+	CSVHeaderIDCard,
+	CSVHeaderDataStatus,
+	CSVHeaderStatus,
+	CSVHeaderDescription,
+}
+
 var CSVExportHeaderGenRetail = []string{
 	// CSVHeaderDateCreated,
 	CSVHeaderLoanNumber,
