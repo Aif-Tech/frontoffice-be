@@ -29,6 +29,8 @@ const (
 	CSVHeaderDescription          = "Description"
 )
 
+// CSV Template Header
+
 var CSVTemplateHeaderLoanRecord = []string{
 	CSVHeaderName,
 	CSVHeaderIDCard,
@@ -44,6 +46,12 @@ var CSVTemplateHeaderMultipleLoan = []string{
 
 var CSVTemplateHeaderPhoneLive = []string{
 	CSVHeaderPhone,
+	CSVHeaderLoanNumber,
+}
+
+var CSVTemplateHeaderPhoneNIK = []string{
+	CSVHeaderPhone,
+	CSVHeaderIDCard,
 	CSVHeaderLoanNumber,
 }
 
@@ -67,6 +75,13 @@ var CSVTemplateHeaderNPWPVerification = []string{
 	CSVHeaderLoanNumber,
 }
 
+var CSVTemplateHeaderRecycleNumber = []string{
+	CSVHeaderPhone,
+	CSVHeaderLoanNumber,
+}
+
+// CSV Export Header
+
 var CSVExportHeaderPhoneLive = []string{
 	CSVHeaderLoanNumber,
 	CSVHeaderPhone,
@@ -76,11 +91,6 @@ var CSVExportHeaderPhoneLive = []string{
 	CSVHeaderPhoneType,
 	CSVHeaderStatus,
 	CSVHeaderDescription,
-}
-
-var CSVTemplateHeaderRecycleNumber = []string{
-	CSVHeaderPhone,
-	CSVHeaderLoanNumber,
 }
 
 var CSVExportHeaderLoanRecord = []string{
