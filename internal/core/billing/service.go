@@ -113,7 +113,7 @@ func (svc *service) ExportUsageXlsx(input downloadUsageXlsxInput) (*downloadUsag
 		Password:        input.Password,
 	})
 	if err != nil {
-		return nil, apperror.Internal("failed to generate report", err)
+		return nil, err
 	}
 
 	filename := fmt.Sprintf(
@@ -421,14 +421,14 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 	}
 
 	if !builtAny {
-		return nil, fmt.Errorf("no sheets generated for company %d", input.CompanyId)
+		return nil, apperror.NotFound("no sheets generated")
 	}
 
 	f.DeleteSheet(defaultSheet)
 
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
-		return nil, err
+		return nil, apperror.Internal(fmt.Sprintf("failed to write sheet: %s", err), err)
 	}
 
 	// encrypt file
