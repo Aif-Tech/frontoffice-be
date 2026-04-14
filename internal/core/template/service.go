@@ -76,6 +76,8 @@ func getTemplateDescription(product string) string {
 	switch product {
 	case constant.PhoneLiveTemplates:
 		return "Phone live status template"
+	case constant.PhoneNIKMatchingTemplates:
+		return "Phone NIK matching template"
 	case constant.LoanRecordCheckerTemplates:
 		return "Loan record checker template"
 	case constant.MultipleLoanTemplates:

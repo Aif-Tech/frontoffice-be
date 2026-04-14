@@ -48,7 +48,7 @@ func (ctrl *controller) ExportUsage(c *fiber.Ctx) error {
 			Err(err).
 			Msg("failed to generate report")
 
-		return apperror.Internal("failed to generate report", err)
+		return err
 	}
 
 	c.Set(constant.HeaderContentType, result.ContentType)

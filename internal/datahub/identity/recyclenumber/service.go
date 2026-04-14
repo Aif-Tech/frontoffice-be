@@ -228,7 +228,7 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 }
 
 func (svc *service) processSingleRecycleNumber(params *recycleNumberContext) error {
-	trxId := helper.GenerateTrx(constant.TrxIdLoanRecord)
+	trxId := helper.GenerateTrx(constant.TrxIdRecycleNumber)
 	if err := validator.ValidateStruct(params.Request); err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadRequest)
 

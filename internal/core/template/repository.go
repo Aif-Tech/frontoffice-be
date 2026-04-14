@@ -30,6 +30,7 @@ func (r *repository) GetAvailableTemplates() (map[string][]string, error) {
 	products := []string{
 		constant.PhoneLiveTemplates,
 		constant.RecycleNumberTemplates,
+		constant.PhoneNIKMatchingTemplates,
 		constant.LoanRecordCheckerTemplates,
 		constant.MultipleLoanTemplates,
 		constant.NPWPVerificationTemplates,
