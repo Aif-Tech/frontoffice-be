@@ -162,8 +162,9 @@ func (svc *service) BulkPhoneNIK(authCtx *model.AuthContext, file *multipart.Fil
 		}
 
 		requests = append(requests, &phoneNIKRequest{
-			Phone:  rec[0],
-			LoanNo: rec[1],
+			NIK:    rec[0],
+			Phone:  rec[1],
+			LoanNo: rec[2],
 		})
 	}
 

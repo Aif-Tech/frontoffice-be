@@ -50,8 +50,8 @@ var CSVTemplateHeaderPhoneLive = []string{
 }
 
 var CSVTemplateHeaderPhoneNIK = []string{
-	CSVHeaderPhone,
 	CSVHeaderIDCard,
+	CSVHeaderPhone,
 	CSVHeaderLoanNumber,
 }
 
