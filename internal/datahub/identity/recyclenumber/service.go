@@ -1,7 +1,6 @@
 package recyclenumber
 
 import (
-	"errors"
 	"front-office/internal/core/log/operation"
 	"front-office/internal/core/log/transaction"
 	"front-office/internal/core/member"
@@ -91,12 +90,7 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 			return nil, err
 		}
 
-		var apiErr *apperror.ExternalAPIError
-		if errors.As(err, &apiErr) {
-			return nil, apperror.MapLoanError(apiErr)
-		}
-
-		return nil, apperror.Internal("failed to process recycle number", err)
+		return nil, apperror.MapRepoError(err, "failed to process recycle number")
 	}
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {

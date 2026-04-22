@@ -8,6 +8,8 @@ import (
 	"front-office/pkg/common/model"
 	"io"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 func SuccessResponse[T any](message string, data T, meta ...*model.Meta) *model.APIResponse[T] {
@@ -41,6 +43,27 @@ func ParseAifcoreAPIResponse[T any](response *http.Response) (*model.AifcoreAPIR
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
+	if response.StatusCode >= 400 {
+		log.Warn().
+			Int("upstream_status", response.StatusCode).
+			Str("upstream_body", string(dataBytes)).
+			Str("url", response.Request.URL.String()).
+			Msg("upstream returned error response")
+
+		var apiResp model.AifcoreAPIResponse[T]
+		if err := json.Unmarshal(dataBytes, &apiResp); err == nil && apiResp.Message != "" {
+			return nil, &apperror.ExternalAPIError{
+				StatusCode: response.StatusCode,
+				Message:    apiResp.Message,
+			}
+		}
+
+		return nil, &apperror.ExternalAPIError{
+			StatusCode: response.StatusCode,
+			Message:    string(dataBytes),
+		}
+	}
+
 	var apiResp model.AifcoreAPIResponse[T]
 	if err := json.Unmarshal(dataBytes, &apiResp); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w; raw: %s", err, string(dataBytes))
@@ -48,7 +71,7 @@ func ParseAifcoreAPIResponse[T any](response *http.Response) (*model.AifcoreAPIR
 
 	apiResp.StatusCode = response.StatusCode
 
-	if apiResp.StatusCode >= 400 || !apiResp.Success {
+	if !apiResp.Success {
 		return nil, &apperror.ExternalAPIError{
 			StatusCode: apiResp.StatusCode,
 			Message:    apiResp.Message,
