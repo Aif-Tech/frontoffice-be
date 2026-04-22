@@ -20,7 +20,8 @@ func ErrorHandler() fiber.ErrorHandler {
 				Int("status_code", appErr.StatusCode).
 				Str("message", appErr.Message).
 				Str("method", method).
-				Str("path", path)
+				Str("path", path).
+				Msg("app error")
 
 			return c.Status(appErr.StatusCode).JSON(fiber.Map{
 				"message": appErr.Message,
@@ -32,6 +33,7 @@ func ErrorHandler() fiber.ErrorHandler {
 			Err(err).
 			Str("method", method).
 			Str("path", path).
+			Str("error_type", fmt.Sprintf("%T", err)).
 			Msg("internal server error")
 
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

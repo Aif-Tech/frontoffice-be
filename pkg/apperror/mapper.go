@@ -22,6 +22,8 @@ func MapExternalAPIError(err *ExternalAPIError) error {
 		return UnprocessableEntity(err.Message)
 	case 429:
 		return TooManyRequests("too many requests")
+	case 431:
+		return BadGateway("upstream service rejected request: header too large")
 	case 500:
 		return Internal(err.Message, err)
 	case 502:
