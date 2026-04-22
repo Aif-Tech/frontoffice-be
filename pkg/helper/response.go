@@ -139,12 +139,40 @@ func ParseScoreezyAPIResponse[T any](response *http.Response) (*model.ScoreezyAP
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
+	if response.StatusCode >= 400 {
+		log.Warn().
+			Int("upstream_status", response.StatusCode).
+			Str("upstream_body", string(dataBytes)).
+			Str("url", response.Request.URL.String()).
+			Msg("upstream returned error response")
+
+		var apiResp model.ScoreezyAPIResponse[T]
+		if err := json.Unmarshal(dataBytes, &apiResp); err == nil && apiResp.Message != "" {
+			return nil, &apperror.ExternalAPIError{
+				StatusCode: response.StatusCode,
+				Message:    apiResp.Message,
+			}
+		}
+
+		return nil, &apperror.ExternalAPIError{
+			StatusCode: response.StatusCode,
+			Message:    string(dataBytes),
+		}
+	}
+
 	var apiResp model.ScoreezyAPIResponse[T]
 	if err := json.Unmarshal(dataBytes, &apiResp); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w; raw: %s", err, string(dataBytes))
 	}
 
 	apiResp.StatusCode = response.StatusCode
+
+	if !apiResp.Success {
+		return nil, &apperror.ExternalAPIError{
+			StatusCode: apiResp.StatusCode,
+			Message:    apiResp.Message,
+		}
+	}
 
 	return &apiResp, nil
 }
