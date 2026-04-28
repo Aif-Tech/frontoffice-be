@@ -36,7 +36,7 @@ type Repository interface {
 func (repo *repository) RecycleNumberAPI(apiKey, trxId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
 	status := "phone number never happens recycled"
 	if payload.Phone == "08111111110" {
-		status = "phone number has never been recycled"
+		status = "phone number has been recycled"
 	}
 
 	return &model.ProCatAPIResponse[dataRecycleNumberAPI]{
