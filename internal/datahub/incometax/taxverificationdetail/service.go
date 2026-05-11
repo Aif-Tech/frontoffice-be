@@ -94,7 +94,7 @@ func (svc *service) CallTaxVerification(authCtx *model.AuthContext, request *tax
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventTaxScoreSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, nil
@@ -206,7 +206,7 @@ func (svc *service) BulkTaxVerification(authCtx *model.AuthContext, file *multip
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventTaxVerificationBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

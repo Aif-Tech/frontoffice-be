@@ -89,7 +89,7 @@ func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVe
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventNPWPVerificationSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
@@ -200,7 +200,7 @@ func (svc *service) BulkNPWPVerification(authCtx *model.AuthContext, file *multi
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventNPWPVerificationBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

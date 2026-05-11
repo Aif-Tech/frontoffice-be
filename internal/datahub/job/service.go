@@ -194,7 +194,7 @@ func (svc *service) exportJobDetailsToCSV(
 		log.Warn().
 			Err(err).
 			Str("action", eventName).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return filename, nil

@@ -95,7 +95,7 @@ func (svc *service) LoanRecordChecker(authCtx *model.AuthContext, reqBody *loanR
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventLoanRecordSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, nil
@@ -206,7 +206,7 @@ func (svc *service) BulkLoanRecordChecker(authCtx *model.AuthContext, file *mult
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventLoanRecordBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

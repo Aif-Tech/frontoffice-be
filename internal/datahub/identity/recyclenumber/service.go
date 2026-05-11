@@ -105,7 +105,7 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventRecycleNumberSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, nil
@@ -215,7 +215,7 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventRecycleNumberBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

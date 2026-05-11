@@ -90,7 +90,7 @@ func (svc *service) TaxScore(authCtx *model.AuthContext, request *taxScoreReques
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventTaxScoreSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, nil
@@ -202,7 +202,7 @@ func (svc *service) BulkTaxScore(authCtx *model.AuthContext, file *multipart.Fil
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventTaxScoreBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
