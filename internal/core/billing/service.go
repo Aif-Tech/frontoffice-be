@@ -49,10 +49,10 @@ type Service interface {
 	generateUsageXlsx(input XlsxReportInput) ([]byte, error)
 }
 
-func (svc *service) NewProcatFetchFn(pricingStrategy, applyDedup string) FetchFn {
+func (svc *service) NewProcatFetchFn(pricingStrategy, applyDedup, month, year string) FetchFn {
 	return func(productId, companyId, productSlug string) ([]LogRow, error) {
 		rows, err := svc.transactionRepo.GetLogTransByCompanyAPI(
-			"", productId, companyId, pricingStrategy, productSlug, applyDedup,
+			"", productId, companyId, pricingStrategy, productSlug, applyDedup, month, year,
 		)
 		if err != nil {
 			return nil, err
@@ -117,8 +117,8 @@ func (svc *service) ExportUsageXlsx(input downloadUsageXlsxInput) (*downloadUsag
 	}
 
 	filename := fmt.Sprintf(
-		"usage_report_%s_%d_%02d.xlsx",
-		companyName, input.Year, input.Month,
+		"usage_report_%s_%02d_%d.xlsx",
+		companyName, input.Month, input.Year,
 	)
 
 	return &downloadUsageXlsxResult{
@@ -157,6 +157,14 @@ func (svc *service) SendMonthlyUsageReport() error {
 
 	for _, summary := range summaries {
 		companyId := summary.CompanyId
+		if len(summary.SubscribedProducts) == 0 {
+			log.Warn().
+				Uint("company_id", companyId).
+				Msg("no subscribed products, skipping send monthly report usage")
+
+			continue
+		}
+
 		admins, err := svc.repo.GetAdminsData(companyId)
 		if err != nil {
 			log.Warn().
@@ -170,7 +178,7 @@ func (svc *service) SendMonthlyUsageReport() error {
 		if len(admins) == 0 {
 			log.Warn().
 				Uint("company_id", companyId).
-				Msg("no admin emails found, skipping")
+				Msg("no admin emails found, skipping send monthly report usage")
 
 			continue
 		}
@@ -181,7 +189,7 @@ func (svc *service) SendMonthlyUsageReport() error {
 			{
 				GroupName: "Procat",
 				Products:  toXlsxProducts(summary.ProcatProducts),
-				FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus, applyDedup),
+				FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus, applyDedup, "", ""),
 			},
 			{
 				GroupName: "Scoreezy",
@@ -202,8 +210,9 @@ func (svc *service) SendMonthlyUsageReport() error {
 		// todo: remove this, only for testing purposes
 		xlsxPassword := svc.cfg.Mail.Password // todo: update xlsx password
 		listReceiver := []string{
-			"loveleen@aiforesee.com",
-			"diki@aiforesee.com",
+			// "loveleen@aiforesee.com",
+			// "diki@aiforesee.com",
+			"arief@aiforesee.com",
 		}
 
 		xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
@@ -329,7 +338,7 @@ func (svc *service) buildProductGroups(
 				GroupName: "Procat",
 				Key:       groupKeyProcat,
 				Products:  toXlsxProducts(summary.ProcatProducts),
-				FetchFn:   svc.NewProcatFetchFn(pricingStrategy, applyDedup),
+				FetchFn:   svc.NewProcatFetchFn(pricingStrategy, applyDedup, monthStr, yearStr),
 			},
 			{
 				GroupName: "Scoreezy",

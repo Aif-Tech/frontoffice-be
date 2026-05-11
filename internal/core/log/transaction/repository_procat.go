@@ -67,7 +67,7 @@ func (repo *repository) ProcessedLogCountAPI(jobId string) (*getProcessedCountRe
 	return apiResp.Data, nil
 }
 
-func (repo *repository) GetLogTransByCompanyAPI(jobId, productId, companyId, pricingStrategy, productSlug, applyDedup string) ([]*LogTransProductCatalog, error) {
+func (repo *repository) GetLogTransByCompanyAPI(jobId, productId, companyId, pricingStrategy, productSlug, applyDedup, month, year string) ([]*LogTransProductCatalog, error) {
 	url := fmt.Sprintf("%s/api/core/logging/transaction/product-catalog/by-company", repo.cfg.App.AifcoreHost)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -87,6 +87,8 @@ func (repo *repository) GetLogTransByCompanyAPI(jobId, productId, companyId, pri
 	q.Add("pricing_strategy", pricingStrategy)
 	q.Add("product_slug", productSlug)
 	q.Add("apply_dedup", applyDedup)
+	q.Add("month", month)
+	q.Add("year", year)
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := repo.client.Do(req)

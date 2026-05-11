@@ -32,7 +32,7 @@ func TestGetLogTransByCompanyAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup, "1", "2026")
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -45,7 +45,7 @@ func TestGetLogTransByCompanyAPI(t *testing.T) {
 			App: &application.Environment{AifcoreHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup, "1", "2026")
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -56,7 +56,7 @@ func TestGetLogTransByCompanyAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup, "1", "2026")
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -72,7 +72,7 @@ func TestGetLogTransByCompanyAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup)
+		result, err := repo.GetLogTransByCompanyAPI(constant.DummyJobId, constant.DummyProduct, constant.DummyCompanyId, constant.DummyPricingStrategy, constant.SlugLoanRecordChecker, constant.DummyWithDedup, "1", "2026")
 
 		assert.Nil(t, result)
 		assert.Error(t, err)
