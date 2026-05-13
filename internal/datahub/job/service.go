@@ -34,7 +34,7 @@ type service struct {
 type Service interface {
 	CreateJob(req *CreateJobRequest) (*createJobRespData, error)
 	UpdateJobAPI(jobId string, req *UpdateJobRequest) error
-	GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error)
+	GetJobs(filter *logFilter) (*jobListClientResponse, error)
 	GetGenRetailJobs(filter *logFilter) (*model.APIResponse[*jobGenRetailData], error)
 	GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[*jobDetailResponse], error)
 	ExportJobDetails(filter *logFilter, buf *bytes.Buffer) (string, error)
@@ -83,13 +83,13 @@ func (svc *service) UpdateJobAPI(jobId string, req *UpdateJobRequest) error {
 	return nil
 }
 
-func (svc *service) GetJobs(filter *logFilter) (*model.AifcoreAPIResponse[*jobListResponse], error) {
+func (svc *service) GetJobs(filter *logFilter) (*jobListClientResponse, error) {
 	result, err := svc.repo.GetJobsAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch jobs")
 	}
 
-	return result, nil
+	return mapToClientResponse(result), nil
 }
 
 func (svc *service) GetGenRetailJobs(filter *logFilter) (*model.APIResponse[*jobGenRetailData], error) {
@@ -736,5 +736,27 @@ func mapPhoneNIKRow(isMasked bool, d *logTransProductCatalog) []string {
 		status,
 		d.Status,
 		description,
+	}
+}
+
+func mapToClientResponse(src *model.AifcoreAPIResponse[*jobListResponse]) *jobListClientResponse {
+	jobs := make([]jobClient, len(src.Data.Jobs))
+	for i, j := range src.Data.Jobs {
+		jobs[i] = jobClient{
+			Id:           j.JobId,
+			ProductId:    j.ProductId,
+			MemberId:     j.MemberId,
+			CompanyId:    j.CompanyId,
+			Total:        j.Total,
+			SuccessCount: j.SuccessCount,
+			Status:       j.Status,
+			StartTime:    j.StartTime,
+			EndTime:      j.EndTime,
+		}
+	}
+
+	return &jobListClientResponse{
+		Jobs:      jobs,
+		TotalData: src.Data.TotalData,
 	}
 }
