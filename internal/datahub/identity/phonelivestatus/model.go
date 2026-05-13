@@ -18,6 +18,19 @@ type mstPhoneLiveStatusJob struct {
 	EndAt        string             `json:"end_time"`
 }
 
+type mstPhoneLiveStatusClientJob struct {
+	Id           uint               `json:"id"`
+	Total        int                `json:"total"`
+	SuccessCount int                `json:"success_count"`
+	Status       string             `json:"status"`
+	MemberId     uint               `json:"member_id"`
+	Member       member.MstMember   `json:"-"`
+	CompanyId    uint               `json:"company_id"`
+	Company      company.MstCompany `json:"-"`
+	CreatedAt    string             `json:"start_time"`
+	EndAt        string             `json:"end_time"`
+}
+
 type mstPhoneLiveStatusJobDetail struct {
 	MemberId         uint      `json:"member_id"`
 	CompanyId        uint      `json:"company_id"`
@@ -77,6 +90,11 @@ type phoneLiveStatusFilter struct {
 type jobListRespData struct {
 	Jobs      []*mstPhoneLiveStatusJob `json:"jobs"`
 	TotalData int                      `json:"total_data"`
+}
+
+type jobListClientRespData struct {
+	Jobs      []mstPhoneLiveStatusClientJob `json:"jobs"`
+	TotalData int                           `json:"total_data"`
 }
 
 type jobDetailsDTO struct {
