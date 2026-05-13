@@ -56,7 +56,11 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(result)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Success",
+		"success": true,
+		"data":    result,
+	})
 }
 
 func (ctrl *controller) GetGenRetailJobs(c *fiber.Ctx) error {

@@ -72,6 +72,23 @@ type job struct {
 	EndTime      string `json:"end_time"`
 }
 
+type jobListClientResponse struct {
+	Jobs      []jobClient `json:"jobs"`
+	TotalData int64       `json:"total_data"`
+}
+
+type jobClient struct {
+	Id           uint   `json:"id"`
+	ProductId    uint   `json:"product_id"`
+	MemberId     uint   `json:"member_id"`
+	CompanyId    uint   `json:"company_id"`
+	Total        int    `json:"total"`
+	SuccessCount int    `json:"success_count"`
+	Status       string `json:"status"`
+	StartTime    string `json:"start_time"`
+	EndTime      string `json:"end_time"`
+}
+
 type jobGenRetailData struct {
 	Logs      []jobsScoreezy `json:"logs"`
 	TotalData int64          `json:"total_data"`
