@@ -13,7 +13,6 @@ type (
 		Password string
 		MaxRetry string
 		CCMails  string
-		ResendAPIKey string
 	}
 )
 
@@ -28,7 +27,6 @@ func GetConfig() Config {
 			User:     env.MailUser,
 			Password: env.MailPass,
 			MaxRetry: env.MailMaxRetry,
-			ResendAPIKey: env.ResendAPIKey,
 		},
 	}
 }
