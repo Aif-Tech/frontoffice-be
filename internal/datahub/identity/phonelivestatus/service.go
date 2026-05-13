@@ -98,7 +98,7 @@ func (svc *service) PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLi
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventPhoneLiveSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
@@ -201,7 +201,7 @@ func (svc *service) BulkPhoneLiveStatus(authCtx *model.AuthContext, file *multip
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventPhoneLiveBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
@@ -286,7 +286,7 @@ func (svc *service) ExportJobDetails(memberId, companyId uint, filter *phoneLive
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventPhoneLiveDownload).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return filename, nil
@@ -351,7 +351,7 @@ func (svc *service) ExportJobsSummary(memberId, companyId uint, filter *phoneLiv
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventPhoneLiveDownloadSummary).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return filename, nil

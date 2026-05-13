@@ -131,7 +131,7 @@ func (svc *service) MultipleLoan(authCtx *model.AuthContext, slug string, reqBod
 		log.Warn().
 			Err(err).
 			Str("action", mlCfg.event).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, nil
@@ -278,7 +278,7 @@ func (svc *service) BulkMultipleLoan(authCtx *model.AuthContext, slug string, fi
 		log.Warn().
 			Err(err).
 			Str("action", mlCfg.event).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

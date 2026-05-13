@@ -6,7 +6,7 @@ import (
 )
 
 type mstPhoneLiveStatusJob struct {
-	Id           uint               `json:"id"`
+	JobId        uint               `json:"job_id"`
 	Total        int                `json:"total"`
 	SuccessCount int                `json:"success_count"`
 	Status       string             `json:"status"`

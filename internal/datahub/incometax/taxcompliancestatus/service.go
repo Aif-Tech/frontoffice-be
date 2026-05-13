@@ -90,7 +90,7 @@ func (svc *service) TaxComplianceStatus(authCtx *model.AuthContext, reqBody *tax
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventTaxComplianceSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, nil
@@ -202,7 +202,7 @@ func (svc *service) BulkTaxComplianceStatus(authCtx *model.AuthContext, file *mu
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventTaxComplianceBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

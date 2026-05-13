@@ -106,7 +106,7 @@ func (svc *service) GetGenRetailJobs(filter *logFilter) (*model.APIResponse[*job
 		}
 
 		mappedJobs = append(mappedJobs, jobsScoreezy{
-			Id:          item.Id,
+			Id:          item.JobId,
 			MemberId:    item.MemberId,
 			CompanyId:   item.CompanyId,
 			ProductId:   item.ProductId,
@@ -194,7 +194,7 @@ func (svc *service) exportJobDetailsToCSV(
 		log.Warn().
 			Err(err).
 			Str("action", eventName).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return filename, nil

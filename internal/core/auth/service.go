@@ -229,7 +229,7 @@ func (svc *service) PasswordReset(token string, req *passwordResetRequest) error
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventPasswordReset).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
@@ -304,7 +304,7 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventRegisterMember).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
@@ -439,7 +439,7 @@ func (svc *service) RequestPasswordReset(email string) error {
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventRequestPasswordReset).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
@@ -482,7 +482,7 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventSignIn).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	loginResp = &loginResponse{
@@ -525,7 +525,7 @@ func (svc *service) Logout(userId, companyId uint) error {
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventSignOut).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil
@@ -580,7 +580,7 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventChangePassword).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

@@ -12,6 +12,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	errNilHTTPResponse        = "nil http response"
+	errFailedReadResponseBody = "failed to read response body"
+	errUpstreamError          = "upstream returned error response"
+	errFailedParseJSON        = "failed to parse JSON: %w; raw: %s"
+	errWrapFormat             = "%s: %w"
+)
+
 func SuccessResponse[T any](message string, data T, meta ...*model.Meta) *model.APIResponse[T] {
 	var m *model.Meta
 	if len(meta) > 0 {
@@ -35,12 +43,12 @@ func ErrorResponse(message string) *model.APIResponse[any] {
 
 func ParseAifcoreAPIResponse[T any](response *http.Response) (*model.AifcoreAPIResponse[T], error) {
 	if response == nil {
-		return nil, errors.New("nil http response")
+		return nil, errors.New(errNilHTTPResponse)
 	}
 
 	dataBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, fmt.Errorf(errWrapFormat, errFailedReadResponseBody, err)
 	}
 
 	if response.StatusCode >= 400 {
@@ -48,7 +56,7 @@ func ParseAifcoreAPIResponse[T any](response *http.Response) (*model.AifcoreAPIR
 			Int("upstream_status", response.StatusCode).
 			Str("upstream_body", string(dataBytes)).
 			Str("url", response.Request.URL.String()).
-			Msg("upstream returned error response")
+			Msg(errUpstreamError)
 
 		var apiResp model.AifcoreAPIResponse[T]
 		if err := json.Unmarshal(dataBytes, &apiResp); err == nil && apiResp.Message != "" {
@@ -66,7 +74,7 @@ func ParseAifcoreAPIResponse[T any](response *http.Response) (*model.AifcoreAPIR
 
 	var apiResp model.AifcoreAPIResponse[T]
 	if err := json.Unmarshal(dataBytes, &apiResp); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %w; raw: %s", err, string(dataBytes))
+		return nil, fmt.Errorf(errFailedParseJSON, err, string(dataBytes))
 	}
 
 	apiResp.StatusCode = response.StatusCode
@@ -83,12 +91,12 @@ func ParseAifcoreAPIResponse[T any](response *http.Response) (*model.AifcoreAPIR
 
 func ParseProCatAPIResponse[T any](response *http.Response) (*model.ProCatAPIResponse[T], error) {
 	if response == nil {
-		return nil, errors.New("nil http response")
+		return nil, errors.New(errNilHTTPResponse)
 	}
 
 	dataBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, fmt.Errorf(errWrapFormat, errFailedReadResponseBody, err)
 	}
 
 	if response.StatusCode >= 400 {
@@ -96,7 +104,7 @@ func ParseProCatAPIResponse[T any](response *http.Response) (*model.ProCatAPIRes
 			Int("upstream_status", response.StatusCode).
 			Str("upstream_body", string(dataBytes)).
 			Str("url", response.Request.URL.String()).
-			Msg("upstream returned error response")
+			Msg(errUpstreamError)
 
 		var apiResp model.ProCatAPIResponse[T]
 		if err := json.Unmarshal(dataBytes, &apiResp); err == nil && apiResp.Message != "" {
@@ -114,7 +122,7 @@ func ParseProCatAPIResponse[T any](response *http.Response) (*model.ProCatAPIRes
 
 	var apiResp model.ProCatAPIResponse[T]
 	if err := json.Unmarshal(dataBytes, &apiResp); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %w; raw: %s", err, string(dataBytes))
+		return nil, fmt.Errorf(errFailedParseJSON, err, string(dataBytes))
 	}
 
 	apiResp.StatusCode = response.StatusCode
@@ -131,12 +139,12 @@ func ParseProCatAPIResponse[T any](response *http.Response) (*model.ProCatAPIRes
 
 func ParseScoreezyAPIResponse[T any](response *http.Response) (*model.ScoreezyAPIResponse[T], error) {
 	if response == nil {
-		return nil, errors.New("nil http response")
+		return nil, errors.New(errNilHTTPResponse)
 	}
 
 	dataBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, fmt.Errorf(errWrapFormat, errFailedReadResponseBody, err)
 	}
 
 	if response.StatusCode >= 400 {
@@ -144,7 +152,7 @@ func ParseScoreezyAPIResponse[T any](response *http.Response) (*model.ScoreezyAP
 			Int("upstream_status", response.StatusCode).
 			Str("upstream_body", string(dataBytes)).
 			Str("url", response.Request.URL.String()).
-			Msg("upstream returned error response")
+			Msg(errUpstreamError)
 
 		var apiResp model.ScoreezyAPIResponse[T]
 		if err := json.Unmarshal(dataBytes, &apiResp); err == nil && apiResp.Message != "" {
@@ -162,7 +170,7 @@ func ParseScoreezyAPIResponse[T any](response *http.Response) (*model.ScoreezyAP
 
 	var apiResp model.ScoreezyAPIResponse[T]
 	if err := json.Unmarshal(dataBytes, &apiResp); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %w; raw: %s", err, string(dataBytes))
+		return nil, fmt.Errorf(errFailedParseJSON, err, string(dataBytes))
 	}
 
 	apiResp.StatusCode = response.StatusCode

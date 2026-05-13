@@ -13,6 +13,9 @@ const (
 	TemplateNotFound     = "template not found"
 	UpstreamError        = "upstream error"
 
+	InvalidStartDateFormat = "invalid start_date format, use YYYY-MM-DD"
+	InvalidEndDateFormat   = "invalid end_date format, use YYYY-MM-DD"
+
 	// auth
 	AlreadyVerified            = "the account has already verified"
 	ActivationTokenExpired     = "user activation token has expired"
@@ -38,16 +41,6 @@ const (
 	FieldMaxGradeEmpty     = "field max grade is required"
 	FieldGradingValueEmpty = "field grading value is required"
 
-	// gen-retail
-	InvalidDocumentFile    = "invalid document file"
-	ErrorGettingFile       = "error getting file"
-	ErrorOpeningFile       = "error opening file"
-	ErrorReadingCSV        = "error reading CSV file"
-	HeaderTemplateNotValid = "header template is not valid"
-	ErrorReadingCSVRecords = "error reading CSV records"
-	ErrorUploadDataCSV     = "error upload data CSV file"
-	FailedParseCSV         = "failed to parse csv"
-
 	//parameter settings
 	ParamSettingIsNotSet = "parameter settings is not set"
 
@@ -68,6 +61,7 @@ const (
 	InvalidUserSession    = "invalid user session"
 	InvalidCompanySession = "invalid company session"
 	MissingUserId         = "missing user id"
+	MissingCompanyId      = "missing company id"
 	MissingAccessToken    = "no access token provided"
 	MissingStartDate      = "start_date is required"
 	MissingEndDate        = "end_date is required"
@@ -76,14 +70,11 @@ const (
 	ErrMsgHTTPReqFailed      = "failed to create request to upstream service"
 	ErrUpstreamUnavailable   = "upstream service unavailable"
 
-	ErrSubscribtionNotFound     = "company has no subscription for this product"
-	ErrFetchProduct             = "failed to fetch  product"
-	ErrUnsupportedProduct       = "unsupported product type"
-	ErrFetchSubscribedProduct   = "failed to fetch subscribed product"
-	ErrQuotaExceeded            = "insufficient quota to complete request"
-	ErrCreatePhoneLiveJob       = "failed to create phone live status job"
-	ErrFetchPhoneLiveDetail     = "failed to fetch phone live status job detail"
-	ErrFetchJobMetrics          = "failed to fetch job metrics"
-	ErrMsgUpdatePhoneLiveJob    = "failed to update phone live status job"
-	ErrMsgUpdatePhoneLiveDetail = "failed to update phone live status job detail"
+	ErrSubscriptionNotFound   = "company has no subscription for this product"
+	ErrFetchProduct           = "failed to fetch product"
+	ErrUnsupportedProduct     = "unsupported product type"
+	ErrFetchSubscribedProduct = "failed to fetch subscribed product"
+	ErrQuotaExceeded          = "insufficient quota to complete request"
+	ErrFetchPhoneLiveDetail   = "failed to fetch phone live status job detail"
+	ErrFetchJobMetrics        = "failed to fetch job metrics"
 )

@@ -114,7 +114,7 @@ func (svc *service) GenRetailV3(memberId, companyId uint, payload *genRetailRequ
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventScoreezySingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, err
@@ -228,7 +228,7 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventScoreezyBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return jobRes.JobId, nil
@@ -251,13 +251,13 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 
 	if filter.StartDate != "" {
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
-			return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+			return nil, apperror.BadRequest(constant.InvalidStartDateFormat)
 		}
 	}
 
 	if filter.EndDate != "" {
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
-			return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+			return nil, apperror.BadRequest(constant.InvalidEndDateFormat)
 		}
 	}
 
@@ -291,13 +291,13 @@ func (svc *service) GetLogsScoreezy(filter *filterLogs) (*model.AifcoreAPIRespon
 func (svc *service) GetLogScoreezy(filter *filterLogs) (*logTransScoreezy, error) {
 	if filter.StartDate != "" {
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
-			return nil, apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+			return nil, apperror.BadRequest(constant.InvalidStartDateFormat)
 		}
 	}
 
 	if filter.EndDate != "" {
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
-			return nil, apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+			return nil, apperror.BadRequest(constant.InvalidEndDateFormat)
 		}
 	}
 
@@ -331,13 +331,13 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 	if filter.StartDate != "" {
 		includeDate = true
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.StartDate); err != nil {
-			return "", apperror.BadRequest("invalid start_date format, use YYYY-MM-DD")
+			return "", apperror.BadRequest(constant.InvalidStartDateFormat)
 		}
 	}
 
 	if filter.EndDate != "" {
 		if _, err := time.Parse(constant.FormatYYYYMMDD, filter.EndDate); err != nil {
-			return "", apperror.BadRequest("invalid end_date format, use YYYY-MM-DD")
+			return "", apperror.BadRequest(constant.InvalidEndDateFormat)
 		}
 	}
 
@@ -364,7 +364,7 @@ func (svc *service) ExportJobDetails(filter *filterLogs, buf *bytes.Buffer) (str
 		log.Warn().
 			Err(err).
 			Str("action", action).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	if len(result.Data) <= 1 {

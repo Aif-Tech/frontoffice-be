@@ -105,7 +105,7 @@ func (svc *service) PhoneNIK(authCtx *model.AuthContext, reqBody *phoneNIKReques
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventPhoneToNIKSingleReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return result, nil
@@ -216,7 +216,7 @@ func (svc *service) BulkPhoneNIK(authCtx *model.AuthContext, file *multipart.Fil
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventPhoneToNIKBulkReq).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return nil

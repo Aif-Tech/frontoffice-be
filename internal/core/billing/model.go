@@ -151,6 +151,7 @@ var productRegistry = map[string]ProductSheetDef{
 	constant.Slug90DaysMultipleLoan:    product90DMultipleLoan,
 	constant.SlugNPWPVerification:      productNPWPVerification,
 	constant.SlugPhoneLiveStatus:       productPhoneLive,
+	constant.SlugPhoneNIKMatching:      productPhoneToNIK,
 	constant.SlugRecycleNumber:         productRecycleNumber,
 	constant.SlugTaxComplianceStatus:   productTaxCompliance,
 	constant.SlugTaxScore:              productTaxScore,
@@ -240,6 +241,18 @@ var productPhoneLive = ProductSheetDef{
 		{Header: constant.CSVHeaderDeviceStatus, Type: ColTypeText, Width: 24, ExtractFn: procatDataTransform("live_status", splitIndex(",", 1))},
 		{Header: constant.CSVHeaderOperator, Type: ColTypeText, Width: 36, ExtractFn: procatDataStr("operator")},
 		{Header: constant.CSVHeaderPhoneType, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("phone_type")},
+		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
+	},
+}
+
+var productPhoneToNIK = ProductSheetDef{
+	ProductName: constant.PhoneNIKMatching,
+	Columns: []ColumnDef{
+		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
+		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 18, ExtractFn: staticVal(constant.PhoneLiveStatus)},
+		{Header: constant.CSVHeaderPhone, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("phone_number")},
+		{Header: constant.CSVHeaderIDCard, Type: ColTypeText, Width: 20, ExtractFn: procatRespInputStr("nik")},
+		{Header: constant.CSVHeaderStatus, Type: ColTypeText, Width: 24, ExtractFn: procatDataStr("status")},
 		{Header: constant.CSVHeaderDateCreated, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
 	},
 }

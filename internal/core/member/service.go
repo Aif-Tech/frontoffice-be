@@ -138,7 +138,7 @@ func (svc *service) UpdateProfile(userId string, currentUserRoleId uint, req *up
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventUpdateProfile).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return &userUpdateResponse{
@@ -180,7 +180,7 @@ func (svc *service) UploadProfileImage(userId string, filename *string) (*userUp
 		log.Warn().
 			Err(err).
 			Str("action", constant.EventUpdateProfile).
-			Msg("failed to add operation log")
+			Msg(constant.MsgFailedAddOperationLog)
 	}
 
 	return &userUpdateResponse{
@@ -295,7 +295,7 @@ func (svc *service) UpdateMemberById(authCtx *model.AuthContext, memberId string
 			log.Warn().
 				Err(err).
 				Str("action", event).
-				Msg("failed to add operation log")
+				Msg(constant.MsgFailedAddOperationLog)
 		}
 	}
 

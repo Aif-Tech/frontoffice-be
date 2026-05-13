@@ -61,7 +61,7 @@ type jobListResponse struct {
 }
 
 type job struct {
-	Id           uint   `json:"id"`
+	JobId        uint   `json:"job_id"`
 	ProductId    uint   `json:"product_id"`
 	MemberId     uint   `json:"member_id"`
 	CompanyId    uint   `json:"company_id"`
@@ -110,7 +110,7 @@ type UpdateJobRequest struct {
 }
 
 type createJobRespData struct {
-	JobId     uint `json:"id"`
+	JobId     uint `json:"job_id"`
 	MemberId  uint `json:"member_id"`
 	CompanyId uint `json:"company_id"`
 }
