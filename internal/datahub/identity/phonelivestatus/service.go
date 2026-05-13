@@ -53,7 +53,7 @@ type service struct {
 type Service interface {
 	PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLiveStatusRequest) error
 	BulkPhoneLiveStatus(authCtx *model.AuthContext, fileHeader *multipart.FileHeader) error
-	GetJobs(filter *phoneLiveStatusFilter) (*jobListRespData, error)
+	GetJobs(filter *phoneLiveStatusFilter) (*jobListClientRespData, error)
 	GetJobDetails(filter *phoneLiveStatusFilter) (*jobDetailsDTO, error)
 	ExportJobDetails(memberId, companyId uint, filter *phoneLiveStatusFilter, buf *bytes.Buffer) (string, error)
 	GetJobsSummary(filter *phoneLiveStatusFilter) (*jobsSummaryDTO, error)
@@ -207,13 +207,13 @@ func (svc *service) BulkPhoneLiveStatus(authCtx *model.AuthContext, file *multip
 	return nil
 }
 
-func (svc *service) GetJobs(filter *phoneLiveStatusFilter) (*jobListRespData, error) {
+func (svc *service) GetJobs(filter *phoneLiveStatusFilter) (*jobListClientRespData, error) {
 	jobs, err := svc.repo.GetPhoneLiveStatusJobAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch phone live status jobs")
 	}
 
-	return jobs, nil
+	return mapToClientResponse(jobs), nil
 }
 
 func (svc *service) GetJobDetails(filter *phoneLiveStatusFilter) (*jobDetailsDTO, error) {
@@ -485,4 +485,25 @@ func (svc *service) logFailedTransaction(params *phoneLiveStatusContext, trxId, 
 		RequestTime:  time.Now(),
 		ResponseTime: time.Now(),
 	})
+}
+
+func mapToClientResponse(src *jobListRespData) *jobListClientRespData {
+	jobs := make([]mstPhoneLiveStatusClientJob, len(src.Jobs))
+	for i, j := range src.Jobs {
+		jobs[i] = mstPhoneLiveStatusClientJob{
+			Id:           j.JobId,
+			MemberId:     j.MemberId,
+			CompanyId:    j.CompanyId,
+			Total:        j.Total,
+			SuccessCount: j.SuccessCount,
+			Status:       j.Status,
+			CreatedAt:    j.CreatedAt,
+			EndAt:        j.EndAt,
+		}
+	}
+
+	return &jobListClientRespData{
+		Jobs:      jobs,
+		TotalData: src.TotalData,
+	}
 }
