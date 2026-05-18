@@ -21,8 +21,8 @@ func SetupInit(billingAPI fiber.Router, cfg *application.Config, client httpclie
 	service := NewService(cfg, repo, transactionRepo, internalTeamRepo, mailSvc)
 	controller := NewController(service)
 
-	billingAPI.Get("/usage", middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.GetUsageReport)
-	billingAPI.Get("/usage/export", middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.ExportUsage)
+	billingAPI.Get("/usage", middleware.AdminAuth(cfg), middleware.GetJWTPayloadFromCookie(cfg), controller.GetUsageReport)
+	billingAPI.Get("/usage/export", middleware.AdminAuth(cfg), middleware.GetJWTPayloadFromCookie(cfg), controller.ExportUsage)
 	billingAPI.Post("/send-monthly-report", controller.SendMonthlyUsageReport)
 
 	// Cron SendMonthlyUsageReport

@@ -25,6 +25,6 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 	controller := NewController(service)
 
 	phoneToNIKGroup := apiGroup.Group("phone-nik")
-	phoneToNIKGroup.Post("/single-request", middleware.Auth(), middleware.ValidateRequest(phoneNIKRequest{}), middleware.GetJWTPayloadFromCookie(), controller.SingleRequest)
-	phoneToNIKGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(), controller.BulkSearch)
+	phoneToNIKGroup.Post("/single-request", middleware.Auth(), middleware.ValidateRequest(phoneNIKRequest{}), middleware.GetJWTPayloadFromCookie(cfg), controller.SingleRequest)
+	phoneToNIKGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(cfg), controller.BulkSearch)
 }

@@ -18,10 +18,10 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 	service := NewService(repository, transactionRepo, operationRepo)
 	controller := NewController(service)
 
-	apiGroup.Get("/gen-retail/jobs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetGenRetailJobs)
-	apiGroup.Get("/:product_slug/jobs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetJobs)
-	apiGroup.Get("/:product_slug/jobs/:job_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetJobDetails)
-	apiGroup.Get("/:product_slug/jobs/:job_id/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.ExportJobDetails)
-	apiGroup.Get("/:product_slug/jobs-summary", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetJobDetailsByDateRange)
-	apiGroup.Get("/:product_slug/jobs-summary/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.ExportJobDetailsByDateRange)
+	apiGroup.Get("/gen-retail/jobs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.GetGenRetailJobs)
+	apiGroup.Get("/:product_slug/jobs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.GetJobs)
+	apiGroup.Get("/:product_slug/jobs/:job_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.GetJobDetails)
+	apiGroup.Get("/:product_slug/jobs/:job_id/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.ExportJobDetails)
+	apiGroup.Get("/:product_slug/jobs-summary", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.GetJobDetailsByDateRange)
+	apiGroup.Get("/:product_slug/jobs-summary/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.ExportJobDetailsByDateRange)
 }
