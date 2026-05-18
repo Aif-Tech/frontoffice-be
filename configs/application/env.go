@@ -20,6 +20,9 @@ type Environment struct {
 	MailjetPublicKey               string
 	MailjetSecretKey               string
 	JwtSecretKey                   string
+	JwtActivationSecretKey         string
+	JwtResetPasswordSecretKey      string
+	JwtRefreshSecretKey            string
 	JwtExpiresMinutes              string
 	JwtRefreshTokenExpiresMinutes  string
 	JwtVerificationExpiresMinutes  string
@@ -68,6 +71,9 @@ func LoadEnvironment() *Environment {
 		MailPass:                       GetEnvironment("FO_MAIL_PASSWORD"),
 		MailUser:                       GetEnvironment("FO_MAIL_USER"),
 		JwtSecretKey:                   GetEnvironment("FO_JWT_SECRET_KEY"),
+		JwtActivationSecretKey:         GetEnvironment("FO_JWT_ACTIVATION_SECRET_KEY"),
+		JwtResetPasswordSecretKey:      GetEnvironment("FO_JWT_RESET_PASSWORD_SECRET_KEY"),
+		JwtRefreshSecretKey:            GetEnvironment("FO_JWT_REFRESH_SECRET_KEY"),
 		JwtExpiresMinutes:              GetEnvironment("FO_JWT_EXPIRES_MINUTES"),
 		JwtRefreshTokenExpiresMinutes:  GetEnvironment("FO_JWT_REFRESH_EXPIRES_MINUTES"),
 		JwtVerificationExpiresMinutes:  GetEnvironment("FO_JWT_VERIFICATION_EXPIRES_MINUTES"),

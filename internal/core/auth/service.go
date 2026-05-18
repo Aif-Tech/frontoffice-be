@@ -56,7 +56,7 @@ type service struct {
 type Service interface {
 	// RegisterAdminSvc(req *RegisterAdminRequest) (*user.User, string, error)
 	LoginMember(loginReq *userLoginRequest) (accessToken, refreshToken string, loginResp *loginResponse, err error)
-	RefreshAccessToken(userId, companyId, tierLevel uint, apiKey string) (string, error)
+	RefreshAccessToken(userId, companyId, tierLevel, quotaType uint, apiKey string) (string, string, error)
 	Logout(userId, companyId uint) error
 	AddMember(currentUserId uint, req *member.RegisterMemberRequest) error
 	RequestActivation(email string) error
@@ -247,7 +247,7 @@ func (svc *service) AddMember(currentUserId uint, req *member.RegisterMemberRequ
 		RoleId:    req.RoleId,
 	}
 
-	activationToken, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtActivationExpiresMinutes)
+	activationToken, err := svc.generateToken(tokenPayload, constant.TokenTypeActivation)
 	if err != nil {
 		return apperror.Internal("generate activation token failed", err)
 	}
@@ -332,7 +332,7 @@ func (svc *service) RequestActivation(email string) error {
 		RoleId:    user.RoleId,
 	}
 
-	token, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtActivationExpiresMinutes)
+	token, err := svc.generateToken(tokenPayload, constant.TokenTypeActivation)
 	if err != nil {
 		return apperror.Internal("generate activation token failed", err)
 	}
@@ -400,7 +400,7 @@ func (svc *service) RequestPasswordReset(email string) error {
 		RoleId:    user.RoleId,
 	}
 
-	token, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtResetPasswordExpiresMinutes)
+	token, err := svc.generateToken(tokenPayload, constant.TokenTypeResetPassword)
 	if err != nil {
 		return apperror.Internal("generate password reset token failed", err)
 	}
@@ -464,12 +464,12 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 		ApiKey:    user.ApiKey,
 	}
 
-	accessToken, err = svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtExpiresMinutes)
+	accessToken, err = svc.generateToken(tokenPayload, constant.TokenTypeAccess)
 	if err != nil {
 		return "", "", nil, apperror.Internal("generate access token failed", err)
 	}
 
-	refreshToken, err = svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtRefreshTokenExpiresMinutes)
+	refreshToken, err = svc.generateToken(tokenPayload, constant.TokenTypeRefresh)
 	if err != nil {
 		return "", "", nil, apperror.Internal("generate refresh token failed", err)
 	}
@@ -500,20 +500,26 @@ func (svc *service) LoginMember(req *userLoginRequest) (accessToken, refreshToke
 	return accessToken, refreshToken, loginResp, nil
 }
 
-func (svc *service) RefreshAccessToken(userId, companyId, roleId uint, apiKey string) (string, error) {
+func (svc *service) RefreshAccessToken(userId, companyId, roleId, quotaType uint, apiKey string) (accessToken, refreshToken string, err error) {
 	tokenPayload := &tokenPayload{
 		MemberId:  userId,
 		CompanyId: companyId,
 		RoleId:    roleId,
+		QuotaType: quotaType,
 		ApiKey:    apiKey,
 	}
 
-	accessToken, err := svc.generateToken(tokenPayload, svc.cfg.App.JwtSecretKey, svc.cfg.App.JwtExpiresMinutes)
+	accessToken, err = svc.generateToken(tokenPayload, constant.TokenTypeAccess)
 	if err != nil {
-		return "", apperror.Internal("generate access token failed", err)
+		return "", "", apperror.Internal("generate access token failed", err)
 	}
 
-	return accessToken, nil
+	refreshToken, err = svc.generateToken(tokenPayload, constant.TokenTypeRefresh)
+	if err != nil {
+		return "", "", apperror.Internal("generate refresh token failed", err)
+	}
+
+	return accessToken, refreshToken, nil
 }
 
 func (svc *service) Logout(userId, companyId uint) error {
@@ -586,11 +592,30 @@ func (svc *service) ChangePassword(userId string, reqBody *changePasswordRequest
 	return nil
 }
 
-func (svc *service) generateToken(payload *tokenPayload, secret, minutesStr string) (string, error) {
+func (svc *service) generateToken(payload *tokenPayload, tokenType string) (string, error) {
+	var minutesStr, secret string
+
+	switch tokenType {
+	case constant.TokenTypeRefresh:
+		minutesStr = svc.cfg.App.JwtRefreshTokenExpiresMinutes
+		secret = svc.cfg.App.JwtRefreshSecretKey
+	case constant.TokenTypeActivation:
+		minutesStr = svc.cfg.App.JwtActivationExpiresMinutes
+		secret = svc.cfg.App.JwtActivationSecretKey
+	case constant.TokenTypeResetPassword:
+		minutesStr = svc.cfg.App.JwtResetPasswordExpiresMinutes
+		secret = svc.cfg.App.JwtResetPasswordSecretKey
+	case constant.TokenTypeAccess:
+		minutesStr = svc.cfg.App.JwtExpiresMinutes
+		secret = svc.cfg.App.JwtSecretKey
+	default:
+		return "", fmt.Errorf("unknown token type: %s", tokenType)
+	}
+
 	minutes, err := strconv.Atoi(minutesStr)
 	if err != nil {
 		return "", fmt.Errorf("invalid duration: %w", err)
 	}
 
-	return helper.GenerateToken(secret, minutes, payload.MemberId, payload.CompanyId, payload.RoleId, payload.QuotaType, payload.ApiKey)
+	return helper.GenerateToken(secret, minutes, tokenType, payload.MemberId, payload.CompanyId, payload.RoleId, payload.QuotaType, payload.ApiKey)
 }
