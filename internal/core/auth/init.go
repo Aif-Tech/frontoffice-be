@@ -31,13 +31,13 @@ func SetupInit(authAPI fiber.Router, cfg *application.Config, client httpclient.
 
 	controller := NewController(service, serviceUser, serviceActivationToken, servicePasswordResetToken, serviceLogOperation, cfg)
 
-	authAPI.Post("/register-member", middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(member.RegisterMemberRequest{}), controller.RegisterMember)
+	authAPI.Post("/register-member", middleware.AdminAuth(cfg), middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(member.RegisterMemberRequest{}), controller.RegisterMember)
 	authAPI.Post("/login", middleware.ValidateRequest(userLoginRequest{}), controller.Login)
 	authAPI.Put("/verify/:token", middleware.ValidateRequest(passwordResetRequest{}), controller.VerifyUser)
-	authAPI.Post("/logout", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.Logout)
-	authAPI.Post("/refresh-access", middleware.GetPayloadFromRefreshToken(), controller.RefreshAccessToken)
-	authAPI.Put("/send-email-activation/:email", middleware.Auth(), middleware.AdminAuth(), middleware.GetJWTPayloadFromCookie(), controller.RequestActivation)
+	authAPI.Post("/logout", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.Logout)
+	authAPI.Post("/refresh-access", middleware.GetPayloadFromRefreshToken(cfg), controller.RefreshAccessToken)
+	authAPI.Put("/send-email-activation/:email", middleware.Auth(), middleware.AdminAuth(cfg), middleware.GetJWTPayloadFromCookie(cfg), controller.RequestActivation)
 	authAPI.Post("/request-password-reset", middleware.ValidateRequest(requestPasswordResetRequest{}), controller.RequestPasswordReset)
 	authAPI.Put("/password-reset/:token", middleware.ValidateRequest(passwordResetRequest{}), controller.PasswordReset)
-	authAPI.Put("/change-password", middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(changePasswordRequest{}), controller.ChangePassword)
+	authAPI.Put("/change-password", middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(changePasswordRequest{}), controller.ChangePassword)
 }

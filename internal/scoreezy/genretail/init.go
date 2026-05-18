@@ -27,11 +27,11 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 
 	controller := NewController(service)
 
-	apiGroup.Post("/dummy-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(genRetailRequest{}), controller.DummyRequestScore)
-	apiGroup.Post("/single-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), middleware.ValidateRequest(genRetailRequest{}), controller.SingleRequest)
-	apiGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(), controller.BulkRequest)
-	apiGroup.Get("/logs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogsScoreezy)
-	apiGroup.Get("/logs/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.ExportJobDetails)
-	apiGroup.Get("/logs/:trx_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(), controller.GetLogScoreezy)
-	// genRetailAPI.Put("/upload-scoring-template", middleware.Auth(), middleware.ValidateRequest(UploadScoringRequest{}), middleware.GetJWTPayloadFromCookie(), middleware.DocUpload(), controller.UploadCSV)
+	apiGroup.Post("/dummy-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(genRetailRequest{}), controller.DummyRequestScore)
+	apiGroup.Post("/single-request", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(genRetailRequest{}), controller.SingleRequest)
+	apiGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(cfg), controller.BulkRequest)
+	apiGroup.Get("/logs", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.GetLogsScoreezy)
+	apiGroup.Get("/logs/export", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.ExportJobDetails)
+	apiGroup.Get("/logs/:trx_id", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.GetLogScoreezy)
+	// genRetailAPI.Put("/upload-scoring-template", middleware.Auth(), middleware.ValidateRequest(UploadScoringRequest{}), middleware.GetJWTPayloadFromCookie(cfg), middleware.DocUpload(), controller.UploadCSV)
 }

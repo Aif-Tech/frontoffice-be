@@ -109,8 +109,8 @@ func (ctrl *controller) Logout(c *fiber.Ctx) error {
 	}
 
 	// Clear access & refresh token cookies
-	clearAuthCookie(c, "aif_token")
-	clearAuthCookie(c, "aif_refresh_token")
+	clearAuthCookie(c, "aif_token", "/")
+	clearAuthCookie(c, "aif_refresh_token", "/api/fo/users/refresh-access")
 
 	if err := ctrl.svc.Logout(authCtx.UserId, authCtx.CompanyId); err != nil {
 		log.Warn().Err(err).Msg("failed to log logout event")
@@ -165,19 +165,30 @@ func (ctrl *controller) RefreshAccessToken(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	accessToken, err := ctrl.svc.RefreshAccessToken(authCtx.UserId, authCtx.CompanyId, authCtx.RoleId, authCtx.APIKey)
+	accessToken, refreshToken, err := ctrl.svc.RefreshAccessToken(
+		authCtx.UserId,
+		authCtx.CompanyId,
+		authCtx.RoleId,
+		authCtx.QuotaType,
+		authCtx.APIKey,
+	)
 	if err != nil {
 		return err
 	}
 
-	if err := setTokenCookie(c, "aif_token", accessToken, ctrl.cfg.App.JwtExpiresMinutes); err != nil {
+	if err := setTokenCookie(c, "aif_token", accessToken, ctrl.cfg.App.JwtExpiresMinutes, "/"); err != nil {
 		return apperror.Internal("failed to set access token cookie", err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
-		"access token refreshed",
-		nil,
-	))
+	if err := setTokenCookie(c, "aif_refresh_token", refreshToken, ctrl.cfg.App.JwtRefreshTokenExpiresMinutes, "/api/fo/users/refresh-access"); err != nil {
+		return apperror.Internal("failed to set refresh token cookie", err)
+	}
+
+	return c.Status(fiber.StatusOK).
+		JSON(helper.SuccessResponse[any](
+			"access token refreshed",
+			nil,
+		))
 }
 
 func (ctrl *controller) Login(c *fiber.Ctx) error {
@@ -195,12 +206,12 @@ func (ctrl *controller) Login(c *fiber.Ctx) error {
 	const refreshCookieName = "aif_refresh_token"
 
 	// Set access token cookie
-	if err := setTokenCookie(c, accessCookieName, accessToken, ctrl.cfg.App.JwtExpiresMinutes); err != nil {
+	if err := setTokenCookie(c, accessCookieName, accessToken, ctrl.cfg.App.JwtExpiresMinutes, "/"); err != nil {
 		return apperror.Internal("failed to set access token cookie", err)
 	}
 
 	// Set refresh token cookie
-	if err := setTokenCookie(c, refreshCookieName, refreshToken, ctrl.cfg.App.JwtRefreshTokenExpiresMinutes); err != nil {
+	if err := setTokenCookie(c, refreshCookieName, refreshToken, ctrl.cfg.App.JwtRefreshTokenExpiresMinutes, "/api/fo/users/refresh-access"); err != nil {
 		return apperror.Internal("failed to set refresh token cookie", err)
 	}
 
@@ -246,7 +257,7 @@ func (ctrl *controller) PasswordReset(c *fiber.Ctx) error {
 	))
 }
 
-func setTokenCookie(c *fiber.Ctx, name, value, durationStr string) error {
+func setTokenCookie(c *fiber.Ctx, name, value, durationStr, path string) error {
 	minutes, err := strconv.Atoi(durationStr)
 	if err != nil {
 		return err
@@ -259,18 +270,20 @@ func setTokenCookie(c *fiber.Ctx, name, value, durationStr string) error {
 		HTTPOnly: true,
 		Secure:   true,
 		SameSite: "Lax",
+		Path:     path,
 	})
 
 	return nil
 }
 
-func clearAuthCookie(c *fiber.Ctx, name string) {
+func clearAuthCookie(c *fiber.Ctx, name, path string) {
 	c.Cookie(&fiber.Cookie{
 		Name:     name,
 		Value:    "",
 		Expires:  time.Unix(0, 0),
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: "Lax", // Atau "Strict" jika lebih aman
+		SameSite: "Lax",
+		Path:     path,
 	})
 }
