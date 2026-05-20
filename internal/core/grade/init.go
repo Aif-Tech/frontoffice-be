@@ -13,6 +13,6 @@ func SetupInit(gradingAPI fiber.Router, cfg *application.Config, client httpclie
 	service := NewService(repo)
 	controller := NewController(service)
 
-	gradingAPI.Put("/", middleware.AdminAuth(cfg), middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(createGradeRequest{}), controller.SaveGrading)
-	gradingAPI.Get("/", middleware.Auth(), middleware.GetJWTPayloadFromCookie(cfg), controller.GetGrades)
+	gradingAPI.Put("/", middleware.GetJWTPayloadFromCookie(cfg), middleware.AdminAuth(), middleware.ValidateRequest(createGradeRequest{}), controller.SaveGrading)
+	gradingAPI.Get("/", middleware.GetJWTPayloadFromCookie(cfg), controller.GetGrades)
 }

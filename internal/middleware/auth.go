@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"front-office/configs/application"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
@@ -11,6 +12,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
+	"github.com/golang-jwt/jwt/v4"
+)
+
+const (
+	RoleMember = uint(2)
+	RoleAdmin  = uint(1)
 )
 
 func Auth() func(c *fiber.Ctx) error {
@@ -25,6 +32,7 @@ func Auth() func(c *fiber.Ctx) error {
 
 func jwtError(c *fiber.Ctx, err error) error {
 	resp := helper.ErrorResponse(err.Error())
+
 	return c.Status(fiber.StatusUnauthorized).JSON(resp)
 }
 
@@ -59,9 +67,16 @@ func GetJWTPayloadFromCookie(cfg *application.Config) fiber.Handler {
 
 		claims, err := helper.ExtractClaimsFromJWT(token, secret)
 		if err != nil {
-			resp := helper.ErrorResponse(err.Error())
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				return c.Status(fiber.StatusUnauthorized).JSON(helper.ErrorResponse("token expired"))
+			}
 
-			return c.Status(fiber.StatusUnauthorized).JSON(resp)
+			return c.Status(fiber.StatusUnauthorized).JSON(helper.ErrorResponse("invalid token"))
+		}
+
+		tokenType, err := helper.ExtractTokenTypeFromClaims(claims)
+		if err != nil || tokenType != constant.TokenTypeAccess {
+			return c.Status(fiber.StatusUnauthorized).JSON(helper.ErrorResponse("invalid token type"))
 		}
 
 		userId, err := helper.ExtractUserIdFromClaims(claims)
@@ -181,33 +196,19 @@ func GetPayloadFromRefreshToken(cfg *application.Config) fiber.Handler {
 	}
 }
 
-func AdminAuth(cfg *application.Config) fiber.Handler {
+func AdminAuth() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		secret := cfg.App.JwtSecretKey
-		token := c.Cookies("aif_token")
-		if token == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"message": constant.MissingAccessToken,
-			})
+		roleId, ok := c.Locals(constant.RoleId).(uint)
+		if !ok {
+			return c.Status(fiber.StatusUnauthorized).JSON(
+				helper.ErrorResponse("missing role information"),
+			)
 		}
 
-		claims, err := helper.ExtractClaimsFromJWT(token, secret)
-		if err != nil {
-			resp := helper.ErrorResponse(err.Error())
-
-			return c.Status(fiber.StatusUnauthorized).JSON(resp)
-		}
-
-		roleId, err := helper.ExtractRoleIdFromClaims(claims)
-		if err != nil {
-			resp := helper.ErrorResponse(err.Error())
-
-			return c.Status(fiber.StatusBadRequest).JSON(resp)
-		}
-		if roleId == 2 {
-			resp := helper.ErrorResponse(constant.RequestProhibited)
-
-			return c.Status(fiber.StatusUnauthorized).JSON(resp)
+		if roleId == RoleMember {
+			return c.Status(fiber.StatusForbidden).JSON(
+				helper.ErrorResponse(constant.RequestProhibited),
+			)
 		}
 
 		return c.Next()

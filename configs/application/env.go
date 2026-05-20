@@ -1,7 +1,10 @@
 package application
 
 import (
+	"fmt"
 	"os"
+	"sort"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
@@ -79,12 +82,52 @@ func LoadEnvironment() *Environment {
 		JwtVerificationExpiresMinutes:  GetEnvironment("FO_JWT_VERIFICATION_EXPIRES_MINUTES"),
 		JwtActivationExpiresMinutes:    GetEnvironment("FO_JWT_ACTIVATION_EXPIRES_MINUTES"),
 		JwtResetPasswordExpiresMinutes: GetEnvironment("FO_JWT_RESET_PASSWORD_EXPIRES_MINUTES"),
-		PartnerServiceHost:             GetEnvironment("PARTNER_SERVICE_HOST"),
 		ProductCatalogHost:             GetEnvironment("FO_DATAHUB_HOST"),
 		AifcoreHost:                    GetEnvironment("FO_CORE_HOST"),
 		ScoreezyHost:                   GetEnvironment("FO_SCOREEZY_HOST"),
-		AllowingDomains:                GetEnvironment("ALLOWING_DOMAINS"),
 		CoreModuleKey:                  GetEnvironment("FO_CORE_KEY"),
 		RedisAddr:                      GetEnvironment("FO_REDIS_URL"),
 	}
+}
+
+func (e *Environment) Validate() error {
+	var missing []string
+
+	required := map[string]string{
+		"FO_APP_ENV":                            e.AppEnv,
+		"FO_FRONTEND_BASE_URL":                  e.FrontendBaseUrl,
+		"FO_APP_PORT":                           e.Port,
+		"FO_MAIL_HOST":                          e.MailHost,
+		"FO_MAIL_MAX_RETRY":                     e.MailMaxRetry,
+		"FO_MAIL_PORT":                          e.MailPort,
+		"FO_MAIL_PASSWORD":                      e.MailPass,
+		"FO_MAIL_USER":                          e.MailUser,
+		"FO_JWT_SECRET_KEY":                     e.JwtSecretKey,
+		"FO_JWT_ACTIVATION_SECRET_KEY":          e.JwtActivationSecretKey,
+		"FO_JWT_RESET_PASSWORD_SECRET_KEY":      e.JwtResetPasswordSecretKey,
+		"FO_JWT_REFRESH_SECRET_KEY":             e.JwtRefreshSecretKey,
+		"FO_JWT_EXPIRES_MINUTES":                e.JwtExpiresMinutes,
+		"FO_JWT_REFRESH_EXPIRES_MINUTES":        e.JwtRefreshTokenExpiresMinutes,
+		"FO_JWT_VERIFICATION_EXPIRES_MINUTES":   e.JwtVerificationExpiresMinutes,
+		"FO_JWT_ACTIVATION_EXPIRES_MINUTES":     e.JwtActivationExpiresMinutes,
+		"FO_JWT_RESET_PASSWORD_EXPIRES_MINUTES": e.JwtResetPasswordExpiresMinutes,
+		"FO_DATAHUB_HOST":                       e.ProductCatalogHost,
+		"FO_CORE_HOST":                          e.AifcoreHost,
+		"FO_SCOREEZY_HOST":                      e.ScoreezyHost,
+		"FO_CORE_KEY":                           e.CoreModuleKey,
+		"FO_REDIS_URL":                          e.RedisAddr,
+	}
+
+	for key, val := range required {
+		if strings.TrimSpace(val) == "" {
+			missing = append(missing, key)
+		}
+	}
+
+	if len(missing) > 0 {
+		sort.Strings(missing)
+		return fmt.Errorf("missing required environment variables: %s", strings.Join(missing, ", "))
+	}
+
+	return nil
 }
