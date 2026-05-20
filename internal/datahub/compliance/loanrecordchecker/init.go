@@ -25,6 +25,6 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 	controller := NewController(service)
 
 	loanRecordCheckerGroup := apiGroup.Group("loan-record-checker")
-	loanRecordCheckerGroup.Post("/single-request", middleware.Auth(), middleware.ValidateRequest(loanRecordCheckerRequest{}), middleware.GetJWTPayloadFromCookie(cfg), controller.SingleSearch)
-	loanRecordCheckerGroup.Post("/bulk-request", middleware.Auth(), middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(cfg), controller.BulkSearch)
+	loanRecordCheckerGroup.Post("/single-request", middleware.ValidateRequest(loanRecordCheckerRequest{}), middleware.GetJWTPayloadFromCookie(cfg), controller.SingleSearch)
+	loanRecordCheckerGroup.Post("/bulk-request", middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(cfg), controller.BulkSearch)
 }
