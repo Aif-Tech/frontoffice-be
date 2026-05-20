@@ -1,5 +1,7 @@
 package application
 
+import "github.com/rs/zerolog/log"
+
 type (
 	Config struct {
 		App  *Environment
@@ -18,6 +20,9 @@ type (
 
 func GetConfig() Config {
 	env := LoadEnvironment()
+	if err := env.Validate(); err != nil {
+		log.Fatal().Err(err).Msg("invalid environment configuration")
+	}
 
 	return Config{
 		App: env,
