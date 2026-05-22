@@ -178,6 +178,21 @@ spec:
                 configMapKeyRef:
                   name: frontoffice-be-config
                   key: FO_REDIS_URL
+            - name: FO_JWT_REFRESH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: frontoffice-be-secret
+                  key: FO_JWT_REFRESH_SECRET_KEY
+            - name: FO_JWT_ACTIVATION_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: frontoffice-be-secret
+                  key: FO_JWT_ACTIVATION_SECRET_KEY
+            - name: FO_JWT_RESET_PASSWORD_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: frontoffice-be-secret
+                  key: FO_JWT_RESET_PASSWORD_SECRET_KEY
 
 ---
 apiVersion: autoscaling/v1
