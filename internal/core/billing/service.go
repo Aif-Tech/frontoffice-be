@@ -9,6 +9,7 @@ import (
 	"front-office/internal/mail"
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
+	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
 	"strconv"
 	"strings"
@@ -150,155 +151,10 @@ func (svc *service) SendMonthlyUsageReport() error {
 			Msg("failed to get internal team emails")
 	}
 
-	var ccEmails []string
-	for _, data := range internalTeam.Data {
-		ccEmails = append(ccEmails, data.Email)
-	}
+	ccEmails := svc.buildCCEmails(internalTeam)
 
 	for _, summary := range summaries {
-		companyId := summary.CompanyId
-		if len(summary.SubscribedProducts) == 0 {
-			log.Warn().
-				Uint("company_id", companyId).
-				Msg("no subscribed products, skipping send monthly report usage")
-
-			continue
-		}
-
-		admins, err := svc.repo.GetAdminsData(companyId)
-		if err != nil {
-			log.Warn().
-				Err(err).
-				Uint("company_id", companyId).
-				Msg("failed to get admin emails")
-
-			continue
-		}
-
-		if len(admins) == 0 {
-			log.Warn().
-				Uint("company_id", companyId).
-				Msg("no admin emails found, skipping send monthly report usage")
-
-			continue
-		}
-
-		applyDedup := strconv.FormatBool(isDedupCompany(summary.CompanyName))
-
-		groups := []ProductGroup{
-			{
-				GroupName: "Procat",
-				Products:  toXlsxProducts(summary.ProcatProducts),
-				FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus, applyDedup, "", ""),
-			},
-			{
-				GroupName: "Scoreezy",
-				Products:  toXlsxProducts(summary.ScoreezyProducts),
-				FetchFn:   svc.NewScoreezyFetchFn(startDate, endDate),
-			},
-		}
-
-		subject := fmt.Sprintf("Monthly Usage Report for %s - %s %d", summary.CompanyName, month, year)
-		templateData := buildMonthlyUsageTemplateData(
-			subject,
-			summary.CompanyName,
-			month.String(),
-			year,
-			summary,
-		)
-
-		// todo: remove this, only for testing purposes
-		xlsxPassword := svc.cfg.Mail.Password // todo: update xlsx password
-		listReceiver := []string{
-			// "loveleen@aiforesee.com",
-			// "diki@aiforesee.com",
-			"arief@aiforesee.com",
-		}
-
-		xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
-			CompanyId:       companyId,
-			CompanyName:     summary.CompanyName,
-			PeriodYear:      year,
-			PeriodMonth:     int(month),
-			ProductGroups:   groups,
-			PricingStrategy: constant.PaidStatus,
-			Password:        xlsxPassword,
-		})
-		if xlsxErr != nil {
-			log.Warn().
-				Err(xlsxErr).
-				Uint("company_id", companyId).
-				Msg("sending email without attachment")
-		}
-
-		var attachments []mail.MailAttachment
-		if xlsxBytes != nil {
-			attachments = append(attachments, mail.MailAttachment{
-				FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
-				Content:  xlsxBytes,
-				MimeType: constant.MimeXlsx,
-			})
-		}
-
-		for _, email := range listReceiver {
-			if err := svc.mailSvc.SendWithTemplate(
-				email,
-				ccEmails,
-				subject,
-				"monthly_usage_report.html",
-				templateData,
-				attachments...,
-			); err != nil {
-				log.Warn().
-					Err(err).
-					Uint("company_id", companyId).
-					Msg("failed to send monthly usage report")
-			}
-		}
-
-		// todo: uncomment this section
-		// for _, admin := range admins {
-		// 	xlsxPassword := admin.Key
-
-		// 	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
-		// 		CompanyId:       companyId,
-		// 		CompanyName:     summary.CompanyName,
-		// 		PeriodYear:      year,
-		// 		PeriodMonth:     int(month),
-		// 		ProductGroups:   groups,
-		// 		PricingStrategy: constant.PaidStatus,
-		// 		Password:        xlsxPassword,
-		// 	})
-		// 	if xlsxErr != nil {
-		// 		log.Warn().
-		// 			Err(xlsxErr).
-		// 			Uint("company_id", companyId).
-		// 			Msg("sending email without attachment")
-		// 	}
-
-		// var attachments []mail.MailAttachment
-		// 	if xlsxBytes != nil {
-		// 		attachments = append(attachments, mail.MailAttachment{
-		// 			FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
-		// 			Content:  xlsxBytes,
-		// 			MimeType: constant.MimeXlsx,
-		// 		})
-		// 	}
-
-		// 	if err := svc.mailSvc.SendWithTemplate(
-		// 		admin.Email,
-		// 		ccEmails,
-		// 		subject,
-		// 		"monthly_usage_report.html",
-		// 		templateData,
-		// 		attachments...,
-		// 	); err != nil {
-		// 		log.Warn().
-		// 			Err(err).
-		// 			Uint("company_id", companyId).
-		// 			Msg("failed to send monthly usage report")
-		// 	}
-		// }
+		svc.processSummaryReport(summary, ccEmails, startDate, endDate, month, year)
 	}
 
 	return nil
@@ -349,6 +205,166 @@ func (svc *service) buildProductGroups(
 		},
 		summary.CompanyName,
 		nil
+}
+
+func (svc *service) buildCCEmails(internalTeam *model.AifcoreAPIResponse[[]internalteam.MstInternalTeam]) []string {
+	var ccEmails []string
+	for _, data := range internalTeam.Data {
+		ccEmails = append(ccEmails, data.Email)
+	}
+
+	return ccEmails
+}
+
+func (svc *service) processSummaryReport(
+	summary usageSummary,
+	ccEmails []string,
+	startDate, endDate string,
+	month time.Month,
+	year int,
+) {
+	companyId := summary.CompanyId
+
+	if len(summary.SubscribedProducts) == 0 {
+		log.Warn().
+			Uint("company_id", companyId).
+			Msg("no subscribed products, skipping send monthly report usage")
+		return
+	}
+
+	admins, err := svc.repo.GetAdminsData(companyId)
+	if err != nil {
+		log.Warn().
+			Err(err).
+			Uint("company_id", companyId).
+			Msg("failed to get admin emails")
+		return
+	}
+
+	if len(admins) == 0 {
+		log.Warn().
+			Uint("company_id", companyId).
+			Msg("no admin emails found, skipping send monthly report usage")
+		return
+	}
+
+	applyDedup := strconv.FormatBool(isDedupCompany(summary.CompanyName))
+	groups := []ProductGroup{
+		{
+			GroupName: "Procat",
+			Products:  toXlsxProducts(summary.ProcatProducts),
+			FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus, applyDedup, "", ""),
+		},
+		{
+			GroupName: "Scoreezy",
+			Products:  toXlsxProducts(summary.ScoreezyProducts),
+			FetchFn:   svc.NewScoreezyFetchFn(startDate, endDate),
+		},
+	}
+
+	subject := fmt.Sprintf("Monthly Usage Report for %s - %s %d", summary.CompanyName, month, year)
+	templateData := buildMonthlyUsageTemplateData(
+		subject,
+		summary.CompanyName,
+		month.String(),
+		year,
+		summary,
+	)
+
+	// todo: remove this, only for testing purposes
+	xlsxPassword := svc.cfg.Mail.Password // todo: update xlsx password
+	listReceiver := []string{
+		// "loveleen@aiforesee.com",
+		// "diki@aiforesee.com",
+		"arief@aiforesee.com",
+	}
+
+	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
+		CompanyId:       companyId,
+		CompanyName:     summary.CompanyName,
+		PeriodYear:      year,
+		PeriodMonth:     int(month),
+		ProductGroups:   groups,
+		PricingStrategy: constant.PaidStatus,
+		Password:        xlsxPassword,
+	})
+	if xlsxErr != nil {
+		log.Warn().
+			Err(xlsxErr).
+			Uint("company_id", companyId).
+			Msg("sending email without attachment")
+	}
+
+	var attachments []mail.MailAttachment
+	if xlsxBytes != nil {
+		attachments = append(attachments, mail.MailAttachment{
+			FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
+			Content:  xlsxBytes,
+			MimeType: constant.MimeXlsx,
+		})
+	}
+
+	for _, email := range listReceiver {
+		if err := svc.mailSvc.SendWithTemplate(
+			email,
+			ccEmails,
+			subject,
+			"monthly_usage_report.html",
+			templateData,
+			attachments...,
+		); err != nil {
+			log.Warn().
+				Err(err).
+				Uint("company_id", companyId).
+				Msg("failed to send monthly usage report")
+		}
+	}
+
+	// todo: uncomment this section
+	// for _, admin := range admins {
+	// 	xlsxPassword := admin.Key
+	// }
+
+	// 	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
+	// 		CompanyId:       companyId,
+	// 		CompanyName:     summary.CompanyName,
+	// 		PeriodYear:      year,
+	// 		PeriodMonth:     int(month),
+	// 		ProductGroups:   groups,
+	// 		PricingStrategy: constant.PaidStatus,
+	// 		Password:        xlsxPassword,
+	// 	})
+	// 	if xlsxErr != nil {
+	// 		log.Warn().
+	// 			Err(xlsxErr).
+	// 			Uint("company_id", companyId).
+	// 			Msg("sending email without attachment")
+	// 	}
+
+	// var attachments []mail.MailAttachment
+	// 	if xlsxBytes != nil {
+	// 		attachments = append(attachments, mail.MailAttachment{
+	// 			FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
+	// 			Content:  xlsxBytes,
+	// 			MimeType: constant.MimeXlsx,
+	// 		})
+	// 	}
+
+	// for _, admin := range admins {
+	// 	if err := svc.mailSvc.SendWithTemplate(
+	// 		admin.Email,
+	// 		ccEmails,
+	// 		subject,
+	// 		"monthly_usage_report.html",
+	// 		templateData,
+	// 		attachments...,
+	// 	); err != nil {
+	// 		log.Warn().
+	// 			Err(err).
+	// 			Uint("company_id", companyId).
+	// 			Msg("failed to send monthly usage report")
+	// 	}
+	// }
 }
 
 func filterGroups(groups []ProductGroup, allowedKeys []string) []ProductGroup {
