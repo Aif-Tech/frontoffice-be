@@ -3,6 +3,7 @@ package billing
 import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/common/constant"
+	"front-office/pkg/common/model"
 	"front-office/pkg/helper"
 	"strconv"
 	"strings"
@@ -95,57 +96,17 @@ func parseDownloadRequest(c *fiber.Ctx) (*downloadUsageXlsxRequest, error) {
 		return nil, apperror.Unauthorized(err.Error())
 	}
 
-	companyId := c.Query("company_id")
-	if companyId == "0" {
-		return nil, apperror.BadRequest("company_id is required")
-	}
-
-	if authCtx.RoleId != 0 && authCtx.CompanyIdStr() != companyId {
-		return nil, apperror.Unauthorized(constant.RequestProhibited)
-	}
-
-	companyIdUint, err := strconv.ParseUint(companyId, 10, 64)
+	companyIdUint, err := parseAndValidateCompanyId(c, authCtx)
 	if err != nil {
-		return nil, apperror.BadRequest("company_id must be a valid number")
+		return nil, err
 	}
 
-	// year & month — default ke bulan lalu
-	now := time.Now()
-	firstOfThisMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-	lastMonth := firstOfThisMonth.AddDate(0, -1, 0)
-
-	year := lastMonth.Year()
-	month := int(lastMonth.Month())
-
-	if y := c.Query("year"); y != "" {
-		parsed, err := strconv.Atoi(y)
-		if err != nil || parsed < 2000 || parsed > now.Year() {
-			return nil, apperror.BadRequest("year must be a valid 4-digit year")
-		}
-
-		year = parsed
+	year, month, err := parseYearMonth(c)
+	if err != nil {
+		return nil, err
 	}
 
-	if m := c.Query("month"); m != "" {
-		parsed, err := strconv.Atoi(m)
-		if err != nil || parsed < 1 || parsed > 12 {
-			return nil, apperror.BadRequest("month must be between 1 and 12")
-		}
-
-		month = parsed
-	}
-
-	// groups — opsional, comma-separated
-	var groups []string
-	if g := c.Query("groups"); g != "" {
-		for _, part := range strings.Split(g, ",") {
-			trimmed := strings.TrimSpace(strings.ToLower(part))
-			if trimmed != "" {
-				groups = append(groups, trimmed)
-			}
-		}
-	}
-
+	groups := parseGroups(c.Query("groups"))
 	pricingStrategy := strings.ToUpper(c.Query("pricing_strategy"))
 
 	return &downloadUsageXlsxRequest{
@@ -156,4 +117,62 @@ func parseDownloadRequest(c *fiber.Ctx) (*downloadUsageXlsxRequest, error) {
 		PricingStrategy: pricingStrategy,
 		Password:        authCtx.APIKey,
 	}, nil
+}
+
+func parseAndValidateCompanyId(c *fiber.Ctx, authCtx *model.AuthContext) (uint64, error) {
+	companyId := c.Query("company_id")
+	if companyId == "0" {
+		return 0, apperror.BadRequest("company_id is required")
+	}
+
+	if authCtx.RoleId != 0 && authCtx.CompanyIdStr() != companyId {
+		return 0, apperror.Unauthorized(constant.RequestProhibited)
+	}
+
+	companyIdUint, err := strconv.ParseUint(companyId, 10, 64)
+	if err != nil {
+		return 0, apperror.BadRequest("company_id must be a valid number")
+	}
+
+	return companyIdUint, nil
+}
+
+func parseYearMonth(c *fiber.Ctx) (int, int, error) {
+	now := time.Now()
+	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, -1, 0)
+
+	year, month := lastMonth.Year(), int(lastMonth.Month())
+
+	if y := c.Query("year"); y != "" {
+		parsed, err := strconv.Atoi(y)
+		if err != nil || parsed < 2000 || parsed > now.Year() {
+			return 0, 0, apperror.BadRequest("year must be a valid 4-digit year")
+		}
+		year = parsed
+	}
+
+	if m := c.Query("month"); m != "" {
+		parsed, err := strconv.Atoi(m)
+		if err != nil || parsed < 1 || parsed > 12 {
+			return 0, 0, apperror.BadRequest("month must be between 1 and 12")
+		}
+		month = parsed
+	}
+
+	return year, month, nil
+}
+
+func parseGroups(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+
+	var groups []string
+	for _, part := range strings.Split(raw, ",") {
+		if trimmed := strings.TrimSpace(strings.ToLower(part)); trimmed != "" {
+			groups = append(groups, trimmed)
+		}
+	}
+
+	return groups
 }
