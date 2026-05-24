@@ -400,47 +400,13 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 
 	for _, group := range input.ProductGroups {
 		for _, product := range group.Products {
-			def, ok := productRegistry[product.ProductSlug]
-			if !ok {
-				log.Warn().
-					Str("group", group.GroupName).
-					Str("product_slug", product.ProductSlug).
-					Msg("product not found in registry, skipping")
-
-				continue
-			}
-
-			productId := strconv.FormatUint(uint64(product.ProductId), 10)
-			companyId := strconv.FormatUint(uint64(input.CompanyId), 10)
-
-			rows, err := group.FetchFn(productId, companyId, product.ProductSlug)
+			created, err := svc.buildProductSheet(f, group, product, input, !builtAny)
 			if err != nil {
-				log.Warn().
-					Err(err).
-					Str("group", group.GroupName).
-					Str("product_slug", product.ProductSlug).
-					Uint("company_id", input.CompanyId).
-					Msg("failed to fetch transaction data, skipping sheet")
-
-				continue
+				return nil, err
 			}
 
-			sheetName := def.SheetName
-			if sheetName == "" {
-				sheetName = def.ProductName
-			}
-
-			idx, err := f.NewSheet(sheetName)
-			if err != nil {
-				return nil, apperror.Internal(fmt.Sprintf("failed to create sheet '%s': %s", sheetName, err), err)
-			}
-			if !builtAny {
-				f.SetActiveSheet(idx)
+			if created {
 				builtAny = true
-			}
-
-			if err := writeProductSheet(f, sheetName, def, rows); err != nil {
-				return nil, apperror.Internal(fmt.Sprintf("failed to write sheet '%s': %s", sheetName, err), err)
 			}
 		}
 	}
@@ -451,22 +417,82 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 
 	f.DeleteSheet(defaultSheet)
 
+	return encryptOrWriteXlsx(f, input.Password)
+}
+
+func (svc *service) buildProductSheet(
+	f *excelize.File,
+	group ProductGroup,
+	product XlsxReportProduct,
+	input XlsxReportInput,
+	isFirstSheet bool,
+) (sheetCreated bool, err error) {
+	def, ok := productRegistry[product.ProductSlug]
+	if !ok {
+		log.Warn().
+			Str("group", group.GroupName).
+			Str("product_slug", product.ProductSlug).
+			Msg("product not found in registry, skipping")
+
+		return false, nil
+	}
+
+	productId := strconv.FormatUint(uint64(product.ProductId), 10)
+	companyId := strconv.FormatUint(uint64(input.CompanyId), 10)
+
+	rows, err := group.FetchFn(productId, companyId, product.ProductSlug)
+	if err != nil {
+		log.Warn().
+			Err(err).
+			Str("group", group.GroupName).
+			Str("product_slug", product.ProductSlug).
+			Uint("company_id", input.CompanyId).
+			Msg("failed to fetch transaction data, skipping sheet")
+
+		return false, nil
+	}
+
+	if len(rows) == 0 {
+		return false, nil
+	}
+
+	sheetName := def.SheetName
+	if sheetName == "" {
+		sheetName = def.ProductName
+	}
+
+	idx, err := f.NewSheet(sheetName)
+	if err != nil {
+		return false, apperror.Internal(fmt.Sprintf("failed to create sheet '%s': %s", sheetName, err), err)
+	}
+
+	if isFirstSheet {
+		f.SetActiveSheet(idx)
+	}
+
+	if err := writeProductSheet(f, sheetName, def, rows); err != nil {
+		return false, apperror.Internal(fmt.Sprintf("failed to write sheet '%s': %s", sheetName, err), err)
+	}
+
+	return true, nil
+}
+
+func encryptOrWriteXlsx(f *excelize.File, password string) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
 		return nil, apperror.Internal(fmt.Sprintf("failed to write sheet: %s", err), err)
 	}
 
-	// encrypt file
-	if input.Password != "" {
-		encrypted, err := excelize.Encrypt(buf.Bytes(), &excelize.Options{Password: input.Password})
-		if err != nil {
-			return nil, apperror.Internal("failed to write encypted xlxs in buffer", err)
-		}
-
-		return encrypted, nil
+	if password == "" {
+		return buf.Bytes(), nil
 	}
 
-	return buf.Bytes(), nil
+	encrypted, err := excelize.Encrypt(buf.Bytes(), &excelize.Options{Password: password})
+	if err != nil {
+		return nil, apperror.Internal("failed to write encypted xlxs in buffer", err)
+	}
+
+	return encrypted, nil
 }
 
 func buildMonthlyUsageTemplateData(
@@ -535,7 +561,7 @@ func writeProductSheet(
 	f.SetPanes(sheetName, &excelize.Panes{
 		Freeze:      true,
 		YSplit:      1,
-		TopLeftCell: "A5",
+		TopLeftCell: "A2",
 		ActivePane:  "bottomLeft",
 	})
 
