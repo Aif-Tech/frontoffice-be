@@ -274,9 +274,9 @@ func (svc *service) processSummaryReport(
 	// todo: remove this, only for testing purposes
 	xlsxPassword := svc.cfg.Mail.Password // todo: update xlsx password
 	listReceiver := []string{
-		// "loveleen@aiforesee.com",
-		// "diki@aiforesee.com",
-		"arief@aiforesee.com",
+		"loveleen@aiforesee.com",
+		"diki@aiforesee.com",
+		// "arief@aiforesee.com",
 	}
 
 	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
