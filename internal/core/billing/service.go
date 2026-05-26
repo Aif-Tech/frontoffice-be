@@ -224,6 +224,8 @@ func (svc *service) processSummaryReport(
 	year int,
 ) {
 	companyId := summary.CompanyId
+	yearStr := strconv.Itoa(year)
+	monthStr := strconv.Itoa(int(month))
 
 	if len(summary.SubscribedProducts) == 0 {
 		log.Warn().
@@ -253,7 +255,7 @@ func (svc *service) processSummaryReport(
 		{
 			GroupName: "Procat",
 			Products:  toXlsxProducts(summary.ProcatProducts),
-			FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus, applyDedup, "", ""),
+			FetchFn:   svc.NewProcatFetchFn(constant.PaidStatus, applyDedup, monthStr, yearStr),
 		},
 		{
 			GroupName: "Scoreezy",
@@ -298,7 +300,7 @@ func (svc *service) processSummaryReport(
 	var attachments []mail.MailAttachment
 	if xlsxBytes != nil {
 		attachments = append(attachments, mail.MailAttachment{
-			FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
+			FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlsx", summary.CompanyName, month, year),
 			Content:  xlsxBytes,
 			MimeType: constant.MimeXlsx,
 		})
