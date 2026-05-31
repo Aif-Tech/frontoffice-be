@@ -166,7 +166,7 @@ spec:
             - name: FO_MAIL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: frontoffice-be-config
+                  name: frontoffice-be-secret
                   key: FO_MAIL_PASSWORD
             - name: FO_MAIL_MAX_RETRY
               valueFrom:
