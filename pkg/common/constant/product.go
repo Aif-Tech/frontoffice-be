@@ -16,11 +16,14 @@ const (
 	SlugTaxComplianceStatus   = "INCOMETAX_tax_compliance_status"
 	SlugTaxScore              = "INCOMETAX_tax_score"
 	SlugTaxVerificationDetail = "INCOMETAX_tax_verification_detail"
+
+	SlugCustomMAW2 = "CUSTOM_maw2"
 )
 
 const (
 	GenRetail         = "Gen Retail"
 	LoanRecordChecker = "Loan Record Checker"
+	CustomMAW2        = "MAW2"
 	MultipleLoan7D    = "7 Days Multiple Loan"
 	MultipleLoan30D   = "30 Days Multiple Loan"
 	MultipleLoan90D   = "90 Days Multiple Loan"
