@@ -278,7 +278,6 @@ func (svc *service) processSummaryReport(
 	listReceiver := []string{
 		"loveleen@aiforesee.com",
 		"diki@aiforesee.com",
-		// "arief@aiforesee.com",
 	}
 
 	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
@@ -402,7 +401,7 @@ func (svc *service) generateUsageXlsx(input XlsxReportInput) ([]byte, error) {
 
 	for _, group := range input.ProductGroups {
 		for _, product := range group.Products {
-			created, err := svc.buildProductSheet(f, group, product, input, !builtAny)
+			created, err := svc.buildProductSheet(f, group, product, input, !builtAny, input.CompanyName)
 			if err != nil {
 				return nil, err
 			}
@@ -428,15 +427,22 @@ func (svc *service) buildProductSheet(
 	product XlsxReportProduct,
 	input XlsxReportInput,
 	isFirstSheet bool,
+	companyName string,
 ) (sheetCreated bool, err error) {
-	def, ok := productRegistry[product.ProductSlug]
-	if !ok {
-		log.Warn().
-			Str("group", group.GroupName).
-			Str("product_slug", product.ProductSlug).
-			Msg("product not found in registry, skipping")
+	var def ProductSheetDef
+	var ok bool
 
-		return false, nil
+	switch product.ProductSlug {
+	case constant.SlugCustomMAW2:
+		def = productCustomMAW2(companyName)
+	default:
+		def, ok = productRegistry[product.ProductSlug]
+		if !ok {
+			log.Warn().
+				Str("product_slug", product.ProductSlug).
+				Msg("product not found in registry, skipping")
+			return false, nil
+		}
 	}
 
 	productId := strconv.FormatUint(uint64(product.ProductId), 10)
@@ -733,6 +739,34 @@ func scoreezyNestedDataStr(keys ...string) RowExtractFn {
 	})
 }
 
+func procatNestedDataStr(keys ...string) RowExtractFn {
+	return fromProcat(func(r *transaction.LogTransProductCatalog) interface{} {
+		v := helper.ExtractNestedField(r.Data, keys...)
+		if s, ok := v.(string); ok {
+			return s
+		}
+
+		if v == nil || v == "" {
+			return ""
+		}
+
+		return fmt.Sprintf("%v", v)
+	})
+}
+
+func procatNestedResponseStr(keys ...string) RowExtractFn {
+	return fromProcat(func(r *transaction.LogTransProductCatalog) interface{} {
+		v := helper.ExtractNestedField(r.ResponseBody, keys...)
+		if s, ok := v.(string); ok {
+			return s
+		}
+		if v == nil || v == "" {
+			return ""
+		}
+		return fmt.Sprintf("%v", v)
+	})
+}
+
 var (
 	ScoreezyExtractTrxID = fromScoreezy(func(r *transaction.LogTransScoreezy) interface{} {
 		return r.TrxId
@@ -774,6 +808,17 @@ func procatExtractRespInput(log *transaction.LogTransProductCatalog, key string)
 func procatRespInputStr(key string) RowExtractFn {
 	return fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
 		v := procatExtractRespInput(log, key)
+		if s, ok := v.(string); ok {
+			return s
+		}
+
+		return fmt.Sprintf("%v", v)
+	})
+}
+
+func procatReqBodyStr(key string) RowExtractFn {
+	return fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
+		v := helper.LookupKey(helper.ParseJSON(log.RequestBody), key)
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -824,6 +869,22 @@ func staticVal(val interface{}) RowExtractFn {
 var (
 	ProcatExtractTransactionID = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
 		return log.TransactionID
+	})
+
+	ProcatExtractLoanNumber = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
+		return log.LoanNo
+	})
+
+	ProcatExtractPricingStrategy = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
+		return log.PricingStrategy
+	})
+
+	ProcatExtractSuccess = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
+		return log.Success
+	})
+
+	ProcatExtractStatusCode = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
+		return log.Status
 	})
 
 	ProcatExtractCreatedAt = fromProcat(func(log *transaction.LogTransProductCatalog) interface{} {
