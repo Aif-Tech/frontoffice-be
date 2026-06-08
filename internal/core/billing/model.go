@@ -183,22 +183,6 @@ var productLoanRecord = ProductSheetDef{
 	},
 }
 
-// var productCustomMAW2 = ProductSheetDef{
-// 	ProductName: constant.CustomMAW2,
-// 	Columns: []ColumnDef{
-// 		{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
-// 		{Header: constant.CSVHeaderCompanyName, Type: ColTypeText, Width: 20, ExtractFn: staticVal("KlikUmkm")},
-// 		{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 20, ExtractFn: staticVal(constant.CustomMAW2)},
-// 		{Header: constant.CSVHeaderLoanNumber, Type: ColTypeText, Width: 24, ExtractFn: ProcatExtractLoanNumber},
-// 		{Header: constant.CSVHeaderResultCode, Type: ColTypeText, Width: 20, ExtractFn: procatNestedDataStr("data", "resultCode")},
-// 		{Header: constant.CSVHeaderPricingStrategy, Type: ColTypeText, Width: 20, ExtractFn: ProcatExtractPricingStrategy},
-// 		{Header: constant.CSVHeaderSuccess, Type: ColTypeText, Width: 24, ExtractFn: ProcatExtractSuccess},
-// 		{Header: constant.CSVHeaderStatusCode, Type: ColTypeText, Width: 24, ExtractFn: ProcatExtractStatusCode},
-// 		{Header: constant.CSVHeaderCreatedAt, Type: ColTypeDateTime, Width: 22, ExtractFn: ProcatExtractCreatedAt},
-// 		{Header: constant.CSVHeaderDate, Type: ColTypeDate, Width: 22, ExtractFn: ProcatExtractCreatedAt},
-// 	},
-// }
-
 func productCustomMAW2(companyName string) ProductSheetDef {
 	return ProductSheetDef{
 		ProductName: constant.CustomMAW2,
@@ -206,7 +190,7 @@ func productCustomMAW2(companyName string) ProductSheetDef {
 			{Header: constant.CSVHeaderTransactionID, Type: ColTypeText, Width: 32, ExtractFn: ProcatExtractTransactionID},
 			{Header: constant.CSVHeaderCompanyName, Type: ColTypeText, Width: 20, ExtractFn: staticVal(companyName)},
 			{Header: constant.CSVHeaderProductName, Type: ColTypeText, Width: 20, ExtractFn: staticVal(constant.CustomMAW2)},
-			{Header: constant.CSVHeaderLoanNumber, Type: ColTypeText, Width: 24, ExtractFn: ProcatExtractLoanNumber},
+			{Header: constant.CSVHeaderLoanNumber, Type: ColTypeText, Width: 36, ExtractFn: ProcatExtractLoanNumber},
 			{Header: constant.CSVHeaderResultCode, Type: ColTypeText, Width: 20, ExtractFn: procatNestedDataStr("data", "resultCode")},
 			{Header: constant.CSVHeaderPricingStrategy, Type: ColTypeText, Width: 20, ExtractFn: ProcatExtractPricingStrategy},
 			{Header: constant.CSVHeaderSuccess, Type: ColTypeText, Width: 18, ExtractFn: ProcatExtractSuccess},
