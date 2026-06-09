@@ -144,14 +144,23 @@ func (svc *service) SendMonthlyUsageReport() error {
 	startDate := fmt.Sprintf("%d-%02d-01", year, int(month))
 	endDate := fmt.Sprintf("%d-%02d-%02d", year, int(month), lastDayOfMonth(lastMonth))
 
-	internalTeam, err := svc.internalRepo.GetMemberAPI()
-	if err != nil {
-		log.Warn().
-			Err(err).
-			Msg("failed to get internal team emails")
-	}
+	// internalTeam, err := svc.internalRepo.GetMemberAPI()
+	// if err != nil {
+	// 	log.Warn().
+	// 		Err(err).
+	// 		Msg("failed to get internal team emails")
+	// }
 
-	ccEmails := svc.buildCCEmails(internalTeam)
+	// ccEmails := svc.buildCCEmails(internalTeam)
+
+	ccEmails := []string{
+		"diki@aiforesee.com",
+		"loveleen@aiforesee.com",
+		"chris@aiforesee.com",
+		"finance@aiforesee.com",
+		"johanes@aiforesee.com",
+		"arief.nugraha@bankraya.co.id",
+	}
 
 	for _, summary := range summaries {
 		svc.processSummaryReport(summary, ccEmails, startDate, endDate, month, year)
@@ -273,11 +282,13 @@ func (svc *service) processSummaryReport(
 		summary,
 	)
 
-	// todo: remove this, only for testing purposes
-	xlsxPassword := svc.cfg.Mail.Password // todo: update xlsx password
+	var xlsxPassword string
+	for _, admin := range admins {
+		xlsxPassword = admin.Key
+	}
+
 	listReceiver := []string{
-		"loveleen@aiforesee.com",
-		"diki@aiforesee.com",
+		"DOP.reconciliation@bankraya.co.id",
 	}
 
 	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{

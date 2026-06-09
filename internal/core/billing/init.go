@@ -28,7 +28,7 @@ func SetupInit(billingAPI fiber.Router, cfg *application.Config, client httpclie
 	// Cron SendMonthlyUsageReport
 	jakartaTime, _ := time.LoadLocation("Asia/Jakarta")
 	scd := gocron.NewScheduler(jakartaTime)
-	_, err := scd.Every(1).Month(1).At("09:00").Do(func() {
+	_, err := scd.Every(1).Month(3).At("09:00").Do(func() {
 		if err := service.SendMonthlyUsageReport(); err != nil {
 			log.Error().Err(err).Msg("failed to send monthly usage report")
 		}

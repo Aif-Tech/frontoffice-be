@@ -1,6 +1,8 @@
 package helper
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 func ParseJSON(raw []byte) map[string]interface{} {
 	if raw == nil {
