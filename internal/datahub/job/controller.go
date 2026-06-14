@@ -239,6 +239,7 @@ var productSlugMap = map[string]string{
 	"phone-nik":               constant.SlugPhoneNIKMatching,
 	"npwp-verification":       constant.SlugNPWPVerification,
 	"recycle-number":          constant.SlugRecycleNumber,
+	"negative-record":         constant.SlugNegativeRecord,
 	"gen-retail":              constant.SlugGenRetailV3,
 }
 

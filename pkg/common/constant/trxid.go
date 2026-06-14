@@ -10,6 +10,7 @@ const (
 	TrxIdPhoneLiveStatus    = "PLS"
 	TrxIdPhoneNIK           = "PNM"
 	TrxIdRecycleNumber      = "RCN"
+	TrxIdNegativeRecord     = "CNR"
 	TrxIdTaxCompliance      = "TCS"
 	TrxIdTaxVerification    = "TVD"
 	TrxIdTaxScore           = "TXS"

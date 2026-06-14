@@ -7,6 +7,7 @@ const (
 	SlugPhoneNIKMatching = "IDENTITY_phone_to_nik"
 	SlugRecycleNumber    = "IDENTITY_recycle_number"
 	SlugNPWPVerification = "IDENTITY_npwp_verification"
+	SlugNegativeRecord   = "IDENTITY_negative_record"
 
 	SlugLoanRecordChecker  = "COMPLIANCE_loan_record_checker"
 	Slug7DaysMultipleLoan  = "COMPLIANCE_7d_multiple_loan"
