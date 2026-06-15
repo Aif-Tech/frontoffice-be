@@ -35,15 +35,16 @@ type refTransProductCatalog struct {
 }
 
 type logTransData struct {
-	Remarks          *string `json:"remarks,omitempty"`
-	Status           *string `json:"status,omitempty"`
-	QueryCount       *int    `json:"query_count,omitempty"`
-	Nama             *string `json:"nama,omitempty"`
-	Score            *string `json:"score,omitempty"`
-	Alamat           *string `json:"alamat,omitempty"`
-	NPWP             *string `json:"npwp,omitempty"`
-	NPWPVerification *string `json:"npwp_verification,omitempty"`
-	TaxCompliance    *string `json:"tax_compliance,omitempty"`
+	Remarks          *string                 `json:"remarks,omitempty"`
+	Status           *string                 `json:"status,omitempty"`
+	QueryCount       *int                    `json:"query_count,omitempty"`
+	Nama             *string                 `json:"nama,omitempty"`
+	Score            *string                 `json:"score,omitempty"`
+	Alamat           *string                 `json:"alamat,omitempty"`
+	NPWP             *string                 `json:"npwp,omitempty"`
+	NPWPVerification *string                 `json:"npwp_verification,omitempty"`
+	TaxCompliance    *string                 `json:"tax_compliance,omitempty"`
+	Result           []dataNegativeRecordAPI `json:"result,omitempty"`
 }
 
 type logTransInput struct {
@@ -53,6 +54,7 @@ type logTransInput struct {
 	NPWP        *string `json:"npwp,omitempty"`
 	NPWPOrNIK   *string `json:"npwp_or_nik,omitempty"`
 	LoanNo      string  `json:"loan_no,omitempty"`
+	CompanyName *string `json:"company_name,omitempty"`
 }
 
 type jobListResponse struct {
@@ -92,6 +94,19 @@ type jobClient struct {
 type jobGenRetailData struct {
 	Logs      []jobsScoreezy `json:"logs"`
 	TotalData int64          `json:"total_data"`
+}
+
+type dataNegativeRecordAPI struct {
+	CompanyName         string `json:"company_name"`
+	CaseStatus          string `json:"case_status"`
+	Court               string `json:"court"`
+	CaseNumber          string `json:"case_number"`
+	CaseCodeDescription string `json:"case_code_description"`
+	PartyStatus         string `json:"party_status"`
+	CaseClassification  string `json:"case_classification"`
+	RegistrationDate    string `json:"registration_date"`
+	CaseDuration        string `json:"case_duration"`
+	SimilarityScore     string `json:"similarity_score"`
 }
 
 type jobsScoreezy struct {

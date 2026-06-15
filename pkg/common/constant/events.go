@@ -75,6 +75,12 @@ const (
 	EventRecycleNumberDownload        = "recycle number download result"
 	EventRecycleNumberDownloadSummary = "recycle number download result summary"
 
+	// negative record
+	EventNegativeRecordSingleReq       = "negative record single request"
+	EventNegativeRecordBulkReq         = "negative record bulk request"
+	EventNegativeRecordDownload        = "negative record download result"
+	EventNegativeRecordDownloadSummary = "negative record download result summary"
+
 	// tax compliance status
 	EventTaxComplianceSingleReq       = "tax compliance single request"
 	EventTaxComplianceBulkReq         = "tax compliance bulk request"
