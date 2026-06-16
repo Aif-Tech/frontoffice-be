@@ -131,6 +131,14 @@ func (svc *service) GetJobDetails(filter *logFilter) (*model.AifcoreAPIResponse[
 		return nil, apperror.MapRepoError(err, "failed to fetch job detail")
 	}
 
+	if result.Data != nil {
+		for _, detail := range result.Data.JobDetails {
+			if err := remapLogTransData(filter.ProductSlug, detail); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	return result, nil
 }
 
@@ -138,6 +146,14 @@ func (svc *service) GetJobDetailsByDateRange(filter *logFilter) (*model.AifcoreA
 	result, err := svc.repo.GetJobsSummaryAPI(filter)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, "failed to fetch job detail")
+	}
+
+	if result.Data != nil {
+		for _, detail := range result.Data.JobDetails {
+			if err := remapLogTransData(filter.ProductSlug, detail); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return result, nil
@@ -161,6 +177,14 @@ func (svc *service) exportJobDetailsToCSV(
 	resp, err := fetchFunc(filter)
 	if err != nil {
 		return "", apperror.MapRepoError(err, "failed to fetch job details")
+	}
+
+	if resp.Data != nil {
+		for _, detail := range resp.Data.JobDetails {
+			if err := remapLogTransData(filter.ProductSlug, detail); err != nil {
+				return "", apperror.Internal("failed to remap job detail data", err)
+			}
+		}
 	}
 
 	cfg, ok := exportProductMap[filter.ProductSlug]
@@ -437,8 +461,12 @@ func mapLoanRecordCheckerRow(isMasked bool, d *logTransProductCatalog) []string 
 	}
 
 	if d.Data != nil {
-		remarks = *d.Data.Remarks
-		status = *d.Data.Status
+		if d.Data.GetRemarks() != nil {
+			remarks = *d.Data.GetRemarks()
+		}
+		if d.Data.GetStatus() != nil {
+			status = *d.Data.GetStatus()
+		}
 	}
 
 	var ref refTransProductCatalog
@@ -479,7 +507,10 @@ func mapMultipleLoanRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		queryCount = *d.Data.QueryCount
+		if d.Data.GetQueryCount() != nil {
+			queryCount = *d.Data.GetQueryCount()
+		}
+
 	}
 
 	var ref refTransProductCatalog
@@ -507,7 +538,7 @@ func mapMultipleLoanRow(isMasked bool, d *logTransProductCatalog) []string {
 
 func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 	var (
-		description, nama, address, status, npwp string
+		description, name, address, status, npwp string
 	)
 
 	if d.Message != nil {
@@ -515,9 +546,15 @@ func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		nama = *d.Data.Nama
-		address = *d.Data.Alamat
-		status = *d.Data.Status
+		if d.Data.GetName() != nil {
+			name = *d.Data.GetName()
+		}
+		if d.Data.GetStatus() != nil {
+			status = *d.Data.GetStatus()
+		}
+		if d.Data.GetAddress() != nil {
+			address = *d.Data.GetAddress()
+		}
 	}
 
 	var ref refTransProductCatalog
@@ -534,7 +571,7 @@ func mapTaxComplianceRow(isMasked bool, d *logTransProductCatalog) []string {
 	return []string{
 		// d.Input.LoanNo,
 		npwp,
-		nama,
+		name,
 		address,
 		status,
 		d.Status,
@@ -552,10 +589,18 @@ func mapTaxScoreRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		name = *d.Data.Nama
-		address = *d.Data.Alamat
-		status = *d.Data.Status
-		score = *d.Data.Score
+		if d.Data.GetName() != nil {
+			name = *d.Data.GetName()
+		}
+		if d.Data.GetStatus() != nil {
+			status = *d.Data.GetStatus()
+		}
+		if d.Data.GetAddress() != nil {
+			address = *d.Data.GetAddress()
+		}
+		if d.Data.GetScore() != nil {
+			score = *d.Data.GetScore()
+		}
 	}
 
 	var ref refTransProductCatalog
@@ -591,12 +636,23 @@ func mapTaxVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		name = *d.Data.Nama
-		address = *d.Data.Alamat
-		npwpVerification = *d.Data.NPWPVerification
 		// npwp = *d.Data.NPWP
-		status = *d.Data.Status
-		taxCompliance = *d.Data.TaxCompliance
+
+		if d.Data.GetName() != nil {
+			name = *d.Data.GetName()
+		}
+		if d.Data.GetStatus() != nil {
+			status = *d.Data.GetStatus()
+		}
+		if d.Data.GetAddress() != nil {
+			address = *d.Data.GetAddress()
+		}
+		if d.Data.GetNPWPVerification() != nil {
+			npwpVerification = *d.Data.GetNPWPVerification()
+		}
+		if d.Data.GetTaxCompliance() != nil {
+			taxCompliance = *d.Data.GetTaxCompliance()
+		}
 	}
 
 	var ref refTransProductCatalog
@@ -638,9 +694,15 @@ func mapNPWPVerificationRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		name = *d.Data.Nama
-		address = *d.Data.Alamat
-		status = *d.Data.Status
+		if d.Data.GetName() != nil {
+			name = *d.Data.GetName()
+		}
+		if d.Data.GetStatus() != nil {
+			status = *d.Data.GetStatus()
+		}
+		if d.Data.GetAddress() != nil {
+			address = *d.Data.GetAddress()
+		}
 	}
 
 	var ref refTransProductCatalog
@@ -677,7 +739,9 @@ func mapRecycleNumberRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		status = *d.Data.Status
+		if d.Data.GetStatus() != nil {
+			status = *d.Data.GetStatus()
+		}
 	}
 
 	var ref refTransProductCatalog
@@ -713,7 +777,9 @@ func mapPhoneNIKRow(isMasked bool, d *logTransProductCatalog) []string {
 	}
 
 	if d.Data != nil {
-		status = *d.Data.Status
+		if d.Data.GetStatus() != nil {
+			status = *d.Data.GetStatus()
+		}
 	}
 
 	var ref refTransProductCatalog
@@ -759,4 +825,57 @@ func mapToClientResponse(src *model.AifcoreAPIResponse[*jobListResponse]) *jobLi
 		Jobs:      jobs,
 		TotalData: src.Data.TotalData,
 	}
+}
+
+type logTransDataBase interface {
+	GetRemarks() *string
+	GetStatus() *string
+	GetQueryCount() *int
+	GetName() *string
+	GetScore() *string
+	GetAddress() *string
+	GetNPWP() *string
+	GetNPWPVerification() *string
+	GetTaxCompliance() *string
+}
+
+func (d *logTransData) GetRemarks() *string          { return d.Remarks }
+func (d *logTransData) GetStatus() *string           { return d.Status }
+func (d *logTransData) GetQueryCount() *int          { return d.QueryCount }
+func (d *logTransData) GetName() *string             { return d.Nama }
+func (d *logTransData) GetScore() *string            { return d.Score }
+func (d *logTransData) GetAddress() *string          { return d.Alamat }
+func (d *logTransData) GetNPWP() *string             { return d.NPWP }
+func (d *logTransData) GetNPWPVerification() *string { return d.NPWPVerification }
+func (d *logTransData) GetTaxCompliance() *string    { return d.TaxCompliance }
+
+func remapLogTransData(productSlug string, detail *logTransProductCatalog) error {
+	if detail.RawData == nil {
+		return nil
+	}
+
+	raw, err := json.Marshal(detail.RawData)
+	if err != nil {
+		return err
+	}
+
+	switch productSlug {
+	case constant.SlugNegativeRecord:
+		var data logTransDataNegativeRecord
+		if err := json.Unmarshal(raw, &data); err != nil {
+			return err
+		}
+
+		detail.Data = &data
+
+	default:
+		var data logTransData
+		if err := json.Unmarshal(raw, &data); err != nil {
+			return err
+		}
+
+		detail.Data = &data
+	}
+
+	return nil
 }
