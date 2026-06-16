@@ -113,7 +113,7 @@ func (svc *service) NegativeRecord(authCtx *model.AuthContext, reqBody *negative
 }
 
 func (svc *service) BulkNegativeRecord(authCtx *model.AuthContext, file *multipart.FileHeader) error {
-	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderNagativeRecord)
+	records, err := helper.ParseCSVFile(file, constant.CSVTemplateHeaderNegativeRecord)
 	if err != nil {
 		return apperror.BadRequest(err.Error())
 	}

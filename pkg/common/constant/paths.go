@@ -7,6 +7,7 @@ const (
 	PhoneLiveTemplates           = "phonelivestatus"
 	PhoneNIKMatchingTemplates    = "phonenikmatching"
 	RecycleNumberTemplates       = "recyclenumber"
+	NegativeRecordTemplates      = "negativerecord"
 	LoanRecordCheckerTemplates   = "loanrecordchecker"
 	MultipleLoanTemplates        = "multipleloan"
 	NPWPVerificationTemplates    = "npwpverification"

@@ -7,7 +7,6 @@ const (
 	SlugPhoneNIKMatching = "IDENTITY_phone_to_nik"
 	SlugRecycleNumber    = "IDENTITY_recycle_number"
 	SlugNPWPVerification = "IDENTITY_npwp_verification"
-	SlugNegativeRecord   = "IDENTITY_negative_record"
 
 	SlugLoanRecordChecker  = "COMPLIANCE_loan_record_checker"
 	Slug7DaysMultipleLoan  = "COMPLIANCE_7d_multiple_loan"
@@ -17,6 +16,8 @@ const (
 	SlugTaxComplianceStatus   = "INCOMETAX_tax_compliance_status"
 	SlugTaxScore              = "INCOMETAX_tax_score"
 	SlugTaxVerificationDetail = "INCOMETAX_tax_verification_detail"
+
+	SlugNegativeRecord = "COMPLIT_negative_record"
 
 	SlugCustomMAW2 = "CUSTOM_maw2"
 )

@@ -87,6 +87,11 @@ var CSVTemplateHeaderRecycleNumber = []string{
 	CSVHeaderLoanNumber,
 }
 
+var CSVTemplateHeaderNegativeRecord = []string{
+	CSVHeaderCompanyName,
+	CSVHeaderLoanNumber,
+}
+
 // CSV Export Header
 
 var CSVExportHeaderPhoneLive = []string{
