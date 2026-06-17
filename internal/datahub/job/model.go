@@ -6,19 +6,20 @@ import (
 )
 
 type logTransProductCatalog struct {
-	MemberID               uint           `json:"member_id"`
-	CompanyID              uint           `json:"company_id"`
-	JobID                  uint           `json:"job_id"`
-	ProductID              uint           `json:"product_id"`
-	LoanNo                 string         `json:"loan_no"`
-	Status                 string         `json:"status"`
-	Message                *string        `json:"message"`
-	Input                  *logTransInput `json:"input"`
-	Data                   *logTransData  `json:"data"`
-	PricingStrategy        string         `json:"pricing_strategy"`
-	TransactionId          string         `json:"transaction_id"`
-	DateTime               string         `json:"datetime"`
-	RefTransProductCatalog any            `json:"ref_trans_product_catalog"`
+	MemberID               uint             `json:"member_id"`
+	CompanyID              uint             `json:"company_id"`
+	JobID                  uint             `json:"job_id"`
+	ProductID              uint             `json:"product_id"`
+	LoanNo                 string           `json:"loan_no"`
+	Status                 string           `json:"status"`
+	Message                *string          `json:"message"`
+	Input                  *logTransInput   `json:"input"`
+	RawData                any              `json:"data"`
+	Data                   logTransDataBase `json:"-"`
+	PricingStrategy        string           `json:"pricing_strategy"`
+	TransactionId          string           `json:"transaction_id"`
+	DateTime               string           `json:"datetime"`
+	RefTransProductCatalog any              `json:"ref_trans_product_catalog"`
 }
 
 type refTransProductCatalog struct {
@@ -55,6 +56,11 @@ type logTransInput struct {
 	NPWPOrNIK   *string `json:"npwp_or_nik,omitempty"`
 	LoanNo      string  `json:"loan_no,omitempty"`
 	CompanyName *string `json:"company_name,omitempty"`
+}
+
+type logTransDataNegativeRecord struct {
+	logTransData
+	Result []dataNegativeRecordAPI `json:"result"`
 }
 
 type jobListResponse struct {

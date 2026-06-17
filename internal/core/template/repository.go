@@ -37,6 +37,8 @@ func (r *repository) GetAvailableTemplates() (map[string][]string, error) {
 		constant.TaxComplianceStatusTemplates,
 		constant.TaxScoreTemplates,
 		constant.TaxVerificationTemplates,
+		constant.RecycleNumberTemplates,
+		constant.NegativeRecordTemplates,
 		constant.GenRetailTemplates,
 	}
 

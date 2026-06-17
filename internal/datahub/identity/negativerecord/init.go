@@ -26,4 +26,5 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 
 	negativeRecordGroup := apiGroup.Group("negative-record")
 	negativeRecordGroup.Post("/single-request", middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(negativeRecordRequest{}), controller.SingleRequest)
+	negativeRecordGroup.Post("/bulk-request", middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateCSVFile(), controller.BulkSearch)
 }
