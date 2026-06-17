@@ -10,16 +10,16 @@ type dataNegativeRecord struct {
 }
 
 type dataNegativeRecordAPI struct {
-	CompanyName         string `json:"company_name"`
-	CaseStatus          string `json:"case_status"`
-	Court               string `json:"court"`
-	CaseNumber          string `json:"case_number"`
-	CaseCodeDescription string `json:"case_code_description"`
-	PartyStatus         string `json:"party_status"`
-	CaseClassification  string `json:"case_classification"`
-	RegistrationDate    string `json:"registration_date"`
-	CaseDuration        string `json:"case_duration"`
-	SimilarityScore     string `json:"similarity_score"`
+	CompanyName      string `json:"company_name"`
+	SimilarityScore  string `json:"similarity_score"`
+	Status           string `json:"status"`
+	CaseNumber       string `json:"case_number"`
+	Court            string `json:"court"`
+	Province         string `json:"province"`
+	CaseType         string `json:"case_type"`
+	RegistrationDate string `json:"registration_date"`
+	ProcessDuration  string `json:"process_duration"`
+	LastUpdated      string `json:"last_updated"`
 }
 
 type negativeRecordContext struct {
