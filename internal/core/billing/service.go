@@ -282,11 +282,6 @@ func (svc *service) processSummaryReport(
 		summary,
 	)
 
-	var xlsxPassword string
-	for _, admin := range admins {
-		xlsxPassword = admin.Key
-	}
-
 	listReceiver := []string{
 		"DOP.reconciliation@bankraya.co.id",
 	}
@@ -298,7 +293,7 @@ func (svc *service) processSummaryReport(
 		PeriodMonth:     int(month),
 		ProductGroups:   groups,
 		PricingStrategy: constant.PaidStatus,
-		Password:        xlsxPassword,
+		Password:        admins[0].Key,
 	})
 	if xlsxErr != nil {
 		log.Warn().
@@ -335,7 +330,6 @@ func (svc *service) processSummaryReport(
 	// todo: uncomment this section
 	// for _, admin := range admins {
 	// 	xlsxPassword := admin.Key
-	// }
 
 	// 	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
 	// 		CompanyId:       companyId,
@@ -356,13 +350,12 @@ func (svc *service) processSummaryReport(
 	// var attachments []mail.MailAttachment
 	// 	if xlsxBytes != nil {
 	// 		attachments = append(attachments, mail.MailAttachment{
-	// 			FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlxs", summary.CompanyName, month, year),
+	// 			FileName: fmt.Sprintf("Monthly Usage Report for %s - %s %d.xlsx", summary.CompanyName, month, year),
 	// 			Content:  xlsxBytes,
 	// 			MimeType: constant.MimeXlsx,
 	// 		})
 	// 	}
 
-	// for _, admin := range admins {
 	// 	if err := svc.mailSvc.SendWithTemplate(
 	// 		admin.Email,
 	// 		ccEmails,
@@ -752,7 +745,18 @@ func scoreezyNestedDataStr(keys ...string) RowExtractFn {
 
 func procatNestedDataStr(keys ...string) RowExtractFn {
 	return fromProcat(func(r *transaction.LogTransProductCatalog) interface{} {
+		// log.Debug().
+		// 	Uint("log_trx_id", r.LogTrxID).
+		// 	RawJSON("data", r.Data).
+		// 	Strs("keys", keys).
+		// 	Msg("procatNestedDataStr: raw data")
+
 		v := helper.ExtractNestedField(r.Data, keys...)
+		// log.Debug().
+		// 	Uint("log_trx_id", r.LogTrxID).
+		// 	Interface("extracted_value", v).
+		// 	Strs("keys", keys).
+		// 	Msg("procatNestedDataStr: extracted result")
 		if s, ok := v.(string); ok {
 			return s
 		}
