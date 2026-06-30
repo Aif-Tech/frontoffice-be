@@ -29,6 +29,7 @@ type controller struct {
 
 type Controller interface {
 	DummyRequestScore(c *fiber.Ctx) error
+	DummyRequest201(c *fiber.Ctx) error
 	SingleRequest(c *fiber.Ctx) error
 	BulkRequest(c *fiber.Ctx) error
 	GetLogsScoreezy(c *fiber.Ctx) error
@@ -58,6 +59,16 @@ func (ctrl *controller) DummyRequestScore(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(response)
+}
+
+func (ctrl *controller) DummyRequest201(c *fiber.Ctx) error {
+	response := genRetailV3ClientReturnSuccess{
+		Message: "failed to calculate",
+		Success: true,
+		Data:    nil,
+	}
+
+	return c.Status(201).JSON(response)
 }
 
 func (ctrl *controller) SingleRequest(c *fiber.Ctx) error {
