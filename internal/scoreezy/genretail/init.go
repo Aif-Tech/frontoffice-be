@@ -27,7 +27,7 @@ func SetupInit(apiGroup fiber.Router, cfg *application.Config, client httpclient
 
 	controller := NewController(service)
 
-	apiGroup.Post("/dummy-request", middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(genRetailRequest{}), controller.DummyRequestScore)
+	apiGroup.Post("/dummy-request", middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(genRetailRequest{}), controller.DummyRequest201)
 	apiGroup.Post("/single-request", middleware.GetJWTPayloadFromCookie(cfg), middleware.ValidateRequest(genRetailRequest{}), controller.SingleRequest)
 	apiGroup.Post("/bulk-request", middleware.ValidateCSVFile(), middleware.GetJWTPayloadFromCookie(cfg), controller.BulkRequest)
 	apiGroup.Get("/logs", middleware.GetJWTPayloadFromCookie(cfg), controller.GetLogsScoreezy)
