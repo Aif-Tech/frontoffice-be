@@ -155,11 +155,11 @@ func (svc *service) SendMonthlyUsageReport() error {
 
 	ccEmails := []string{
 		"diki@aiforesee.com",
-		"loveleen@aiforesee.com",
-		"chris@aiforesee.com",
-		"finance@aiforesee.com",
-		"johanes@aiforesee.com",
-		"arief.nugraha@bankraya.co.id",
+		// "loveleen@aiforesee.com",
+		// "chris@aiforesee.com",
+		// "finance@aiforesee.com",
+		// "johanes@aiforesee.com",
+		// "arief.nugraha@bankraya.co.id",
 	}
 
 	for _, summary := range summaries {
@@ -283,7 +283,8 @@ func (svc *service) processSummaryReport(
 	)
 
 	listReceiver := []string{
-		"DOP.reconciliation@bankraya.co.id",
+		// "DOP.reconciliation@bankraya.co.id",
+		"arief@aiforesee.com",
 	}
 
 	xlsxBytes, xlsxErr := svc.generateUsageXlsx(XlsxReportInput{
