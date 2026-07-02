@@ -7,8 +7,11 @@ import (
 	"front-office/internal/mail"
 	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
+	"time"
 
+	"github.com/go-co-op/gocron"
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
 
 func SetupInit(billingAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient, mailSvc *mail.SendMailService) {
@@ -22,61 +25,49 @@ func SetupInit(billingAPI fiber.Router, cfg *application.Config, client httpclie
 	billingAPI.Get("/usage/export", middleware.GetJWTPayloadFromCookie(cfg), middleware.AdminAuth(), controller.ExportUsage)
 	billingAPI.Post("/send-monthly-report", controller.SendMonthlyUsageReport)
 
-	// setupCron(service)
+	setupCron(service)
 }
 
-// func setupCron(service Service) {
-// 	jakartaTime, _ := time.LoadLocation("Asia/Jakarta")
-// 	scd := gocron.NewScheduler(jakartaTime)
+func targetRunDay(now time.Time) int {
+	day3 := time.Date(now.Year(), now.Month(), 3, 0, 0, 0, 0, now.Location())
+	switch day3.Weekday() {
+	case time.Saturday:
+		return 5
+	case time.Sunday:
+		return 4
+	default:
+		return 3
+	}
+}
 
-// 	isWeekend := func(t time.Time) bool {
-// 		return t.Weekday() == time.Saturday || t.Weekday() == time.Sunday
-// 	}
+func setupCron(service Service) {
+	jakartaTime, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to load Asia/Jakarta timezone")
+	}
 
-// 	runReport := func() {
-// 		if err := service.SendMonthlyUsageReport(); err != nil {
-// 			log.Error().Err(err).Msg("failed to send monthly usage report")
-// 		}
-// 	}
+	scd := gocron.NewScheduler(jakartaTime)
 
-// 	_, err := scd.Every(1).Month(3).At("09:00").Do(func() {
-// 		now := time.Now().In(jakartaTime)
-// 		if isWeekend(now) {
-// 			log.Info().Msg("tanggal 3 adalah weekend, skip")
-// 			return
-// 		}
-// 		runReport()
-// 	})
-// 	if err != nil {
-// 		log.Fatal().Err(err).Msg("failed to register cron tanggal 3")
-// 	}
+	_, err = scd.Every(1).Day().At("09:00").Do(func() {
+		now := time.Now().In(jakartaTime)
+		target := targetRunDay(now)
 
-// 	_, err = scd.Every(1).Month(4).At("09:00").Do(func() {
-// 		now := time.Now().In(jakartaTime)
-// 		if !isWeekend(now.AddDate(0, 0, -1)) {
-// 			return
-// 		}
-// 		if isWeekend(now) {
-// 			log.Info().Msg("tanggal 4 adalah weekend, skip")
-// 			return
-// 		}
-// 		runReport()
-// 	})
-// 	if err != nil {
-// 		log.Fatal().Err(err).Msg("failed to register cron tanggal 4")
-// 	}
+		if now.Day() != target {
+			return
+		}
 
-// 	_, err = scd.Every(1).Month(5).At("09:00").Do(func() {
-// 		now := time.Now().In(jakartaTime)
-// 		day3 := now.AddDate(0, 0, -2).Weekday()
-// 		if day3 != time.Saturday {
-// 			return
-// 		}
-// 		runReport()
-// 	})
-// 	if err != nil {
-// 		log.Fatal().Err(err).Msg("failed to register cron tanggal 5")
-// 	}
+		log.Info().
+			Int("day", now.Day()).
+			Str("weekday", now.Weekday().String()).
+			Msg("running monthly usage report")
 
-// 	scd.StartAsync()
-// }
+		if err := service.SendMonthlyUsageReport(); err != nil {
+			log.Error().Err(err).Msg("failed to send monthly usage report")
+		}
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to register monthly usage report cron")
+	}
+
+	scd.StartAsync()
+}
