@@ -67,24 +67,7 @@ func (svc *service) PhoneNIK(authCtx *model.AuthContext, reqBody *phoneNIKReques
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	// todo: remove
-	dummyTrxId := helper.GenerateTrx(constant.TrxIdPhoneNIK)
-	if err := svc.dummyLogTrans(&phoneNIKContext{
-		APIKey:         authCtx.APIKey,
-		JobIdStr:       jobIdStr,
-		MemberIdStr:    authCtx.UserIdStr(),
-		CompanyIdStr:   authCtx.CompanyIdStr(),
-		MemberId:       authCtx.UserId,
-		CompanyId:      authCtx.CompanyId,
-		ProductId:      subscribedResp.Data.ProductId,
-		ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
-		JobId:          jobRes.JobId,
-		Request:        reqBody,
-	}, dummyTrxId); err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
-	}
-
-	result, err := svc.repo.PhoneToNIKAPI(authCtx.APIKey, dummyTrxId, reqBody)
+	result, err := svc.repo.PhoneToNIKAPI(authCtx.APIKey, jobIdStr, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -230,11 +213,7 @@ func (svc *service) processSinglePhoneNIK(params *phoneNIKContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	if err := svc.dummyLogTrans(params, trxId); err != nil {
-		return apperror.MapRepoError(err, constant.FailedCreateJob)
-	}
-
-	_, err := svc.repo.PhoneToNIKAPI(params.APIKey, trxId, params.Request)
+	_, err := svc.repo.PhoneToNIKAPI(params.APIKey, params.JobIdStr, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
@@ -260,39 +239,6 @@ func (svc *service) logFailedTransaction(params *phoneNIKContext, trxId, msg str
 		ResponseBody: &transaction.ResponseBody{
 			Input:    params.Request,
 			DateTime: time.Now().Format(constant.FormatDateAndTime),
-		},
-		RequestBody:  params.Request,
-		RequestTime:  time.Now(),
-		ResponseTime: time.Now(),
-	})
-}
-
-// todo: remove
-func (svc *service) dummyLogTrans(params *phoneNIKContext, dummyTrxId string) error {
-	status := "not match"
-	if params.Request.Phone == "08111111110" && params.Request.NIK == "3576014403910003" {
-		status = "match"
-	}
-
-	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
-		TransactionID:  dummyTrxId,
-		MemberID:       params.MemberId,
-		CompanyID:      params.CompanyId,
-		ProductID:      params.ProductId,
-		ProductGroupID: params.ProductGroupId,
-		JobID:          params.JobId,
-		Message:        constant.Success,
-		Status:         http.StatusOK,
-		Success:        true,
-		LoanNo:         params.Request.LoanNo,
-		ResponseBody: &transaction.ResponseBody{
-			Data: dataPhoneNIKAPI{
-				Status: status,
-			},
-			Input:           params.Request,
-			TransactionId:   dummyTrxId,
-			PricingStrategy: "FREE",
-			DateTime:        time.Now().Format(constant.FormatDateAndTime),
 		},
 		RequestBody:  params.Request,
 		RequestTime:  time.Now(),
