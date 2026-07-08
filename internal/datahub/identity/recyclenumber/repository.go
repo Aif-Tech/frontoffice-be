@@ -1,14 +1,17 @@
 package recyclenumber
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
+	"front-office/pkg/helper"
 	"front-office/pkg/httpclient"
 	"front-office/pkg/jsonutil"
 	"net/http"
-	"time"
 )
 
 func NewRepository(cfg *application.Config, client httpclient.HTTPClient, marshalFn jsonutil.Marshaller) Repository {
@@ -30,28 +33,34 @@ type repository struct {
 }
 
 type Repository interface {
-	RecycleNumberAPI(apiKey, trxId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error)
+	RecycleNumberAPI(apiKey, jobId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error)
 }
 
-func (repo *repository) RecycleNumberAPI(apiKey, trxId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
-	status := "phone number never happens recycled"
-	if payload.Phone == "08111111110" {
-		status = "phone number has been recycled"
+func (repo *repository) RecycleNumberAPI(apiKey, jobId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {
+	url := fmt.Sprintf("%s/product/identity/recycle-number", repo.cfg.App.ProductCatalogHost)
+
+	bodyBytes, err := repo.marshalFn(payload)
+	if err != nil {
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
-	return &model.ProCatAPIResponse[dataRecycleNumberAPI]{
-		Success: true,
-		Data: dataRecycleNumberAPI{
-			Status: status,
-		},
-		Input: recycleNumberRequest{
-			Phone:  payload.Phone,
-			LoanNo: payload.LoanNo,
-		},
-		Message:         "Succeed to Request Data",
-		StatusCode:      http.StatusOK,
-		PricingStrategy: "FREE",
-		TransactionId:   trxId,
-		Date:            time.Now().Format(constant.FormatYYYYMMDD),
-	}, nil
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
+	}
+
+	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
+	req.Header.Set(constant.XAPIKey, apiKey)
+
+	q := req.URL.Query()
+	q.Add("job_id", jobId)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
+	}
+	defer resp.Body.Close()
+
+	return helper.ParseProCatAPIResponse[dataRecycleNumberAPI](resp)
 }
