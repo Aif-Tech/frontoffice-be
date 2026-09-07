@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 
 	"front-office/pkg/common/constant"
 )
@@ -28,19 +28,19 @@ type controller struct {
 }
 
 type Controller interface {
-	DummyRequestScore(c *fiber.Ctx) error
-	DummyRequest201(c *fiber.Ctx) error
-	SingleRequest(c *fiber.Ctx) error
-	BulkRequest(c *fiber.Ctx) error
-	GetLogsScoreezy(c *fiber.Ctx) error
-	GetLogScoreezy(c *fiber.Ctx) error
-	ExportJobDetails(c *fiber.Ctx) error
-	// DownloadCSV(c *fiber.Ctx) error
-	// UploadCSV(c *fiber.Ctx) error
-	// GetBulkSearch(c *fiber.Ctx) error
+	DummyRequestScore(c fiber.Ctx) error
+	DummyRequest201(c fiber.Ctx) error
+	SingleRequest(c fiber.Ctx) error
+	BulkRequest(c fiber.Ctx) error
+	GetLogsScoreezy(c fiber.Ctx) error
+	GetLogScoreezy(c fiber.Ctx) error
+	ExportJobDetails(c fiber.Ctx) error
+	// DownloadCSV(c fiber.Ctx) error
+	// UploadCSV(c fiber.Ctx) error
+	// GetBulkSearch(c fiber.Ctx) error
 }
 
-func (ctrl *controller) DummyRequestScore(c *fiber.Ctx) error {
+func (ctrl *controller) DummyRequestScore(c fiber.Ctx) error {
 	response := genRetailV3ClientReturnSuccess{
 		Message: "Succeed to Request Scores",
 		Success: true,
@@ -61,7 +61,7 @@ func (ctrl *controller) DummyRequestScore(c *fiber.Ctx) error {
 	return c.Status(200).JSON(response)
 }
 
-func (ctrl *controller) DummyRequest201(c *fiber.Ctx) error {
+func (ctrl *controller) DummyRequest201(c fiber.Ctx) error {
 	response := genRetailV3ClientReturnSuccess{
 		Message: "failed to calculate",
 		Success: true,
@@ -71,7 +71,7 @@ func (ctrl *controller) DummyRequest201(c *fiber.Ctx) error {
 	return c.Status(201).JSON(response)
 }
 
-func (ctrl *controller) SingleRequest(c *fiber.Ctx) error {
+func (ctrl *controller) SingleRequest(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*genRetailRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -90,7 +90,7 @@ func (ctrl *controller) SingleRequest(c *fiber.Ctx) error {
 	return c.Status(result.StatusCode).JSON(result)
 }
 
-func (ctrl *controller) BulkRequest(c *fiber.Ctx) error {
+func (ctrl *controller) BulkRequest(c fiber.Ctx) error {
 	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -112,7 +112,7 @@ func (ctrl *controller) BulkRequest(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
+func (ctrl *controller) GetLogsScoreezy(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -142,7 +142,7 @@ func (ctrl *controller) GetLogsScoreezy(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
+func (ctrl *controller) GetLogScoreezy(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -161,7 +161,7 @@ func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse(constant.Success, result))
 }
 
-func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
+func (ctrl *controller) ExportJobDetails(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())

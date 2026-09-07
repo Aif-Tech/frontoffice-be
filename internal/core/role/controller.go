@@ -4,7 +4,7 @@ import (
 	"front-office/pkg/apperror"
 	"front-office/pkg/helper"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(service Service) Controller {
@@ -16,11 +16,11 @@ type controller struct {
 }
 
 type Controller interface {
-	GetRoleById(c *fiber.Ctx) error
-	GetRoles(c *fiber.Ctx) error
+	GetRoleById(c fiber.Ctx) error
+	GetRoles(c fiber.Ctx) error
 }
 
-func (ctrl *controller) GetRoleById(c *fiber.Ctx) error {
+func (ctrl *controller) GetRoleById(c fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return apperror.BadRequest("missing role id")
@@ -37,7 +37,7 @@ func (ctrl *controller) GetRoleById(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetRoles(c *fiber.Ctx) error {
+func (ctrl *controller) GetRoles(c fiber.Ctx) error {
 	name := c.Query("name", "")
 
 	filter := RoleFilter{

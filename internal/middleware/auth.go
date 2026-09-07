@@ -10,8 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	jwtware "github.com/gofiber/jwt/v3"
+	"github.com/gofiber/fiber/v3/extractors"
+
+	jwtware "github.com/gofiber/contrib/v3/jwt"
+	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -20,23 +22,23 @@ const (
 	RoleAdmin  = uint(1)
 )
 
-func Auth() func(c *fiber.Ctx) error {
+func Auth() func(c fiber.Ctx) error {
 	config := jwtware.Config{
-		SigningKey:   []byte(os.Getenv("FO_JWT_SECRET_KEY")),
+		SigningKey:   jwtware.SigningKey{Key: []byte(os.Getenv("FO_JWT_SECRET_KEY"))},
 		ErrorHandler: jwtError,
-		TokenLookup:  "cookie:aif_token",
+		Extractor:    extractors.FromCookie("aif_token"),
 	}
 
 	return jwtware.New(config)
 }
 
-func jwtError(c *fiber.Ctx, err error) error {
+func jwtError(c fiber.Ctx, err error) error {
 	resp := helper.ErrorResponse(err.Error())
 
 	return c.Status(fiber.StatusUnauthorized).JSON(resp)
 }
 
-func SetCookiePasswordResetToken(c *fiber.Ctx) error {
+func SetCookiePasswordResetToken(c fiber.Ctx) error {
 	token := c.Params("token")
 	minutesToExpired, err := strconv.Atoi(os.Getenv("FO_JWT_RESET_PASSWORD_EXPIRES_MINUTES"))
 	if err != nil {
@@ -56,7 +58,7 @@ func SetCookiePasswordResetToken(c *fiber.Ctx) error {
 }
 
 func GetJWTPayloadFromCookie(cfg *application.Config) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		secret := cfg.App.JwtSecretKey
 		token := c.Cookies("aif_token")
 		if token == "" {
@@ -125,7 +127,7 @@ func GetJWTPayloadFromCookie(cfg *application.Config) fiber.Handler {
 }
 
 func GetPayloadFromRefreshToken(cfg *application.Config) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		secret := cfg.App.JwtRefreshSecretKey
 		token := c.Cookies("aif_refresh_token")
 		if token == "" {
@@ -197,7 +199,7 @@ func GetPayloadFromRefreshToken(cfg *application.Config) fiber.Handler {
 }
 
 func AdminAuth() fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		roleId, ok := c.Locals(constant.RoleId).(uint)
 		if !ok {
 			return c.Status(fiber.StatusUnauthorized).JSON(

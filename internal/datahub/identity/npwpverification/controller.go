@@ -6,7 +6,7 @@ import (
 	"front-office/pkg/helper"
 	"mime/multipart"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(
@@ -20,11 +20,11 @@ type controller struct {
 }
 
 type Controller interface {
-	SingleSearch(c *fiber.Ctx) error
-	BulkSearch(c *fiber.Ctx) error
+	SingleSearch(c fiber.Ctx) error
+	BulkSearch(c fiber.Ctx) error
 }
 
-func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
+func (ctrl *controller) SingleSearch(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*npwpVerificationRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -48,7 +48,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
+func (ctrl *controller) BulkSearch(c fiber.Ctx) error {
 	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)

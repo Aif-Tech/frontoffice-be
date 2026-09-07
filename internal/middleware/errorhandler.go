@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"front-office/pkg/apperror"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/rs/zerolog/log"
 )
 
 func ErrorHandler() fiber.ErrorHandler {
-	return func(c *fiber.Ctx, err error) error {
+	return func(c fiber.Ctx, err error) error {
 		var appErr *apperror.AppError
 		method := c.Method()
 		path := c.OriginalURL()

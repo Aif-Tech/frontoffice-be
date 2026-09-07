@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,12 +24,12 @@ type controller struct {
 }
 
 type Controller interface {
-	ExportUsage(c *fiber.Ctx) error
-	SendMonthlyUsageReport(c *fiber.Ctx) error
-	GetUsageReport(c *fiber.Ctx) error
+	ExportUsage(c fiber.Ctx) error
+	SendMonthlyUsageReport(c fiber.Ctx) error
+	GetUsageReport(c fiber.Ctx) error
 }
 
-func (ctrl *controller) ExportUsage(c *fiber.Ctx) error {
+func (ctrl *controller) ExportUsage(c fiber.Ctx) error {
 	var err error
 	req, err := parseDownloadRequest(c)
 	if err != nil {
@@ -59,7 +59,7 @@ func (ctrl *controller) ExportUsage(c *fiber.Ctx) error {
 	return c.Send(result.Data)
 }
 
-func (ctrl *controller) SendMonthlyUsageReport(c *fiber.Ctx) error {
+func (ctrl *controller) SendMonthlyUsageReport(c fiber.Ctx) error {
 	if err := ctrl.svc.SendMonthlyUsageReport(); err != nil {
 		log.Error().
 			Err(err).
@@ -72,7 +72,7 @@ func (ctrl *controller) SendMonthlyUsageReport(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetUsageReport(c *fiber.Ctx) error {
+func (ctrl *controller) GetUsageReport(c fiber.Ctx) error {
 	var err error
 	req, err := parseDownloadRequest(c)
 	if err != nil {
@@ -90,7 +90,7 @@ func (ctrl *controller) GetUsageReport(c *fiber.Ctx) error {
 	))
 }
 
-func parseDownloadRequest(c *fiber.Ctx) (*downloadUsageXlsxRequest, error) {
+func parseDownloadRequest(c fiber.Ctx) (*downloadUsageXlsxRequest, error) {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return nil, apperror.Unauthorized(err.Error())
@@ -119,7 +119,7 @@ func parseDownloadRequest(c *fiber.Ctx) (*downloadUsageXlsxRequest, error) {
 	}, nil
 }
 
-func parseAndValidateCompanyId(c *fiber.Ctx, authCtx *model.AuthContext) (uint64, error) {
+func parseAndValidateCompanyId(c fiber.Ctx, authCtx *model.AuthContext) (uint64, error) {
 	companyId := c.Query("company_id")
 	if companyId == "0" {
 		return 0, apperror.BadRequest("company_id is required")
@@ -137,7 +137,7 @@ func parseAndValidateCompanyId(c *fiber.Ctx, authCtx *model.AuthContext) (uint64
 	return companyIdUint, nil
 }
 
-func parseYearMonth(c *fiber.Ctx) (int, int, error) {
+func parseYearMonth(c fiber.Ctx) (int, int, error) {
 	now := time.Now()
 	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, -1, 0)
 

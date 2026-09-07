@@ -6,10 +6,10 @@ import (
 	"front-office/pkg/common/model"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func GetUintLocal(c *fiber.Ctx, key string) (uint, error) {
+func GetUintLocal(c fiber.Ctx, key string) (uint, error) {
 	val, ok := c.Locals(key).(uint)
 	if !ok {
 		return 0, fmt.Errorf("invalid or missing '%s' in context", key)
@@ -18,7 +18,7 @@ func GetUintLocal(c *fiber.Ctx, key string) (uint, error) {
 	return val, nil
 }
 
-func GetStringLocal(c *fiber.Ctx, key string) (string, error) {
+func GetStringLocal(c fiber.Ctx, key string) (string, error) {
 	val, ok := c.Locals(key).(string)
 	if !ok {
 		return "", fmt.Errorf("invalid or missing '%s' in context", key)
@@ -27,7 +27,7 @@ func GetStringLocal(c *fiber.Ctx, key string) (string, error) {
 	return val, nil
 }
 
-func GetUintLocalStr(c *fiber.Ctx, key string) (string, error) {
+func GetUintLocalStr(c fiber.Ctx, key string) (string, error) {
 	val, err := GetUintLocal(c, key)
 	if err != nil {
 		return "", err
@@ -36,7 +36,7 @@ func GetUintLocalStr(c *fiber.Ctx, key string) (string, error) {
 	return strconv.FormatUint(uint64(val), 10), nil
 }
 
-func GetAuthContext(c *fiber.Ctx) (*model.AuthContext, error) {
+func GetAuthContext(c fiber.Ctx) (*model.AuthContext, error) {
 	userId, ok := c.Locals(constant.UserId).(uint)
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing user id")

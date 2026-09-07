@@ -17,7 +17,7 @@ import (
 
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func SetupInit(routeGroup fiber.Router, cfg *application.Config, mailModule *mail.MailModule) {

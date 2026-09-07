@@ -1,7 +1,7 @@
 package transaction
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(service Service) Controller {
@@ -14,10 +14,10 @@ type controller struct {
 
 type Controller interface {
 	// scoreezy
-	GetLogScoreezy(c *fiber.Ctx) error
-	GetLogScoreezyByDate(c *fiber.Ctx) error
-	GetLogScoreezyByDateRange(c *fiber.Ctx) error
-	GetLogScoreezyByMonth(c *fiber.Ctx) error
+	GetLogScoreezy(c fiber.Ctx) error
+	GetLogScoreezyByDate(c fiber.Ctx) error
+	GetLogScoreezyByDateRange(c fiber.Ctx) error
+	GetLogScoreezyByMonth(c fiber.Ctx) error
 
 	// product catalog
 }

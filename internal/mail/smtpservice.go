@@ -47,20 +47,29 @@ func (s *SMTPService) Send(mail Mail) error {
 	}
 
 	addr := fmt.Sprintf("%s:%s", s.host, s.port)
-	auth := smtp.PlainAuth("", s.user, s.pass, s.host)
+	fmt.Println("!!!!!", addr)
 
-	tlsConfig := &tls.Config{
-		ServerName: s.host,
-		MinVersion: tls.VersionTLS12,
-	}
-
-	if s.port == "587" {
+	switch s.port {
+	case "587":
+		auth := smtp.PlainAuth("", s.user, s.pass, s.host)
+		tlsConfig := &tls.Config{
+			ServerName: s.host,
+			MinVersion: tls.VersionTLS12,
+		}
 		return e.SendWithStartTLS(addr, auth, tlsConfig)
-	}
-
-	if s.port == "465" {
+	case "465":
+		auth := smtp.PlainAuth("", s.user, s.pass, s.host)
+		tlsConfig := &tls.Config{
+			ServerName: s.host,
+			MinVersion: tls.VersionTLS12,
+		}
 		return e.SendWithTLS(addr, auth, tlsConfig)
+	default:
+		// plain SMTP tanpa TLS, cocok untuk local dev (MailHog dll)
+		var auth smtp.Auth
+		if s.user != "" {
+			auth = smtp.PlainAuth("", s.user, s.pass, s.host)
+		}
+		return e.Send(addr, auth)
 	}
-
-	return fmt.Errorf("unsupported SMTP port: %s", s.port)
 }
