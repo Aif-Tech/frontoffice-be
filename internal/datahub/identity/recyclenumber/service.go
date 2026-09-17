@@ -268,7 +268,7 @@ func (svc *service) logFailedTransaction(params *recycleNumberContext, trxId, ms
 
 // todo: remove
 func (svc *service) dummyLogTrans(params *recycleNumberContext, dummyTrxId string) error {
-	status := "phone number never happens recycled"
+	status := "phone number is never recycled"
 	if params.Request.Phone == "08111111110" {
 		status = "phone number has been recycled"
 	}
