@@ -1,14 +1,17 @@
 package phonenik
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"front-office/configs/application"
 	"front-office/pkg/common/constant"
 	"front-office/pkg/common/model"
+	"front-office/pkg/helper"
 	"front-office/pkg/httpclient"
 	"front-office/pkg/jsonutil"
 	"net/http"
-	"time"
 )
 
 func NewRepository(cfg *application.Config, client httpclient.HTTPClient, marshalFn jsonutil.Marshaller) Repository {
@@ -30,29 +33,34 @@ type repository struct {
 }
 
 type Repository interface {
-	PhoneToNIKAPI(apiKey, trxId string, payload *phoneNIKRequest) (*model.ProCatAPIResponse[dataPhoneNIKAPI], error)
+	PhoneToNIKAPI(apiKey, jobId string, payload *phoneNIKRequest) (*model.ProCatAPIResponse[dataPhoneNIKAPI], error)
 }
 
-func (repo *repository) PhoneToNIKAPI(apiKey, trxId string, payload *phoneNIKRequest) (*model.ProCatAPIResponse[dataPhoneNIKAPI], error) {
-	status := "not match"
-	if payload.Phone == "08111111110" && payload.NIK == "3576014403910003" {
-		status = "match"
+func (repo *repository) PhoneToNIKAPI(apiKey, jobId string, payload *phoneNIKRequest) (*model.ProCatAPIResponse[dataPhoneNIKAPI], error) {
+	url := fmt.Sprintf("%s/product/identity/phone-to-nik", repo.cfg.App.ProductCatalogHost)
+
+	bodyBytes, err := repo.marshalFn(payload)
+	if err != nil {
+		return nil, errors.New(constant.ErrInvalidRequestPayload)
 	}
 
-	return &model.ProCatAPIResponse[dataPhoneNIKAPI]{
-		Success: true,
-		Data: dataPhoneNIKAPI{
-			Status: status,
-		},
-		Input: phoneNIKRequest{
-			Phone:  payload.Phone,
-			NIK:    payload.NIK,
-			LoanNo: payload.LoanNo,
-		},
-		Message:         "Succeed to Request Data",
-		StatusCode:      http.StatusOK,
-		PricingStrategy: "FREE",
-		TransactionId:   trxId,
-		Date:            time.Now().Format(constant.FormatYYYYMMDD),
-	}, nil
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, errors.New(constant.ErrMsgHTTPReqFailed)
+	}
+
+	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
+	req.Header.Set(constant.XAPIKey, apiKey)
+
+	q := req.URL.Query()
+	q.Add("job_id", jobId)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return nil, errors.New(constant.ErrUpstreamUnavailable)
+	}
+	defer resp.Body.Close()
+
+	return helper.ParseProCatAPIResponse[dataPhoneNIKAPI](resp)
 }

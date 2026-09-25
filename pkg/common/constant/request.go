@@ -4,6 +4,8 @@ const (
 	HeaderContentType        = "Content-Type"
 	HeaderContentDisposition = "Content-Disposition"
 	HeaderApplicationJSON    = "application/json"
+	HeaderPlatform           = "Platform"
+	HeaderJobID              = "Job-ID"
 	XAPIKey                  = "X-API-KEY"
 	XUIDKey                  = "X-UID-KEY"
 	XMemberId                = "X-Member-ID"

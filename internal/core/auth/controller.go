@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -46,18 +46,18 @@ type controller struct {
 }
 
 type Controller interface {
-	RegisterMember(c *fiber.Ctx) error
-	Login(c *fiber.Ctx) error
-	VerifyUser(c *fiber.Ctx) error
-	Logout(c *fiber.Ctx) error
-	RequestActivation(c *fiber.Ctx) error
-	RefreshAccessToken(c *fiber.Ctx) error
-	RequestPasswordReset(c *fiber.Ctx) error
-	PasswordReset(c *fiber.Ctx) error
-	ChangePassword(c *fiber.Ctx) error
+	RegisterMember(c fiber.Ctx) error
+	Login(c fiber.Ctx) error
+	VerifyUser(c fiber.Ctx) error
+	Logout(c fiber.Ctx) error
+	RequestActivation(c fiber.Ctx) error
+	RefreshAccessToken(c fiber.Ctx) error
+	RequestPasswordReset(c fiber.Ctx) error
+	PasswordReset(c fiber.Ctx) error
+	ChangePassword(c fiber.Ctx) error
 }
 
-func (ctrl *controller) RegisterMember(c *fiber.Ctx) error {
+func (ctrl *controller) RegisterMember(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*member.RegisterMemberRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -81,7 +81,7 @@ func (ctrl *controller) RegisterMember(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) VerifyUser(c *fiber.Ctx) error {
+func (ctrl *controller) VerifyUser(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*passwordResetRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -102,7 +102,7 @@ func (ctrl *controller) VerifyUser(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) Logout(c *fiber.Ctx) error {
+func (ctrl *controller) Logout(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -122,7 +122,7 @@ func (ctrl *controller) Logout(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) RequestActivation(c *fiber.Ctx) error {
+func (ctrl *controller) RequestActivation(c fiber.Ctx) error {
 	email := c.Params("email")
 	if email == "" {
 		return apperror.BadRequest("missing email")
@@ -138,7 +138,7 @@ func (ctrl *controller) RequestActivation(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) ChangePassword(c *fiber.Ctx) error {
+func (ctrl *controller) ChangePassword(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*changePasswordRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -159,7 +159,7 @@ func (ctrl *controller) ChangePassword(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) RefreshAccessToken(c *fiber.Ctx) error {
+func (ctrl *controller) RefreshAccessToken(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -191,7 +191,7 @@ func (ctrl *controller) RefreshAccessToken(c *fiber.Ctx) error {
 		))
 }
 
-func (ctrl *controller) Login(c *fiber.Ctx) error {
+func (ctrl *controller) Login(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*userLoginRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -220,7 +220,7 @@ func (ctrl *controller) Login(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) RequestPasswordReset(c *fiber.Ctx) error {
+func (ctrl *controller) RequestPasswordReset(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*requestPasswordResetRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -236,7 +236,7 @@ func (ctrl *controller) RequestPasswordReset(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) PasswordReset(c *fiber.Ctx) error {
+func (ctrl *controller) PasswordReset(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*passwordResetRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -257,7 +257,7 @@ func (ctrl *controller) PasswordReset(c *fiber.Ctx) error {
 	))
 }
 
-func setTokenCookie(c *fiber.Ctx, name, value, durationStr, path string) error {
+func setTokenCookie(c fiber.Ctx, name, value, durationStr, path string) error {
 	minutes, err := strconv.Atoi(durationStr)
 	if err != nil {
 		return err
@@ -276,7 +276,7 @@ func setTokenCookie(c *fiber.Ctx, name, value, durationStr, path string) error {
 	return nil
 }
 
-func clearAuthCookie(c *fiber.Ctx, name, path string) {
+func clearAuthCookie(c fiber.Ctx, name, path string) {
 	c.Cookie(&fiber.Cookie{
 		Name:     name,
 		Value:    "",

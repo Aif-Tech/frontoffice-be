@@ -30,7 +30,7 @@ type repository struct {
 }
 
 type Repository interface {
-	RecycleNumberAPI(apiKey, trxId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error)
+	RecycleNumberAPI(apiKey, jobId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error)
 }
 
 func (repo *repository) RecycleNumberAPI(apiKey, trxId string, payload *recycleNumberRequest) (*model.ProCatAPIResponse[dataRecycleNumberAPI], error) {

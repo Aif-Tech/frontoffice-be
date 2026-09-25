@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
 func FileUpload() fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		userId := fmt.Sprintf("%v", c.Locals(constant.UserId))
 
 		file, err := c.FormFile("image")

@@ -6,7 +6,7 @@ import (
 	"front-office/pkg/helper"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(service Service) Controller {
@@ -18,11 +18,11 @@ type controller struct {
 }
 
 type Controller interface {
-	GetList(c *fiber.Ctx) error
-	GetListByRange(c *fiber.Ctx) error
+	GetList(c fiber.Ctx) error
+	GetListByRange(c fiber.Ctx) error
 }
 
-func (ctrl *controller) GetList(c *fiber.Ctx) error {
+func (ctrl *controller) GetList(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -58,7 +58,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(result)
 }
 
-func (ctrl *controller) GetListByRange(c *fiber.Ctx) error {
+func (ctrl *controller) GetListByRange(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())

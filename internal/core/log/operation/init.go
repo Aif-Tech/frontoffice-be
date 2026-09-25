@@ -5,7 +5,7 @@ import (
 	"front-office/internal/middleware"
 	"front-office/pkg/httpclient"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func SetupInit(logAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {

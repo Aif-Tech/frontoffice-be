@@ -6,7 +6,7 @@ import (
 	"front-office/pkg/helper"
 	"mime/multipart"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(
@@ -20,11 +20,11 @@ type controller struct {
 }
 
 type Controller interface {
-	MultipleLoan(c *fiber.Ctx) error
-	BulkMultipleLoan(c *fiber.Ctx) error
+	MultipleLoan(c fiber.Ctx) error
+	BulkMultipleLoan(c fiber.Ctx) error
 }
 
-func (ctrl *controller) MultipleLoan(c *fiber.Ctx) error {
+func (ctrl *controller) MultipleLoan(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*multipleLoanRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -45,7 +45,7 @@ func (ctrl *controller) MultipleLoan(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(multipleLoanRes)
 }
 
-func (ctrl *controller) BulkMultipleLoan(c *fiber.Ctx) error {
+func (ctrl *controller) BulkMultipleLoan(c fiber.Ctx) error {
 	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)

@@ -8,15 +8,15 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/usepzaka/validator"
 )
 
 func ValidateRequest(model interface{}) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		request := reflect.New(reflect.TypeOf(model)).Interface()
 
-		if err := c.BodyParser(request); err != nil {
+		if err := c.Bind().Body(request); err != nil {
 			resp := helper.ErrorResponse(constant.InvalidRequestFormat)
 
 			return c.Status(fiber.StatusBadRequest).JSON(resp)
@@ -35,7 +35,7 @@ func ValidateRequest(model interface{}) fiber.Handler {
 }
 
 func ValidateCSVFile() fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		file, err := c.FormFile("file")
 		if err != nil {
 			return apperror.BadRequest("file is required")

@@ -51,10 +51,8 @@ func (repo *repository) TaxComplianceStatusAPI(apiKey, jobId string, reqBody *ta
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-
-	q := req.URL.Query()
-	q.Add("job_id", jobId)
-	req.URL.RawQuery = q.Encode()
+	req.Header.Set(constant.HeaderPlatform, "web")
+	req.Header.Set(constant.HeaderJobID, jobId)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {

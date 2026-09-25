@@ -5,7 +5,7 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(service Service) Controller {
@@ -17,11 +17,11 @@ type controller struct {
 }
 
 type Controller interface {
-	SaveGrading(c *fiber.Ctx) error
-	GetGrades(c *fiber.Ctx) error
+	SaveGrading(c fiber.Ctx) error
+	GetGrades(c fiber.Ctx) error
 }
 
-func (ctrl *controller) SaveGrading(c *fiber.Ctx) error {
+func (ctrl *controller) SaveGrading(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*createGradeRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -48,7 +48,7 @@ func (ctrl *controller) SaveGrading(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetGrades(c *fiber.Ctx) error {
+func (ctrl *controller) GetGrades(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())

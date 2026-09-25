@@ -9,7 +9,7 @@ import (
 	"mime/multipart"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(
@@ -23,16 +23,16 @@ type controller struct {
 }
 
 type Controller interface {
-	SingleSearch(c *fiber.Ctx) error
-	BulkSearch(c *fiber.Ctx) error
-	GetJobs(c *fiber.Ctx) error
-	GetJobDetails(c *fiber.Ctx) error
-	ExportJobDetails(c *fiber.Ctx) error
-	GetJobsSummary(c *fiber.Ctx) error
-	ExportJobsSummary(c *fiber.Ctx) error
+	SingleSearch(c fiber.Ctx) error
+	BulkSearch(c fiber.Ctx) error
+	GetJobs(c fiber.Ctx) error
+	GetJobDetails(c fiber.Ctx) error
+	ExportJobDetails(c fiber.Ctx) error
+	GetJobsSummary(c fiber.Ctx) error
+	ExportJobsSummary(c fiber.Ctx) error
 }
 
-func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
+func (ctrl *controller) SingleSearch(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*phoneLiveStatusRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -53,7 +53,7 @@ func (ctrl *controller) SingleSearch(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
+func (ctrl *controller) BulkSearch(c fiber.Ctx) error {
 	file, ok := c.Locals(constant.ValidatedFile).(*multipart.FileHeader)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -74,7 +74,7 @@ func (ctrl *controller) BulkSearch(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
+func (ctrl *controller) GetJobs(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -102,7 +102,7 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
+func (ctrl *controller) GetJobDetails(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -134,7 +134,7 @@ func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
+func (ctrl *controller) ExportJobDetails(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -166,7 +166,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 	return c.SendStream(bytes.NewReader(buf.Bytes()))
 }
 
-func (ctrl *controller) GetJobsSummary(c *fiber.Ctx) error {
+func (ctrl *controller) GetJobsSummary(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -197,7 +197,7 @@ func (ctrl *controller) GetJobsSummary(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) ExportJobsSummary(c *fiber.Ctx) error {
+func (ctrl *controller) ExportJobsSummary(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())

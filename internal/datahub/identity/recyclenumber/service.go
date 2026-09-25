@@ -67,24 +67,7 @@ func (svc *service) RecycleNumber(authCtx *model.AuthContext, reqBody *recycleNu
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	// todo: remove
-	dummyTrxId := helper.GenerateTrx(constant.TrxIdRecycleNumber)
-	if err := svc.dummyLogTrans(&recycleNumberContext{
-		APIKey:         authCtx.APIKey,
-		JobIdStr:       jobIdStr,
-		MemberIdStr:    authCtx.UserIdStr(),
-		CompanyIdStr:   authCtx.CompanyIdStr(),
-		MemberId:       authCtx.UserId,
-		CompanyId:      authCtx.CompanyId,
-		ProductId:      subscribedResp.Data.ProductId,
-		ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
-		JobId:          jobRes.JobId,
-		Request:        reqBody,
-	}, dummyTrxId); err != nil {
-		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
-	}
-
-	result, err := svc.repo.RecycleNumberAPI(authCtx.APIKey, dummyTrxId, reqBody)
+	result, err := svc.repo.RecycleNumberAPI(authCtx.APIKey, jobIdStr, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -229,11 +212,7 @@ func (svc *service) processSingleRecycleNumber(params *recycleNumberContext) err
 		return apperror.BadRequest(err.Error())
 	}
 
-	if err := svc.dummyLogTrans(params, trxId); err != nil {
-		return apperror.MapRepoError(err, constant.FailedCreateJob)
-	}
-
-	_, err := svc.repo.RecycleNumberAPI(params.APIKey, trxId, params.Request)
+	_, err := svc.repo.RecycleNumberAPI(params.APIKey, params.JobIdStr, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)

@@ -8,7 +8,7 @@ import (
 	"front-office/pkg/helper"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -30,17 +30,17 @@ type controller struct {
 }
 
 type Controller interface {
-	GetBy(c *fiber.Ctx) error
-	GetById(c *fiber.Ctx) error
-	GetList(c *fiber.Ctx) error
-	UpdateProfile(c *fiber.Ctx) error
-	UploadProfileImage(c *fiber.Ctx) error
-	UpdateMemberById(c *fiber.Ctx) error
+	GetBy(c fiber.Ctx) error
+	GetById(c fiber.Ctx) error
+	GetList(c fiber.Ctx) error
+	UpdateProfile(c fiber.Ctx) error
+	UploadProfileImage(c fiber.Ctx) error
+	UpdateMemberById(c fiber.Ctx) error
 	UpdateExpiredMailStatus()
-	DeleteById(c *fiber.Ctx) error
+	DeleteById(c fiber.Ctx) error
 }
 
-func (ctrl *controller) GetBy(c *fiber.Ctx) error {
+func (ctrl *controller) GetBy(c fiber.Ctx) error {
 	member, err := ctrl.svc.GetMemberBy(&MemberParams{
 		Email:    c.Query("email"),
 		Username: c.Query("username"),
@@ -56,7 +56,7 @@ func (ctrl *controller) GetBy(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetById(c *fiber.Ctx) error {
+func (ctrl *controller) GetById(c fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return apperror.BadRequest(constant.MissingUserId)
@@ -75,7 +75,7 @@ func (ctrl *controller) GetById(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetList(c *fiber.Ctx) error {
+func (ctrl *controller) GetList(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -106,7 +106,7 @@ func (ctrl *controller) GetList(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) UpdateProfile(c *fiber.Ctx) error {
+func (ctrl *controller) UpdateProfile(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*updateProfileRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -128,7 +128,7 @@ func (ctrl *controller) UpdateProfile(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) UploadProfileImage(c *fiber.Ctx) error {
+func (ctrl *controller) UploadProfileImage(c fiber.Ctx) error {
 	filename, err := helper.GetStringLocal(c, "filename")
 	if err != nil {
 		return apperror.BadRequest(err.Error())
@@ -150,7 +150,7 @@ func (ctrl *controller) UploadProfileImage(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) UpdateMemberById(c *fiber.Ctx) error {
+func (ctrl *controller) UpdateMemberById(c fiber.Ctx) error {
 	reqBody, ok := c.Locals(constant.Request).(*updateUserRequest)
 	if !ok {
 		return apperror.BadRequest(constant.InvalidRequestFormat)
@@ -188,7 +188,7 @@ func (ctrl *controller) UpdateExpiredMailStatus() {
 	}
 }
 
-func (ctrl *controller) DeleteById(c *fiber.Ctx) error {
+func (ctrl *controller) DeleteById(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())

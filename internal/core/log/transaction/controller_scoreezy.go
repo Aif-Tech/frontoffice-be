@@ -5,10 +5,10 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
+func (ctrl *controller) GetLogScoreezy(c fiber.Ctx) error {
 	logs, err := ctrl.svc.GetScoreezyLogs()
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func (ctrl *controller) GetLogScoreezy(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetLogScoreezyByDate(c *fiber.Ctx) error {
+func (ctrl *controller) GetLogScoreezyByDate(c fiber.Ctx) error {
 	date := c.Query("date")
 	companyId := c.Query("company_id")
 
@@ -39,7 +39,7 @@ func (ctrl *controller) GetLogScoreezyByDate(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetLogScoreezyByDateRange(c *fiber.Ctx) error {
+func (ctrl *controller) GetLogScoreezyByDateRange(c fiber.Ctx) error {
 	startDate := c.Query(constant.StartDate)
 	endDate := c.Query(constant.EndDate)
 
@@ -66,7 +66,7 @@ func (ctrl *controller) GetLogScoreezyByDateRange(c *fiber.Ctx) error {
 	))
 }
 
-func (ctrl *controller) GetLogScoreezyByMonth(c *fiber.Ctx) error {
+func (ctrl *controller) GetLogScoreezyByMonth(c fiber.Ctx) error {
 	companyId := c.Query("company_id")
 	month := c.Query("month")
 

@@ -6,7 +6,7 @@ import (
 	"front-office/internal/scoreezy/genretail"
 	"front-office/pkg/httpclient"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func SetupInit(routeAPI fiber.Router, cfg *application.Config, client httpclient.HTTPClient) {

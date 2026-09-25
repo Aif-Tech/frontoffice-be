@@ -5,12 +5,12 @@ import (
 	"front-office/pkg/common/constant"
 	"front-office/pkg/helper"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type Controller interface {
-	ListTemplates(c *fiber.Ctx) error
-	DownloadTemplate(c *fiber.Ctx) error
+	ListTemplates(c fiber.Ctx) error
+	DownloadTemplate(c fiber.Ctx) error
 }
 
 type controller struct {
@@ -20,7 +20,7 @@ type controller struct {
 func NewController(service Service) Controller {
 	return &controller{svc: service}
 }
-func (ctrl *controller) ListTemplates(c *fiber.Ctx) error {
+func (ctrl *controller) ListTemplates(c fiber.Ctx) error {
 	templates, err := ctrl.svc.ListTemplates()
 	if err != nil {
 		return apperror.Internal("failed to fetch template list", err)
@@ -33,9 +33,9 @@ func (ctrl *controller) ListTemplates(c *fiber.Ctx) error {
 }
 
 // Download specific template
-func (ctrl *controller) DownloadTemplate(c *fiber.Ctx) error {
+func (ctrl *controller) DownloadTemplate(c fiber.Ctx) error {
 	var req DownloadRequest
-	if err := c.QueryParser(&req); err != nil {
+	if err := c.Bind().Query(&req); err != nil {
 		return apperror.BadRequest(err.Error())
 	}
 

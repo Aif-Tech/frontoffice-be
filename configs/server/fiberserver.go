@@ -7,10 +7,12 @@ import (
 	"front-office/internal/middleware"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/healthcheck"
-	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v3/middleware/static"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/healthcheck"
+	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,9 +25,7 @@ type fiberServer struct {
 func NewServer(cfg *application.Config, mailModule *mail.MailModule) Server {
 	return &fiberServer{
 		App: fiber.New(
-			fiber.Config{
-				ErrorHandler: middleware.ErrorHandler(),
-			},
+			fiber.Config{ErrorHandler: middleware.ErrorHandler()},
 		),
 		Cfg:        cfg,
 		MailModule: mailModule,
@@ -38,19 +38,20 @@ func (s *fiberServer) Start() error {
 	// Healthcheck system
 	// /live => Liveness
 	// /ready => Readyness
-	s.App.Use(healthcheck.New())
+	s.App.Get("/live", healthcheck.New(healthcheck.Config{}))
+	s.App.Get("/ready", healthcheck.New(healthcheck.Config{}))
 
-	s.App.Static("/", "./storage/uploads")
+	s.App.Get("/*", static.New("./storage/uploads"))
 
 	s.App.Use(cors.New(cors.Config{
-		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Authorization",
-		AllowOrigins:     s.Cfg.App.FrontendBaseUrl,
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Content-Length", "Accept-Language", "Accept-Encoding", "Connection", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Authorization"},
+		AllowOrigins:     []string{s.Cfg.App.FrontendBaseUrl},
 		AllowCredentials: true,
-		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
-		ExposeHeaders:    "Set-Cookie",
+		AllowMethods:     []string{"GET", "POST", "HEAD", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		ExposeHeaders:    []string{"Set-Cookie"},
 	}))
 
-	s.App.Use(func(c *fiber.Ctx) error {
+	s.App.Use(func(c fiber.Ctx) error {
 		start := time.Now()
 
 		err := c.Next()

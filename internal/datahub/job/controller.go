@@ -9,7 +9,7 @@ import (
 	"front-office/pkg/helper"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func NewController(svc Service) Controller {
@@ -21,15 +21,15 @@ type controller struct {
 }
 
 type Controller interface {
-	GetJobs(c *fiber.Ctx) error
-	GetGenRetailJobs(c *fiber.Ctx) error
-	GetJobDetails(c *fiber.Ctx) error
-	ExportJobDetails(c *fiber.Ctx) error
-	GetJobDetailsByDateRange(c *fiber.Ctx) error
-	ExportJobDetailsByDateRange(c *fiber.Ctx) error
+	GetJobs(c fiber.Ctx) error
+	GetGenRetailJobs(c fiber.Ctx) error
+	GetJobDetails(c fiber.Ctx) error
+	ExportJobDetails(c fiber.Ctx) error
+	GetJobDetailsByDateRange(c fiber.Ctx) error
+	ExportJobDetailsByDateRange(c fiber.Ctx) error
 }
 
-func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
+func (ctrl *controller) GetJobs(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -63,7 +63,7 @@ func (ctrl *controller) GetJobs(c *fiber.Ctx) error {
 	})
 }
 
-func (ctrl *controller) GetGenRetailJobs(c *fiber.Ctx) error {
+func (ctrl *controller) GetGenRetailJobs(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -86,7 +86,7 @@ func (ctrl *controller) GetGenRetailJobs(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(result)
 }
 
-func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
+func (ctrl *controller) GetJobDetails(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -116,7 +116,7 @@ func (ctrl *controller) GetJobDetails(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(result)
 }
 
-func (ctrl *controller) GetJobDetailsByDateRange(c *fiber.Ctx) error {
+func (ctrl *controller) GetJobDetailsByDateRange(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -153,7 +153,7 @@ func (ctrl *controller) GetJobDetailsByDateRange(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(result)
 }
 
-func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
+func (ctrl *controller) ExportJobDetails(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
@@ -187,7 +187,7 @@ func (ctrl *controller) ExportJobDetails(c *fiber.Ctx) error {
 	return c.SendStream(bytes.NewReader(buf.Bytes()))
 }
 
-func (ctrl *controller) ExportJobDetailsByDateRange(c *fiber.Ctx) error {
+func (ctrl *controller) ExportJobDetailsByDateRange(c fiber.Ctx) error {
 	authCtx, err := helper.GetAuthContext(c)
 	if err != nil {
 		return apperror.Unauthorized(err.Error())
