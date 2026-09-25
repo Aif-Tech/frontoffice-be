@@ -244,3 +244,36 @@ func (svc *service) logFailedTransaction(params *recycleNumberContext, trxId, ms
 		ResponseTime: time.Now(),
 	})
 }
+
+// todo: remove
+func (svc *service) dummyLogTrans(params *recycleNumberContext, dummyTrxId string) error {
+	status := "phone number is never recycled"
+	if params.Request.Phone == "08111111110" {
+		status = "phone number has been recycled"
+	}
+
+	return svc.transactionRepo.CreateLogTransAPI(&transaction.LogTransProCatRequest{
+		TransactionID:  dummyTrxId,
+		MemberID:       params.MemberId,
+		CompanyID:      params.CompanyId,
+		ProductID:      params.ProductId,
+		ProductGroupID: params.ProductGroupId,
+		JobID:          params.JobId,
+		Message:        constant.Success,
+		Status:         http.StatusOK,
+		Success:        true,
+		LoanNo:         params.Request.LoanNo,
+		ResponseBody: &transaction.ResponseBody{
+			Data: dataRecycleNumberAPI{
+				Status: status,
+			},
+			Input:           params.Request,
+			TransactionId:   dummyTrxId,
+			PricingStrategy: "FREE",
+			DateTime:        time.Now().Format(constant.FormatDateAndTime),
+		},
+		RequestBody:  params.Request,
+		RequestTime:  time.Now(),
+		ResponseTime: time.Now(),
+	})
+}
