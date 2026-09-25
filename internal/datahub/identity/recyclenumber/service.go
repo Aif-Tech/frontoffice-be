@@ -212,13 +212,20 @@ func (svc *service) processSingleRecycleNumber(params *recycleNumberContext) err
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.RecycleNumberAPI(params.APIKey, params.JobIdStr, params.Request)
-	if err != nil {
+	if err := svc.dummyLogTrans(params, trxId); err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
 
-		return apperror.Internal("failed to process recycle number", err)
+		return apperror.Internal("failed to process recycle number request", err)
 	}
+
+	// _, err := svc.repo.RecycleNumberAPI(params.APIKey, params.JobIdStr, params.Request)
+	// if err != nil {
+	// 	_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
+	// 	_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)
+
+	// 	return apperror.Internal("failed to process recycle number", err)
+	// }
 
 	return nil
 }
