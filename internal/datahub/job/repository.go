@@ -43,7 +43,7 @@ type Repository interface {
 }
 
 func (repo *repository) CreateJobAPI(payload *CreateJobRequest) (*createJobRespData, error) {
-	url := fmt.Sprintf("%s/api/core/product/jobs", repo.cfg.App.AifcoreHost)
+	url := fmt.Sprintf("%s/api/core/product/jobs", repo.cfg.App.AifcoreHost) // todo: update endpoint
 
 	bodyBytes, err := repo.marshalFn(payload)
 	if err != nil {
