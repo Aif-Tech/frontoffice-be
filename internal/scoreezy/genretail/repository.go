@@ -57,10 +57,8 @@ func (repo *repository) GenRetailV3API(memberId, jobId string, payload *genRetai
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XUIDKey, memberId)
-
-	q := req.URL.Query()
-	q.Add("job_id", jobId)
-	req.URL.RawQuery = q.Encode()
+	req.Header.Set(constant.HeaderPlatform, "web")
+	req.Header.Set(constant.HeaderJobID, jobId)
 
 	res, err := repo.client.Do(req)
 	if err != nil {

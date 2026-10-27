@@ -191,7 +191,7 @@ func (svc *service) BulkNegativeRecord(authCtx *model.AuthContext, file *multipa
 		}(req)
 
 		batchCount++
-		if batchCount == 100 {
+		if batchCount == 50 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}

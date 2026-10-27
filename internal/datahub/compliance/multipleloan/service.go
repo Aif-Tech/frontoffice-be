@@ -253,7 +253,7 @@ func (svc *service) BulkMultipleLoan(authCtx *model.AuthContext, slug string, fi
 		}(req)
 
 		batchCount++
-		if batchCount == 100 {
+		if batchCount == 50 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}
