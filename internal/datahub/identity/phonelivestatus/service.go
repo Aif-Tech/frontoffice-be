@@ -51,7 +51,7 @@ type service struct {
 }
 
 type Service interface {
-	PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLiveStatusRequest) error
+	PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLiveStatusRequest) (*model.ProCatAPIResponse[phoneLiveStatusRespData], error)
 	BulkPhoneLiveStatus(authCtx *model.AuthContext, fileHeader *multipart.FileHeader) error
 	GetJobs(filter *phoneLiveStatusFilter) (*jobListClientRespData, error)
 	GetJobDetails(filter *phoneLiveStatusFilter) (*jobDetailsDTO, error)
@@ -60,10 +60,10 @@ type Service interface {
 	ExportJobsSummary(memberId, companyId uint, filter *phoneLiveStatusFilter, buf *bytes.Buffer) (string, error)
 }
 
-func (svc *service) PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLiveStatusRequest) error {
+func (svc *service) PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLiveStatusRequest) (*model.ProCatAPIResponse[phoneLiveStatusRespData], error) {
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugPhoneLiveStatus)
 	if err != nil {
-		return apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
+		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
 	}
 
 	jobRes, err := svc.jobRepo.CreateJobAPI(&job.CreateJobRequest{
@@ -73,21 +73,21 @@ func (svc *service) PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLi
 		Total:     1,
 	})
 	if err != nil {
-		return apperror.MapRepoError(err, constant.FailedCreateJob)
+		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	_, err = svc.repo.PhoneLiveStatusAPI(authCtx.APIKey, jobIdStr, reqBody)
+	result, err := svc.repo.PhoneLiveStatusAPI(authCtx.APIKey, jobIdStr, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
-			return err
+			return nil, err
 		}
 
-		return apperror.Internal("failed to process phone live status", err)
+		return nil, apperror.Internal("failed to process phone live status", err)
 	}
 
 	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
@@ -101,7 +101,7 @@ func (svc *service) PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLi
 			Msg(constant.MsgFailedAddOperationLog)
 	}
 
-	return nil
+	return result, nil
 }
 
 func (svc *service) BulkPhoneLiveStatus(authCtx *model.AuthContext, file *multipart.FileHeader) error {
@@ -176,7 +176,7 @@ func (svc *service) BulkPhoneLiveStatus(authCtx *model.AuthContext, file *multip
 		}(req)
 
 		batchCount++
-		if batchCount == 50 {
+		if batchCount == 1 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}

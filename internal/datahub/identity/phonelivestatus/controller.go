@@ -43,14 +43,12 @@ func (ctrl *controller) SingleSearch(c fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error())
 	}
 
-	if err := ctrl.svc.PhoneLiveStatus(authCtx, reqBody); err != nil {
+	result, err := ctrl.svc.PhoneLiveStatus(authCtx, reqBody)
+	if err != nil {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(helper.SuccessResponse[any](
-		"success",
-		nil,
-	))
+	return c.Status(fiber.StatusOK).JSON(result)
 }
 
 func (ctrl *controller) BulkSearch(c fiber.Ctx) error {
