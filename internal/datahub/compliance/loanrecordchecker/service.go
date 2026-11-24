@@ -181,7 +181,7 @@ func (svc *service) BulkLoanRecordChecker(authCtx *model.AuthContext, file *mult
 		}(req)
 
 		batchCount++
-		if batchCount == 50 {
+		if batchCount == 1 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}

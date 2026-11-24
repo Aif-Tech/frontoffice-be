@@ -177,7 +177,7 @@ func (svc *service) BulkTaxScore(authCtx *model.AuthContext, file *multipart.Fil
 		}(req)
 
 		batchCount++
-		if batchCount == 50 {
+		if batchCount == 1 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}
