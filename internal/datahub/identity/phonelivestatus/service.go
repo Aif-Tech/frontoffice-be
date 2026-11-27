@@ -75,9 +75,11 @@ func (svc *service) PhoneLiveStatus(authCtx *model.AuthContext, reqBody *phoneLi
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
-	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.PhoneLiveStatusAPI(authCtx.APIKey, jobIdStr, reqBody)
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
+	reqBody.JobID = jobRes.JobId
+	reqBody.Platform = constant.WebPlatform
+	result, err := svc.repo.PhoneLiveStatusAPI(authCtx.APIKey, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -365,7 +367,9 @@ func (svc *service) processSingle(params *phoneLiveStatusContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.PhoneLiveStatusAPI(params.APIKey, params.JobIdStr, params.Request)
+	params.Request.JobID = params.JobId
+	params.Request.Platform = constant.WebPlatform
+	_, err := svc.repo.PhoneLiveStatusAPI(params.APIKey, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)

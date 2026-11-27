@@ -35,14 +35,14 @@ type repository struct {
 }
 
 type Repository interface {
-	PhoneLiveStatusAPI(apiKey, jobId string, payload *phoneLiveStatusRequest) (*model.ProCatAPIResponse[phoneLiveStatusRespData], error)
+	PhoneLiveStatusAPI(apiKey string, payload *phoneLiveStatusRequest) (*model.ProCatAPIResponse[phoneLiveStatusRespData], error)
 	GetPhoneLiveStatusJobAPI(filter *phoneLiveStatusFilter) (*jobListRespData, error)
 	GetJobDetailsAPI(filter *phoneLiveStatusFilter) (*jobDetailRaw, error)
 	GetJobsSummaryAPI(filter *phoneLiveStatusFilter) (*jobDetailRaw, error)
 	GetJobMetricsAPI(filter *phoneLiveStatusFilter) (*jobMetrics, error)
 }
 
-func (repo *repository) PhoneLiveStatusAPI(apiKey, jobId string, payload *phoneLiveStatusRequest) (*model.ProCatAPIResponse[phoneLiveStatusRespData], error) {
+func (repo *repository) PhoneLiveStatusAPI(apiKey string, payload *phoneLiveStatusRequest) (*model.ProCatAPIResponse[phoneLiveStatusRespData], error) {
 	url := fmt.Sprintf("%s/product/identity/phone-live-status", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
@@ -57,8 +57,6 @@ func (repo *repository) PhoneLiveStatusAPI(apiKey, jobId string, payload *phoneL
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.HeaderPlatform, "web")
-	req.Header.Set(constant.HeaderJobID, jobId)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {

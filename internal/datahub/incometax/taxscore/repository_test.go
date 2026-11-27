@@ -59,7 +59,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, &taxScoreRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -79,7 +79,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, &taxScoreRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -91,7 +91,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		_, err := repo.TaxScoreAPI(constant.DummyAPIKey, &taxScoreRequest{})
 		assert.Error(t, err)
 	})
 
@@ -101,7 +101,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		req := &taxScoreRequest{}
-		_, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, req)
+		_, err := repo.TaxScoreAPI(constant.DummyAPIKey, req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -116,7 +116,7 @@ func TestCallTaxScoreAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, constant.DummyJobId, &taxScoreRequest{})
+		result, err := repo.TaxScoreAPI(constant.DummyAPIKey, &taxScoreRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)

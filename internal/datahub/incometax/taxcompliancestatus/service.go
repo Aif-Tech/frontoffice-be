@@ -67,9 +67,11 @@ func (svc *service) TaxComplianceStatus(authCtx *model.AuthContext, reqBody *tax
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
-	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.TaxComplianceStatusAPI(authCtx.APIKey, jobIdStr, reqBody)
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
+	reqBody.JobID = jobRes.JobId
+	reqBody.Platform = constant.WebPlatform
+	result, err := svc.repo.TaxComplianceStatusAPI(authCtx.APIKey, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -216,11 +218,9 @@ func (svc *service) processTaxComplianceStatus(params *taxComplianceContext) err
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.TaxComplianceStatusAPI(
-		params.APIKey,
-		params.JobIdStr,
-		params.Request,
-	)
+	params.Request.JobID = params.JobId
+	params.Request.Platform = constant.WebPlatform
+	_, err := svc.repo.TaxComplianceStatusAPI(params.APIKey, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)

@@ -33,10 +33,10 @@ type repository struct {
 }
 
 type Repository interface {
-	LoanRecordCheckerAPI(apiKey, jobId, memberId, companyId string, payload *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error)
+	LoanRecordCheckerAPI(apiKey string, payload *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error)
 }
 
-func (repo *repository) LoanRecordCheckerAPI(apiKey, jobId, memberId, companyId string, payload *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
+func (repo *repository) LoanRecordCheckerAPI(apiKey string, payload *loanRecordCheckerRequest) (*model.ProCatAPIResponse[dataLoanRecord], error) {
 	url := fmt.Sprintf("%s/product/compliance/loan-record-checker", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
@@ -51,8 +51,6 @@ func (repo *repository) LoanRecordCheckerAPI(apiKey, jobId, memberId, companyId 
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.HeaderPlatform, "web")
-	req.Header.Set(constant.HeaderJobID, jobId)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {

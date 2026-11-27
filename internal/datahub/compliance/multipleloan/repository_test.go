@@ -56,7 +56,7 @@ func TestCallMultipleLoan7DaysAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, &multipleLoanRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -73,7 +73,7 @@ func TestCallMultipleLoan7DaysAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -85,7 +85,7 @@ func TestCallMultipleLoan7DaysAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		_, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Error(t, err)
 	})
 
@@ -95,7 +95,7 @@ func TestCallMultipleLoan7DaysAPI(t *testing.T) {
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		req := &multipleLoanRequest{}
-		_, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, req)
+		_, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -110,7 +110,7 @@ func TestCallMultipleLoan7DaysAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan7Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)
@@ -134,7 +134,7 @@ func TestCallMultipleLoan30DaysAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, &multipleLoanRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -151,7 +151,7 @@ func TestCallMultipleLoan30DaysAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -163,7 +163,7 @@ func TestCallMultipleLoan30DaysAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		_, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Error(t, err)
 	})
 
@@ -173,7 +173,7 @@ func TestCallMultipleLoan30DaysAPI(t *testing.T) {
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		req := &multipleLoanRequest{}
-		_, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, req)
+		_, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -188,7 +188,7 @@ func TestCallMultipleLoan30DaysAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan30Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)
@@ -212,7 +212,7 @@ func TestCallMultipleLoan90DaysAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, &multipleLoanRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -229,7 +229,7 @@ func TestCallMultipleLoan90DaysAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -241,7 +241,7 @@ func TestCallMultipleLoan90DaysAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		_, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Error(t, err)
 	})
 
@@ -251,7 +251,7 @@ func TestCallMultipleLoan90DaysAPI(t *testing.T) {
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
 		req := &multipleLoanRequest{}
-		_, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, req)
+		_, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -266,7 +266,7 @@ func TestCallMultipleLoan90DaysAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, constant.DummyJobId, constant.DummyMemberId, constant.DummyCompanyId, &multipleLoanRequest{})
+		result, err := repo.CallMultipleLoan90Days(constant.DummyAPIKey, &multipleLoanRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)

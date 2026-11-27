@@ -3,6 +3,8 @@ package negativerecord
 type negativeRecordRequest struct {
 	LoanNo      string `json:"loan_no" validate:"required~loan number cannot be empty."`
 	CompanyName string `json:"company_name" validate:"required~company name cannot be empty"`
+	Platform    string `json:"platform"`
+	JobID       uint   `json:"job_id"`
 }
 
 type dataNegativeRecord struct {

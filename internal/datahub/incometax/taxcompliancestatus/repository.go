@@ -33,10 +33,10 @@ type repository struct {
 }
 
 type Repository interface {
-	TaxComplianceStatusAPI(apiKey, jobId string, request *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error)
+	TaxComplianceStatusAPI(apiKey string, request *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error)
 }
 
-func (repo *repository) TaxComplianceStatusAPI(apiKey, jobId string, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error) {
+func (repo *repository) TaxComplianceStatusAPI(apiKey string, reqBody *taxComplianceStatusRequest) (*model.ProCatAPIResponse[taxComplianceRespData], error) {
 	url := fmt.Sprintf("%s/product/incometax/tax-compliance-status", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(reqBody)
@@ -51,8 +51,6 @@ func (repo *repository) TaxComplianceStatusAPI(apiKey, jobId string, reqBody *ta
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.HeaderPlatform, "web")
-	req.Header.Set(constant.HeaderJobID, jobId)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
