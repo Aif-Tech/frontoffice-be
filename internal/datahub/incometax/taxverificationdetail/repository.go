@@ -33,10 +33,10 @@ type repository struct {
 }
 
 type Repository interface {
-	TaxVerificationAPI(apiKey, jobId string, reqBody *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
+	TaxVerificationAPI(apiKey string, reqBody *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
 }
 
-func (repo *repository) TaxVerificationAPI(apiKey, jobId string, reqBody *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
+func (repo *repository) TaxVerificationAPI(apiKey string, reqBody *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
 	url := fmt.Sprintf("%s/product/incometax/tax-verification-detail", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(reqBody)
@@ -51,8 +51,6 @@ func (repo *repository) TaxVerificationAPI(apiKey, jobId string, reqBody *taxVer
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.HeaderPlatform, "web")
-	req.Header.Set(constant.HeaderJobID, jobId)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {

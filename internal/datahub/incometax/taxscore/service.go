@@ -52,7 +52,7 @@ type Service interface {
 	BulkTaxScore(authCtx *model.AuthContext, file *multipart.FileHeader) error
 }
 
-func (svc *service) TaxScore(authCtx *model.AuthContext, request *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error) {
+func (svc *service) TaxScore(authCtx *model.AuthContext, reqBody *taxScoreRequest) (*model.ProCatAPIResponse[taxScoreRespData], error) {
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugTaxScore)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
@@ -67,9 +67,11 @@ func (svc *service) TaxScore(authCtx *model.AuthContext, request *taxScoreReques
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
-	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.TaxScoreAPI(authCtx.APIKey, jobIdStr, request)
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
+	reqBody.JobID = jobRes.JobId
+	reqBody.Platform = constant.WebPlatform
+	result, err := svc.repo.TaxScoreAPI(authCtx.APIKey, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -216,11 +218,9 @@ func (svc *service) processTaxScore(params *taxScoreContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.TaxScoreAPI(
-		params.APIKey,
-		params.JobIdStr,
-		params.Request,
-	)
+	params.Request.JobID = params.JobId
+	params.Request.Platform = constant.WebPlatform
+	_, err := svc.repo.TaxScoreAPI(params.APIKey, params.Request)
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)

@@ -52,11 +52,11 @@ type service struct {
 }
 
 type Service interface {
-	CallTaxVerification(authCtx *model.AuthContext, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
+	CallTaxVerification(authCtx *model.AuthContext, reqBody *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error)
 	BulkTaxVerification(authCtx *model.AuthContext, file *multipart.FileHeader) error
 }
 
-func (svc *service) CallTaxVerification(authCtx *model.AuthContext, request *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
+func (svc *service) CallTaxVerification(authCtx *model.AuthContext, reqBody *taxVerificationRequest) (*model.ProCatAPIResponse[taxVerificationRespData], error) {
 	subscribedResp, err := svc.memberRepo.GetSubscribedProducts(authCtx.CompanyIdStr(), constant.SlugTaxVerificationDetail)
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.ErrFetchSubscribedProduct)
@@ -71,9 +71,11 @@ func (svc *service) CallTaxVerification(authCtx *model.AuthContext, request *tax
 	if err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
 	}
-	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := svc.repo.TaxVerificationAPI(authCtx.APIKey, jobIdStr, request)
+	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
+	reqBody.JobID = jobRes.JobId
+	reqBody.Platform = constant.WebPlatform
+	result, err := svc.repo.TaxVerificationAPI(authCtx.APIKey, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -220,11 +222,9 @@ func (svc *service) processTaxVerification(params *taxVerificationContext) error
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.TaxVerificationAPI(
-		params.APIKey,
-		params.JobIdStr,
-		params.Request,
-	)
+	params.Request.JobID = params.JobId
+	params.Request.Platform = constant.WebPlatform
+	_, err := svc.repo.TaxVerificationAPI(params.APIKey, params.Request)
 
 	if err != nil {
 		_ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)

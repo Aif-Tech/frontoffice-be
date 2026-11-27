@@ -54,9 +54,6 @@ type Service interface {
 
 type multipleLoanFunc func(
 	apiKey string,
-	jobID string,
-	userID string,
-	companyID string,
 	req *multipleLoanRequest,
 ) (*model.ProCatAPIResponse[dataMultipleLoanResponse], error)
 
@@ -105,7 +102,9 @@ func (svc *service) MultipleLoan(authCtx *model.AuthContext, slug string, reqBod
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
-	result, err := mlCfg.handler(authCtx.APIKey, jobIdStr, authCtx.UserIdStr(), authCtx.CompanyIdStr(), reqBody)
+	reqBody.JobID = jobRes.JobId
+	reqBody.Platform = constant.WebPlatform
+	result, err := mlCfg.handler(authCtx.APIKey, reqBody)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return nil, err
@@ -253,7 +252,7 @@ func (svc *service) BulkMultipleLoan(authCtx *model.AuthContext, slug string, fi
 		}(req)
 
 		batchCount++
-		if batchCount == 50 {
+		if batchCount == 1 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}
@@ -292,7 +291,9 @@ func (svc *service) processMultipleLoan(params *multipleLoanContext) error {
 		return apperror.BadRequest(err.Error())
 	}
 
-	result, err := params.Handler(params.APIKey, params.JobIdStr, params.MemberIdStr, params.CompanyIdStr, params.Request)
+	params.Request.JobID = params.JobId
+	params.Request.Platform = constant.WebPlatform
+	result, err := params.Handler(params.APIKey, params.Request)
 	if err != nil {
 		statusCode := http.StatusBadGateway
 		if result != nil {

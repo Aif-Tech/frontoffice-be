@@ -33,10 +33,10 @@ type repository struct {
 }
 
 type Repository interface {
-	NPWPVerificationAPI(apiKey, jobId string, payload *npwpVerificationRequest) (*model.ProCatAPIResponse[npwpVerificationRespData], error)
+	NPWPVerificationAPI(apiKey string, payload *npwpVerificationRequest) (*model.ProCatAPIResponse[npwpVerificationRespData], error)
 }
 
-func (repo *repository) NPWPVerificationAPI(apiKey, jobId string, payload *npwpVerificationRequest) (*model.ProCatAPIResponse[npwpVerificationRespData], error) {
+func (repo *repository) NPWPVerificationAPI(apiKey string, payload *npwpVerificationRequest) (*model.ProCatAPIResponse[npwpVerificationRespData], error) {
 	url := fmt.Sprintf("%s/product/identity/npwp-verification", repo.cfg.App.ProductCatalogHost)
 
 	bodyBytes, err := repo.marshalFn(payload)
@@ -51,8 +51,6 @@ func (repo *repository) NPWPVerificationAPI(apiKey, jobId string, payload *npwpV
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.HeaderPlatform, "web")
-	req.Header.Set(constant.HeaderJobID, jobId)
 
 	resp, err := repo.client.Do(req)
 	if err != nil {

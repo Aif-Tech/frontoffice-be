@@ -22,6 +22,8 @@ const (
 	InvalidJSON              = `{invalid-json`
 
 	PaidStatus = "PAY"
+
+	WebPlatform = "web"
 )
 
 const (

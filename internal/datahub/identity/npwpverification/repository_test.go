@@ -56,7 +56,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, &npwpVerificationRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -74,7 +74,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, &npwpVerificationRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -86,7 +86,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, &npwpVerificationRequest{})
 		assert.Error(t, err)
 	})
 
@@ -95,7 +95,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		_, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, &npwpVerificationRequest{})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -110,7 +110,7 @@ func TestCallNPWPVerificationAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, constant.DummyJobId, &npwpVerificationRequest{})
+		result, err := repo.NPWPVerificationAPI(constant.DummyAPIKey, &npwpVerificationRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)

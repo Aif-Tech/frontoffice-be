@@ -68,7 +68,9 @@ func (svc *service) NPWPVerification(authCtx *model.AuthContext, payload *npwpVe
 	}
 
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
-	_, err = svc.repo.NPWPVerificationAPI(authCtx.APIKey, jobIdStr, payload)
+	payload.JobID = jobRes.JobId
+	payload.Platform = constant.WebPlatform
+	_, err = svc.repo.NPWPVerificationAPI(authCtx.APIKey, payload)
 	if err != nil {
 		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
 			return err
@@ -214,7 +216,9 @@ func (svc *service) processNPWPVerification(params *npwpVerificationContext) err
 		return apperror.BadRequest(err.Error())
 	}
 
-	_, err := svc.repo.NPWPVerificationAPI(params.APIKey, params.JobIdStr, params.Request)
+	params.Request.JobID = params.JobId
+	params.Request.Platform = constant.WebPlatform
+	_, err := svc.repo.NPWPVerificationAPI(params.APIKey, params.Request)
 	if err != nil {
 		// _ = svc.logFailedTransaction(params, trxId, err.Error(), http.StatusBadGateway)
 		_ = svc.jobService.FinalizeFailedJob(params.JobIdStr)

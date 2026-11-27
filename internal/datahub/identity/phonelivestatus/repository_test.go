@@ -56,7 +56,7 @@ func TestCallPhoneLiveStatusAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, &phoneLiveStatusRequest{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -73,7 +73,7 @@ func TestCallPhoneLiveStatusAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockHost},
 		}, &MockClient{}, fakeMarshal)
 
-		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, &phoneLiveStatusRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrInvalidRequestPayload)
@@ -85,7 +85,7 @@ func TestCallPhoneLiveStatusAPI(t *testing.T) {
 			App: &application.Environment{ProductCatalogHost: constant.MockInvalidHost},
 		}, mockClient, nil)
 
-		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
+		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, &phoneLiveStatusRequest{})
 		assert.Error(t, err)
 	})
 
@@ -94,7 +94,7 @@ func TestCallPhoneLiveStatusAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, nil, expectedErr)
 
-		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
+		_, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, &phoneLiveStatusRequest{})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), constant.ErrUpstreamUnavailable)
@@ -109,7 +109,7 @@ func TestCallPhoneLiveStatusAPI(t *testing.T) {
 
 		repo, mockClient := setupMockRepo(t, resp, nil)
 
-		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, constant.DummyJobId, &phoneLiveStatusRequest{})
+		result, err := repo.PhoneLiveStatusAPI(constant.DummyAPIKey, &phoneLiveStatusRequest{})
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		mockClient.AssertExpectations(t)
