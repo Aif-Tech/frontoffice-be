@@ -383,6 +383,7 @@ func (svc *service) processSingle(params *phoneLiveStatusContext) error {
 
 func mapToJobDetail(masked bool, raw *logTransProductCatalog) (*mstPhoneLiveStatusJobDetail, error) {
 	var subscriberStatus, deviceStatus, phoneType, operator, phoneNumber string
+
 	if raw.Data != nil {
 		liveStatusParts := strings.Split(raw.Data.LiveStatus, ",")
 		if len(liveStatusParts) >= 2 {

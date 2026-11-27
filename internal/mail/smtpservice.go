@@ -47,7 +47,6 @@ func (s *SMTPService) Send(mail Mail) error {
 	}
 
 	addr := fmt.Sprintf("%s:%s", s.host, s.port)
-	fmt.Println("!!!!!", addr)
 
 	switch s.port {
 	case "587":

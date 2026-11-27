@@ -67,6 +67,19 @@ func (svc *service) PhoneNIK(authCtx *model.AuthContext, reqBody *phoneNIKReques
 	}
 	jobIdStr := helper.ConvertUintToString(jobRes.JobId)
 
+	result, err := svc.repo.PhoneToNIKAPI(authCtx.APIKey, jobIdStr, reqBody)
+	if err != nil {
+		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
+			return nil, err
+		}
+
+		return nil, apperror.MapRepoError(err, "failed to process phone to nik matching")
+	}
+
+	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
+		return nil, err
+	}
+
 	// todo: remove
 	dummyTrxId := helper.GenerateTrx(constant.TrxIdPhoneNIK)
 	if err := svc.dummyLogTrans(&phoneNIKContext{
@@ -80,21 +93,9 @@ func (svc *service) PhoneNIK(authCtx *model.AuthContext, reqBody *phoneNIKReques
 		ProductGroupId: subscribedResp.Data.Product.ProductGroupId,
 		JobId:          jobRes.JobId,
 		Request:        reqBody,
+		Data:           &result.Data,
 	}, dummyTrxId); err != nil {
 		return nil, apperror.MapRepoError(err, constant.FailedCreateJob)
-	}
-
-	result, err := svc.repo.PhoneToNIKAPI(authCtx.APIKey, jobIdStr, reqBody)
-	if err != nil {
-		if err := svc.jobService.FinalizeFailedJob(jobIdStr); err != nil {
-			return nil, err
-		}
-
-		return nil, apperror.MapRepoError(err, "failed to process phone to nik matching")
-	}
-
-	if err := svc.jobService.FinalizeJob(jobIdStr); err != nil {
-		return nil, err
 	}
 
 	if err := svc.operationRepo.AddLogOperation(&operation.AddLogRequest{
@@ -297,6 +298,7 @@ func (svc *service) dummyLogTrans(params *phoneNIKContext, dummyTrxId string) er
 			PricingStrategy: "FREE",
 			DateTime:        time.Now().Format(constant.FormatDateAndTime),
 		},
+		Data:         params.Data,
 		RequestBody:  params.Request,
 		RequestTime:  time.Now(),
 		ResponseTime: time.Now(),
