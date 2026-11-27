@@ -173,7 +173,7 @@ func (svc *service) BulkRecycleNumber(authCtx *model.AuthContext, file *multipar
 		}(req)
 
 		batchCount++
-		if batchCount == 100 {
+		if batchCount == 50 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}

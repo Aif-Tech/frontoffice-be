@@ -21,4 +21,5 @@ type phoneNIKContext struct {
 	ProductGroupId uint             `json:"product_group_id"`
 	JobId          uint             `json:"job_id"`
 	Request        *phoneNIKRequest `json:"request"`
+	Data           *dataPhoneNIKAPI `json:"data"`
 }

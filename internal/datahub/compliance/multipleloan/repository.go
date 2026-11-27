@@ -53,8 +53,6 @@ func (repo *repository) CallMultipleLoan7Days(apiKey, jobId, memberId, companyId
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.XMemberId, memberId)
-	req.Header.Set(constant.XCompanyId, companyId)
 	req.Header.Set(constant.HeaderPlatform, "web")
 	req.Header.Set(constant.HeaderJobID, jobId)
 
@@ -82,8 +80,6 @@ func (repo *repository) CallMultipleLoan30Days(apiKey, jobId, memberId, companyI
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.XMemberId, memberId)
-	req.Header.Set(constant.XCompanyId, companyId)
 	req.Header.Set(constant.HeaderPlatform, "web")
 	req.Header.Set(constant.HeaderJobID, jobId)
 
@@ -111,8 +107,6 @@ func (repo *repository) CallMultipleLoan90Days(apiKey, jobId, memberId, companyI
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.XMemberId, memberId)
-	req.Header.Set(constant.XCompanyId, companyId)
 	req.Header.Set(constant.HeaderPlatform, "web")
 	req.Header.Set(constant.HeaderJobID, jobId)
 

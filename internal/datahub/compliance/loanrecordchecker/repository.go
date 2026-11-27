@@ -51,8 +51,6 @@ func (repo *repository) LoanRecordCheckerAPI(apiKey, jobId, memberId, companyId 
 
 	req.Header.Set(constant.HeaderContentType, constant.HeaderApplicationJSON)
 	req.Header.Set(constant.XAPIKey, apiKey)
-	req.Header.Set(constant.XMemberId, memberId)
-	req.Header.Set(constant.XCompanyId, companyId)
 	req.Header.Set(constant.HeaderPlatform, "web")
 	req.Header.Set(constant.HeaderJobID, jobId)
 
