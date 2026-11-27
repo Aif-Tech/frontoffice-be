@@ -192,7 +192,7 @@ func (svc *service) BulkPhoneNIK(authCtx *model.AuthContext, file *multipart.Fil
 		}(req)
 
 		batchCount++
-		if batchCount == 1 {
+		if batchCount == 50 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}
