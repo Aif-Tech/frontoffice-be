@@ -175,7 +175,7 @@ func (svc *service) BulkNPWPVerification(authCtx *model.AuthContext, file *multi
 		}(req)
 
 		batchCount++
-		if batchCount == 50 {
+		if batchCount == 1 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}

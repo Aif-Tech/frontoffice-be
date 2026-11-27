@@ -181,7 +181,7 @@ func (svc *service) BulkTaxVerification(authCtx *model.AuthContext, file *multip
 		}(req)
 
 		batchCount++
-		if batchCount == 50 {
+		if batchCount == 1 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}

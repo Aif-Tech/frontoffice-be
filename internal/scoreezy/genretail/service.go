@@ -207,7 +207,7 @@ func (svc *service) BulkGenRetailV3(memberId, companyId uint, quotaType string, 
 		}(req)
 
 		batchCount++
-		if batchCount == 50 {
+		if batchCount == 1 {
 			time.Sleep(time.Second)
 			batchCount = 0
 		}
